@@ -6,13 +6,11 @@ import jwt
 import time
 import json, os
 from pathlib import Path
-import secrets 
-
+import secrets
 import encryption_module
 
-
 # Constants
-SECRET_KEY = SECRET_KEY = secrets.token_hex(32)
+SERVER_JWT_KEY = secrets.token_hex(32)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -45,17 +43,9 @@ class MessageResponse(BaseModel):
     message: str
 
 # Helper functions
-def verify_password(encrypted_password, hashed_password):
-    #TODO: Implement SHA256 hashing
-    print(f"encrypted_password: {encrypted_password}")
-    plain_password =encryption_module.decrypt_string(encrypted_password)# uses symmetric encryption and key stored in the static_database.json. Both ends must have the same key
-    print(f"plain_password: '{plain_password}'")
+def verify_password(plain_password, hashed_password):
     hashed_password_candidate = encryption_module.hash_string(plain_text=plain_password) # uses SHA256 hashing
-    print(f"hashed_password_candidate: {hashed_password_candidate}")
-    print(f"hashed_password: {hashed_password}")
     return hashed_password == hashed_password_candidate
-
-    #3bee6e91c48df98d3392c21d9adf2e9edb142c1333052de07497acb083eb8a4d
 
 def get_user(db, username: str):
     if username in db:
@@ -72,7 +62,7 @@ def create_access_token(data: dict, expires_delta: int = ACCESS_TOKEN_EXPIRE_MIN
     to_encode = data.copy()
     expire = time.time() + expires_delta * 60
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SERVER_JWT_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 # Dependency
@@ -83,7 +73,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SERVER_JWT_KEY, algorithms=[ALGORITHM])
+        print(payload)
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
@@ -95,7 +86,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 # Routes
-@app.post("/token", response_model=Token)
+@app.post("/get_token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(USER_DB, form_data.username, form_data.password)
     if not user:
@@ -116,7 +107,6 @@ async def return_test_text(current_user: User = Depends(get_current_user)):
     return {
         "message": "Hello World!"
     }
-
 
 #Run the application
 if __name__ == "__main__":

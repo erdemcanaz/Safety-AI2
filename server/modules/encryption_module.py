@@ -52,18 +52,21 @@ def hash_string(plain_text:str=""):
 
 # Example usage
 if __name__ == "__main__":
-    original_text = "mysecretpassword"
-    password = SYMMETRIC_ENCRYPTION_KEY
+    original_text = input("Enter original text: ")
+    symmetric_encryption_key = SYMMETRIC_ENCRYPTION_KEY
 
     print(f"Original Text: {original_text}")
 
     # Encrypt the string
-    encrypted_text = encrypt_string(original_text, password)
+    encrypted_text = encrypt_string(original_text, symmetric_encryption_key)
     print(f"Encrypted Text: {encrypted_text}")
 
     # Decrypt the string
-    decrypted_text = decrypt_string(encrypted_text, password)
+    decrypted_text = decrypt_string(encrypted_text, symmetric_encryption_key)
     print(f"Decrypted Text: {decrypted_text}")
+
+    hashed_text = hash_string(symmetric_encryption_key)
+    print(f"Hashed Text: ")
 
     # Ensure the original and decrypted texts match
     assert original_text == decrypted_text, "The decrypted text does not match the original text!"
