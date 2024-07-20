@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, List
 import jwt
 import time
 import json, os
@@ -32,15 +32,18 @@ class Token(BaseModel):
     token_type: str
 
 class User(BaseModel):
-    username: str
-    email: str
+    username: str = None
     full_name: str = None
-
-class UserInDB(User):
-    hashed_password: str
+    email: str = None
+    plain_password : str = None
+    hashed_password : str = None
+    allowed_tos : List[str] = None
 
 class MessageResponse(BaseModel):
     message: str
+
+class ListResponse(BaseModel):
+    list_ : List
 
 # Helper functions
 def verify_password(plain_password, hashed_password):
@@ -50,10 +53,10 @@ def verify_password(plain_password, hashed_password):
 def get_user(db, username: str):
     if username in db:
         user_dict = db[username]
-        return UserInDB(**user_dict)
+        return User(**user_dict)
 
-def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+def authenticate_user(user_db, username: str, password: str):
+    user = get_user(user_db, username)
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
@@ -102,11 +105,9 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
-@app.get("/test", response_model=MessageResponse)
+@app.get("/get_allowed_tos", response_model=ListResponse)
 async def return_test_text(current_user: User = Depends(get_current_user)):
-    return {
-        "message": "Hello World!"
-    }
+    return {"list_":current_user.allowed_tos}
 
 #Run the application
 if __name__ == "__main__":
