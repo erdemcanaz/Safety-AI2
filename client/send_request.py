@@ -13,7 +13,6 @@ def get_dummy_data(url:str = None, acces_token:str = None):
     response = requests.get(url, headers=headers)
     return response.json(), response.status_code
 
-
 if __name__ == '__main__':
 
     GET_TOKEN_ENDPOINT = f"{PARAM_SERVER_URL}/get_token"
