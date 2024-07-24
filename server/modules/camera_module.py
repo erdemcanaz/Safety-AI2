@@ -1,8 +1,9 @@
-import random, threading, time, json
+import random, threading, time, json, math
 from pathlib import Path
 from typing import Dict, List
 import cv2
 import server_preferences
+import numpy as np
 
 class CameraStreamFetcher:
     def __init__(self, **kwargs )->None:         
@@ -43,6 +44,9 @@ class CameraStreamFetcher:
 
         # Check for active rules and update the camera score
         
+    def get_frame(self):
+        return self.last_frame["frame"]
+    
     def get_camera_score(self):
         return self.camera_score
 
@@ -114,11 +118,12 @@ class StreamManager:
     def start_cameras_by_uuid(self, camera_uuids:List[str] = []):    
         # Start fetching frames from the cameras. If camera_uuids is empty, start all cameras, otherwise start only the cameras with the specified uuids    
         # If camera is not alive, skip it. Alive means that the camera is reachable and the stream is available
-        number_of_cameras_to_fetch = 0
+        self.optimize_camera_fetching_delays()
+
         for camera in self.cameras:  
             if not camera.is_alive:
                 continue
-            
+
             if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
                 camera.start_fetching_frames()
 
@@ -141,6 +146,44 @@ class StreamManager:
 
         # assuming 250ms to process a signle frame, total process time per second should be around 1 second
 
+    def test_show_all_frames(self, window_size=(1280, 720)):
+        frames_to_show = []
+    
+        for camera in self.cameras:
+            frame = camera.get_frame()
+            if frame is not None:
+                frames_to_show.append(frame)            
+
+        num_frames = len(frames_to_show)
+
+        if num_frames == 0:
+            return
+        
+        print(f"Showing {num_frames} frames")
+
+        # Determine the optimal grid size (rows x cols)
+        grid_cols = math.ceil(math.sqrt(num_frames))
+        grid_rows = math.ceil(num_frames / grid_cols)
+
+        # Determine the size of each frame to fit in the grid within the window size
+        frame_width = window_size[0] // grid_cols
+        frame_height = window_size[1] // grid_rows
+
+        # Create an empty canvas to place the frames
+        canvas = np.zeros((window_size[1], window_size[0], 3), dtype=np.uint8)
+
+        for i, frame in enumerate(frames_to_show):
+            row = i // grid_cols
+            col = i % grid_cols
+
+            # Resize frame to fit in the grid
+            resized_frame = cv2.resize(frame, (frame_width, frame_height))
+            canvas[row * frame_height:(row + 1) * frame_height, col * frame_width:(col + 1) * frame_width] = resized_frame
+
+        print(f"Showing {num_frames} frames in a {grid_rows}x{grid_cols} grid")
+        cv2.imshow('All Frames', canvas)
+        cv2.waitKey(1)
+
 # Test
 if __name__ == "__main__":
 
@@ -148,6 +191,5 @@ if __name__ == "__main__":
     stream_manager.start_cameras_by_uuid()
 
     while True:
-        stream_manager.optimize_camera_fetching_delays()
-        continue
+        stream_manager.test_show_all_frames(window_size=(1280, 720))
 
