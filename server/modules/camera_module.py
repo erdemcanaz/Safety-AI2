@@ -5,16 +5,15 @@ import cv2
 import server_preferences
 
 class CameraStreamFetcher:
-    def __init__(self, **kwargs )->None:
-
-        for kwarg in kwargs:
-            if kwarg not in server_preferences.CAMERA_CONFIG_KEYS:
-                raise ValueError(f"Missing camera config argument. Required: {kwarg}")            
+    def __init__(self, **kwargs )->None:         
+        for key in server_preferences.CAMERA_CONFIG_KEYS:
+            if key not in kwargs.keys():
+                raise ValueError(f"Missing camera config argument. Required: {key}")
+              
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.camera_fetching_delay = 0 if self.is_fetch_without_delay else server_preferences.CAMERA_DEFAULT_FETCHING_DELAY_SECONDS 
-        self.soon_camera_fetching_delay = 0 if self.is_fetch_without_delay else server_preferences.CAMERA_DEFAULT_FETCHING_DELAY_SECONDS # If the frame fetching delay is dynamically changed, it will be set to this value after a frame is fetched
+        self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
         self.is_fetching_frames = False
         self.last_frame = {
             "frame": None,
@@ -22,7 +21,7 @@ class CameraStreamFetcher:
             "info": {},
             "is_checked_for_active_rules": False
         }
-
+        self.number_of_frames_fetched = 0
         self.camera_score = 0 #A positive real number that represent how 'useful' the camera is. The higher the score, the more source is allocated to the camera by the StreamManager
         self.score_keeping_dictionary = self.__initiliaze_score_keeping_dictionary()
 
@@ -80,20 +79,20 @@ class CameraStreamFetcher:
             if time.time() - self.last_frame["timestamp"] > self.camera_fetching_delay: 
                 ret, frame = cap.retrieve()
                 if ret:
-                    if server_preferences.CAMERA_VERBOSE: print(f'Got a frame from {self.ip_address} at {time.time()}')
                     self.last_frame["frame"] = frame
                     self.last_frame["timestamp"] = time.time()
                     self.last_frame["is_checked_for_active_rules"] = False
-                    self.camera_fetching_delay = self.soon_camera_fetching_delay
+                    self.number_of_frames_fetched += 1
                     self.camera_fetching_delay += random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
+                    if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} at {time.time()}')
                 else:
-                    if server_preferences.CAMERA_VERBOSE: print(f'Failed to get a frame from {self.ip_address} at {time.time()}')
+                    if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
                     continue
 
         cap.release()
 
 class StreamManager:
-    def __init__(self, **kwargs) -> None:        
+    def __init__(self) -> None:        
         CAMERA_MODULE_PATH = Path(__file__).resolve()
         CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent / "configs" / "camera_configs.json"
         with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
@@ -115,10 +114,11 @@ class StreamManager:
     def start_cameras_by_uuid(self, camera_uuids:List[str] = []):    
         # Start fetching frames from the cameras. If camera_uuids is empty, start all cameras, otherwise start only the cameras with the specified uuids    
         # If camera is not alive, skip it. Alive means that the camera is reachable and the stream is available
+        number_of_cameras_to_fetch = 0
         for camera in self.cameras:  
             if not camera.is_alive:
                 continue
-
+            
             if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
                 camera.start_fetching_frames()
 
@@ -128,15 +128,18 @@ class StreamManager:
             if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
                 camera.stop_fetching_frames()        
 
-    def update_camera_fetching_delays(self, camera_uuid:str):
-        cameras_fetching_frames = []
-        cameras_without_delay = []
-
+    def optimize_camera_fetching_delays(self):
+        
+        number_of_fetching_cameras = 0
         for camera in self.cameras:
             if camera.is_fetching_frames and camera.is_alive:
-                cameras_fetching_frames.append(camera)
-            if camera.is_fetch_without_delay:
-                cameras_without_delay.append(camera)
+                number_of_fetching_cameras += 1
+        
+        server_preferences.PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras=number_of_fetching_cameras)
+
+
+
+        # assuming 250ms to process a signle frame, total process time per second should be around 1 second
 
 # Test
 if __name__ == "__main__":
@@ -145,7 +148,6 @@ if __name__ == "__main__":
     stream_manager.start_cameras_by_uuid()
 
     while True:
-        time.sleep(1)
+        stream_manager.optimize_camera_fetching_delays()
+        continue
 
-
-            
