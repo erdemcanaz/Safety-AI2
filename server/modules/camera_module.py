@@ -4,6 +4,7 @@ from typing import Dict, List
 import cv2
 import server_preferences
 import numpy as np
+import uuid
 
 class CameraStreamFetcher:
     def __init__(self, **kwargs )->None:         
@@ -16,41 +17,13 @@ class CameraStreamFetcher:
 
         self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
         self.is_fetching_frames = False
-        self.last_frame = {
-            "uuid": self.camera_uuid,
-            "frame": None,
-            "timestamp": 0, #time.time()
-            "info": {},
-            "is_checked_for_active_rules": False
-        }
+        self.last_frame_info = None # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, is_checked_for_active_rules
         self.number_of_frames_fetched = 0
         self.camera_score = 0 #A positive real number that represent how 'useful' the camera is. The higher the score, the more source is allocated to the camera by the StreamManager
-        self.score_keeping_dictionary = self.__initiliaze_score_keeping_dictionary()
-
-    def __initiliaze_score_keeping_dictionary(self):
-        if self.scoring_method == "number_of_people_per_frame":
-            return {
-                "required_yolo_models": [],
-                "number_of_frames_checked": 0,
-                "number_of_people_detected": 0,
-            }  
-        else:
-            raise ValueError(f"Scoring method {self.scoring_method} is not implemented yet")
-              
-    def check_for_active_rules_and_update_score(self, available_yolo_models:List[object]):
-        required_models_to_use = [] #name of the models that are required to be used for this camera. This is decided by both 'active rules' and 'scoring method' attributes
-        for active_rule in self.active_rules:
-            if active_rule["yolo_model_to_use"] not in required_models_to_use:
-                required_models_to_use.append(active_rule["yolo_model_to_use"])
-
-        # Check for active rules and update the camera score
-        
-    def get_frame(self):
-        return self.last_frame["frame"]
+           
+    def get_last_frame_info(self):
+        return self.last_frame_info
     
-    def get_camera_score(self):
-        return self.camera_score
-
     def start_fetching_frames(self):
         self.is_fetching_frames = True
         self.thread = threading.Thread(target=self.__IP_camera_frame_fetching_thread)
@@ -75,18 +48,19 @@ class CameraStreamFetcher:
         buffer_size_in_frames = 1
         cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
 
-        self.last_frame["timestamp"] = time.time() # Set the initial timestamp
         while self.is_fetching_frames:   
-
             if not cap.grab():# Use grab() to capture the frame but not decode it yet for better performance
                 continue 
             
-            if time.time() - self.last_frame["timestamp"] > self.camera_fetching_delay: 
+            if time.time() - self.last_frame_info["timestamp"] > self.camera_fetching_delay: 
                 ret, frame = cap.retrieve()
                 if ret:
-                    self.last_frame["frame"] = frame
-                    self.last_frame["timestamp"] = time.time()
-                    self.last_frame["is_checked_for_active_rules"] = False
+                    self.last_frame_info = {}
+                    self.last_frame_info["frame"] = frame
+                    self.last_frame_info["camera_uuid"] = self.camera_uuid
+                    self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
+                    self.last_frame_info["frame_timestamp"] = time.time()
+                    self.last_frame_info["is_checked_for_active_rules"] = False
                     self.number_of_frames_fetched += 1
                     self.camera_fetching_delay += random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
                     if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} at {time.time()}')
@@ -119,7 +93,7 @@ class StreamManager:
     def start_cameras_by_uuid(self, camera_uuids:List[str] = []):    
         # Start fetching frames from the cameras. If camera_uuids is empty, start all cameras, otherwise start only the cameras with the specified uuids    
         # If camera is not alive, skip it. Alive means that the camera is reachable and the stream is available
-        self.optimize_camera_fetching_delays()
+        self.__optimize_camera_fetching_delays()
 
         for camera in self.cameras:  
             if not camera.is_alive:
@@ -128,14 +102,7 @@ class StreamManager:
             if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
                 camera.start_fetching_frames()
 
-    def stop_cameras_by_uuid(self, camera_uuids:List[str]):
-        # Stop fetching frames from the cameras. If camera_uuids is empty, stop all cameras, otherwise stop only the cameras with the specified uuids
-        for camera in self.cameras:
-            if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
-                camera.stop_fetching_frames()        
-
-    def optimize_camera_fetching_delays(self):
-        
+    def __optimize_camera_fetching_delays(self):        
         number_of_fetching_cameras = 0
         for camera in self.cameras:
             if camera.is_fetching_frames and camera.is_alive:
@@ -143,15 +110,17 @@ class StreamManager:
         
         server_preferences.PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras=number_of_fetching_cameras)
 
-
-
-        # assuming 250ms to process a signle frame, total process time per second should be around 1 second
+    def stop_cameras_by_uuid(self, camera_uuids:List[str]):
+        # Stop fetching frames from the cameras. If camera_uuids is empty, stop all cameras, otherwise stop only the cameras with the specified uuids
+        for camera in self.cameras:
+            if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
+                camera.stop_fetching_frames()        
 
     def test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     
         for camera in self.cameras:
-            frame = camera.get_frame()
+            frame = camera.get_last_frame_info()["frame"] if camera.get_last_frame_info() is not None else None
             if frame is not None:
                 frames_to_show.append(frame)            
 
@@ -160,8 +129,6 @@ class StreamManager:
         if num_frames == 0:
             return
         
-        print(f"Showing {num_frames} frames")
-
         # Determine the optimal grid size (rows x cols)
         grid_cols = math.ceil(math.sqrt(num_frames))
         grid_rows = math.ceil(num_frames / grid_cols)
@@ -181,8 +148,7 @@ class StreamManager:
             resized_frame = cv2.resize(frame, (frame_width, frame_height))
             canvas[row * frame_height:(row + 1) * frame_height, col * frame_width:(col + 1) * frame_width] = resized_frame
 
-        print(f"Showing {num_frames} frames in a {grid_rows}x{grid_cols} grid")
-        cv2.imshow('All Frames', canvas)
+        cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
 
 # Test

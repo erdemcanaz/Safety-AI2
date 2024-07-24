@@ -9,3 +9,5 @@ def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:in
     max_delay = max(CAMERA_DEFAULT_FETCHING_DURATION_SECONDS, 2*CAMERA_DEFAULT_FETCHING_DURATION_SECONDS * number_of_cameras)
     CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [CAMERA_DEFAULT_FETCHING_DURATION_SECONDS, max_delay]
 
+#Object Detection Module Preferences:
+POSE_DETECTION_VERBOSE = True
