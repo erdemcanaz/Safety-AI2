@@ -1,6 +1,7 @@
 import time,pprint,copy, uuid, pprint, math, time, os
 from typing import List, Dict, Tuple #for python3.8 compatibility
 
+from pynvml import * # NVIDIA Management Library
 from ultralytics import YOLO
 import numpy as np
 import cv2
@@ -116,6 +117,9 @@ class PoseDetector():
 # Test
 
 if __name__ == "__main__":
+
+   
+    detectors = []
     pose_detector = PoseDetector("yolov8n")
 
     cap = cv2.VideoCapture(0)
@@ -124,6 +128,13 @@ if __name__ == "__main__":
 
     # Read frame from webcam
 
+    nvmlInit()
+    h = nvmlDeviceGetHandleByIndex(0)
+    info = nvmlDeviceGetMemoryInfo(h)
+    print(f'\ntotal    : {info.total // 1024 ** 2} MB')
+    print(f'free     : {info.free // 1024**2} MB')
+    print(f'used     : {info.used// 1024**2} MB')
+    
     while True:
         ret, frame = cap.read()
         if not ret:
