@@ -17,6 +17,7 @@ class CameraStreamFetcher:
         self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
         self.is_fetching_frames = False
         self.last_frame = {
+            "uuid": self.camera_uuid,
             "frame": None,
             "timestamp": 0, #time.time()
             "info": {},
