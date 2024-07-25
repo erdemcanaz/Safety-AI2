@@ -184,8 +184,8 @@ class StreamManager:
         yolo_model_to_use = []
         for camera in self.cameras:
             for rule in camera.active_rules:
-                print(rule)
-                yolo_model_to_use.append(rule["yolo_model_to_use"])
+                if rule["yolo_model_to_use"] not in yolo_model_to_use:
+                    yolo_model_to_use.append(rule["yolo_model_to_use"])
 
         return yolo_model_to_use
 

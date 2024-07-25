@@ -14,7 +14,6 @@ stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
 
 evaluation_manager = evaluation_module.EvaluationManager(yolo_models_to_be_used = stream_manager.return_yolo_models_to_use())
 
-
 while True:
     stream_manager.optimize_camera_fetching_delays()        
     stream_manager.test_show_all_frames(window_size=(1280, 720))

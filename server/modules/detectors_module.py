@@ -12,7 +12,8 @@ class PoseDetector():
     #keypoints detected by the model in the detection order
     KEYPOINT_NAMES = ["nose", "right_eye", "left_eye", "left_ear", "right_ear", "left_shoulder", "right_shoulder", "left_elbow" ,"right_elbow","left_wrist", "right_wrist", "left_hip", "right_hip", "left_knee", "right_knee", "left_ankle", "right_ankle"]
     POSE_MODEL_PATHS = {
-        "yolov8n-pose":"trained_yolo_models/yolov8n-pose.pt"
+        "yolov8n-pose":"trained_yolo_models/yolov8n-pose.pt",
+        "yolov8l-pose":"trained_yolo_models/yolov8l-pose.pt"
     }
 
     def __init__(self, model_name: str = None ) -> None:   

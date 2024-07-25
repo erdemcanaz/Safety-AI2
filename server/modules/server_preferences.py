@@ -1,6 +1,6 @@
 # Camera Class Preferences:
-CAMERA_VERBOSE = True
-CAMERA_CONFIG_KEYS = ['camera_uuid', 'camera_region', 'camera_description', 'is_alive', 'NVR_ip', 'camera_ip_address', 'username', 'password', 'stream_path', 'active_rules', 'scoring_method']
+CAMERA_VERBOSE = False
+CAMERA_CONFIG_KEYS = ['camera_uuid', 'camera_region', 'camera_description', 'is_alive', 'NVR_ip', 'camera_ip_address', 'username', 'password', 'stream_path', 'active_rules']
 CAMERA_DEFAULT_FETCHING_DURATION_SECONDS = 0.1 # Used to calculate randomization range for fetching delay
 CAMERA_FETCH_DELAY_SAFETY_MARGIN = 2 # Used to increase the fetching delay to prevent bottlenecking. Basically the max delay is calculated by multiplying the default fetching duration by the number of cameras and this safety margin
 
@@ -12,5 +12,10 @@ def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:in
     max_delay = max(CAMERA_DEFAULT_FETCHING_DURATION_SECONDS, CAMERA_FETCH_DELAY_SAFETY_MARGIN*CAMERA_DEFAULT_FETCHING_DURATION_SECONDS * number_of_cameras)
     CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [CAMERA_DEFAULT_FETCHING_DURATION_SECONDS, max_delay]
 
-#Object Detection Module Preferences:
-POSE_DETECTION_VERBOSE = True
+#Detector Module Preferences:
+POSE_DETECTION_VERBOSE = False
+
+#Evaluation Module Preferences:
+DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.9 # If a frame is evaluated as useful, the camera's score is 1. If it is evaluated as not useful, the camera's usefulness score is 0. The usefulness score is updated by -> usefulness_score = usefulness_score * DISCOUNT_FACTOR_FOR_EVALUATION_SCORE + evaluation_score
+EVALUATION_VERBOSE = False
+
