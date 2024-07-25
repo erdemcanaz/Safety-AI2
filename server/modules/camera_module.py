@@ -4,7 +4,7 @@ from typing import Dict, List
 import cv2
 import numpy as np
 
-import modules.server_preferences as server_preferences
+import server_preferences
 
 class CameraStreamFetcher:
     def __init__(self, **kwargs )->None:         
@@ -179,6 +179,15 @@ class StreamManager:
 
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
+
+    def return_yolo_models_to_use(self)->List[str]:
+        yolo_model_to_use = []
+        for camera in self.cameras:
+            for rule in camera.active_rules:
+                print(rule)
+                yolo_model_to_use.append(rule["yolo_model_to_use"])
+
+        return yolo_model_to_use
 
 # Test
 if __name__ == "__main__":
