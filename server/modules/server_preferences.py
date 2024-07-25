@@ -16,6 +16,8 @@ def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:in
 POSE_DETECTION_VERBOSE = False
 
 #Evaluation Module Preferences:
-DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.9 # If a frame is evaluated as useful, the camera's score is 1. If it is evaluated as not useful, the camera's usefulness score is 0. The usefulness score is updated by -> usefulness_score = usefulness_score * DISCOUNT_FACTOR_FOR_EVALUATION_SCORE + evaluation_score
+DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.90 # If a frame is evaluated as useful, the camera's score is 1. If it is evaluated as not useful, the camera's usefulness score is 0. The usefulness score is updated by -> usefulness_score = usefulness_score * DISCOUNT_FACTOR_FOR_EVALUATION_SCORE + evaluation_score
+MINIMUM_EVALUATION_PROBABILITY = 0.05 # The minimum probability that a camera will be evaluated. If the camera's calculated evaluation probability is less than this value, it is set to this value
+GEOMETRIC_R = 0.9 # The evaluation probability of a camera is calculated as a geometric series. The first term is 1, and the common ratio is this value. The probability is calculated as 1 + 1*EVALUATION_PROBABILITY_GEOMETRIC_SERIES_MULTIPLIER + 1*EVALUATION_PROBABILITY_GEOMETRIC_SERIES_MULTIPLIER^2 + ...
 EVALUATION_VERBOSE = False
 
