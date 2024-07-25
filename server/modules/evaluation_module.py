@@ -52,8 +52,13 @@ class EvaluationManager():
 
     def test_print_camera_usefulness_and_evaluation_probability(self):
         print("")
-        for camera_uuid, usefulness in self.camera_usefulness.items():
-            print(f"Camera UUID: {camera_uuid}, Usefulness Score: {usefulness['usefulness_score']:<3.2f}, Evaluation Probability: {self.camera_evaluation_probabilities[camera_uuid]:<2.2f}")
+        sorted_cameras = sorted(
+            self.camera_usefulness.items(), 
+            key=lambda item: item[1]['usefulness_score'], 
+            reverse=True
+        )
+        for camera_uuid, usefulness in sorted_cameras:
+            print(f"Camera UUID: {camera_uuid:<10}, Usefulness Score: {usefulness['usefulness_score']:<6.2f}, Evaluation Probability: {self.camera_evaluation_probabilities[camera_uuid]:<2}")
 
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
         #Update the camera's usefulness score
