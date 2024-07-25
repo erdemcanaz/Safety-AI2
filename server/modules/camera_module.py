@@ -42,33 +42,39 @@ class CameraStreamFetcher:
         self.soon_camera_fetching_delay = new_delay
 
     def __IP_camera_frame_fetching_thread(self):
-        url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
-        cap = cv2.VideoCapture(url)
+        try:
+            url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
+            cap = cv2.VideoCapture(url)
 
-        buffer_size_in_frames = 1
-        cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
+            buffer_size_in_frames = 1
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
 
-        while self.is_fetching_frames:   
-            if not cap.grab():# Use grab() to capture the frame but not decode it yet for better performance
-                continue 
-            
-            if time.time() - self.last_frame_info["timestamp"] > self.camera_fetching_delay: 
-                ret, frame = cap.retrieve()
-                if ret:
-                    self.last_frame_info = {}
-                    self.last_frame_info["frame"] = frame
-                    self.last_frame_info["camera_uuid"] = self.camera_uuid
-                    self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
-                    self.last_frame_info["frame_timestamp"] = time.time()
-                    self.last_frame_info["is_checked_for_active_rules"] = False
-                    self.number_of_frames_fetched += 1
-                    self.camera_fetching_delay += random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
-                    if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} at {time.time()}')
-                else:
-                    if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
-                    continue
+            while self.is_fetching_frames:   
+                if not cap.grab():# Use grab() to capture the frame but not decode it yet for better performance
+                    continue 
+                
 
-        cap.release()
+                if self.last_frame_info == None or (time.time() - self.last_frame_info["frame_timestamp"] > self.camera_fetching_delay): #NOTE: If frame is none,  
+                    ret, frame = cap.retrieve()
+                    if ret:
+                        self.last_frame_info = {}
+                        self.last_frame_info["frame"] = frame
+                        self.last_frame_info["camera_uuid"] = self.camera_uuid
+                        self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
+                        self.last_frame_info["frame_timestamp"] = time.time()
+                        self.last_frame_info["is_checked_for_active_rules"] = False
+                        self.number_of_frames_fetched += 1
+                        self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
+                        if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} at {time.time()}')
+                    else:
+                        if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
+                        continue
+
+            cap.release()           
+        except Exception as e:
+            if server_preferences.CAMERA_VERBOSE: print(f'Error in fetching frames from {self.camera_ip_address}: {e}')
+
+        self.is_fetching_frames = False
 
 class StreamManager:
     def __init__(self) -> None:        
@@ -93,16 +99,17 @@ class StreamManager:
     def start_cameras_by_uuid(self, camera_uuids:List[str] = []):    
         # Start fetching frames from the cameras. If camera_uuids is empty, start all cameras, otherwise start only the cameras with the specified uuids    
         # If camera is not alive, skip it. Alive means that the camera is reachable and the stream is available
-        self.__optimize_camera_fetching_delays()
 
         for camera in self.cameras:  
             if not camera.is_alive:
                 continue
 
-            if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
+            if (camera.camera_uuid in camera_uuids or len(camera_uuids) == 0) and not camera.is_fetching_frames:              
                 camera.start_fetching_frames()
 
-    def __optimize_camera_fetching_delays(self):        
+        self.optimize_camera_fetching_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
+
+    def optimize_camera_fetching_delays(self):        
         number_of_fetching_cameras = 0
         for camera in self.cameras:
             if camera.is_fetching_frames and camera.is_alive:
@@ -115,6 +122,8 @@ class StreamManager:
         for camera in self.cameras:
             if camera.camera_uuid in camera_uuids or len(camera_uuids) == 0:
                 camera.stop_fetching_frames()        
+
+        self.optimize_camera_fetching_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
 
     def test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
@@ -155,8 +164,10 @@ class StreamManager:
 if __name__ == "__main__":
 
     stream_manager = StreamManager()
-    stream_manager.start_cameras_by_uuid()
+    stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
 
     while True:
+        stream_manager.optimize_camera_fetching_delays()        
         stream_manager.test_show_all_frames(window_size=(1280, 720))
+
 
