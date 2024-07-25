@@ -1,10 +1,10 @@
-import random, threading, time, json, math
+import random, threading, time, json, math, uuid
 from pathlib import Path
 from typing import Dict, List
 import cv2
-import server_preferences
 import numpy as np
-import uuid
+
+import modules.server_preferences as server_preferences
 
 class CameraStreamFetcher:
     def __init__(self, **kwargs )->None:         
@@ -17,7 +17,7 @@ class CameraStreamFetcher:
 
         self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
         self.is_fetching_frames = False
-        self.last_frame_info = None # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, is_checked_for_active_rules
+        self.last_frame_info = None # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, active_rules, is_evaluated
         self.number_of_frames_fetched = 0
         self.camera_score = 0 #A positive real number that represent how 'useful' the camera is. The higher the score, the more source is allocated to the camera by the StreamManager
            
@@ -41,6 +41,10 @@ class CameraStreamFetcher:
             raise ValueError(f"Camera {self.camera_ip_address} is set to fetch frames without delay. Cannot change the fetching delay")
         self.soon_camera_fetching_delay = new_delay
 
+    def set_last_frame_as_evaluated_if_frame_uuid_matches(self, frame_uuids:List[str]=[]):
+        if self.last_frame_info is not None and self.last_frame_info["frame_uuid"] in frame_uuids:
+            self.last_frame_info["is_evaluated"] = True
+
     def __IP_camera_frame_fetching_thread(self):
         try:
             url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
@@ -62,7 +66,8 @@ class CameraStreamFetcher:
                         self.last_frame_info["camera_uuid"] = self.camera_uuid
                         self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
                         self.last_frame_info["frame_timestamp"] = time.time()
-                        self.last_frame_info["is_checked_for_active_rules"] = False
+                        self.last_frame_info["active_rules"] = self.active_rules
+                        self.last_frame_info["is_evaluated"] = False
                         self.number_of_frames_fetched += 1
                         self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
                         if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} at {time.time()}')
@@ -83,13 +88,15 @@ class StreamManager:
         with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
             self.CAMERA_CONFIGS= json.load(f)["cameras"]
         
-        # Create Camera Objects whether they are alive or not
+        # Create camera objects for alive cameras
         self.cameras = []
         for camera_config in self.CAMERA_CONFIGS:
+            if not camera_config["is_alive"]: continue
+
             camera = CameraStreamFetcher(**camera_config)
             self.cameras.append(camera)
 
-        # Check for IP collisions (no matter whether the cameras are alive or not)
+        # Check for IP collisions (Consider only the initialized cameras)
         assigned_ips = []
         for camera in self.cameras:
             if camera.camera_ip_address in assigned_ips:
@@ -125,6 +132,19 @@ class StreamManager:
 
         self.optimize_camera_fetching_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
 
+    def return_all_not_evaluated_frames_info(self) -> List[Dict]:
+        not_evaluated_frames_info = []
+        for camera in self.cameras:
+            if camera.get_last_frame_info() is not None and not camera.get_last_frame_info()["is_evaluated"]:
+                not_evaluated_frames_info.append(camera.get_last_frame_info())
+                camera.set_last_frame_as_evaluated_if_frame_uuid_matches()
+
+        return not_evaluated_frames_info
+
+    def update_frame_evaluations(self, evaluated_frame_uuids:List[str]):
+        for camera in self.cameras:
+            camera.set_last_frame_as_evaluated_if_frame_uuid_matches(evaluated_frame_uuids)
+    
     def test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     

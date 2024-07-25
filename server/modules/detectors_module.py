@@ -1,12 +1,12 @@
+#Built-in imports
 import time,pprint,copy, uuid, pprint, math, time, os
 from typing import List, Dict, Tuple #for python3.8 compatibility
-
-from pynvml import * # NVIDIA Management Library
+#3rd party imports
 from ultralytics import YOLO
 import numpy as np
 import cv2
-
-import server_preferences
+#Local imports
+import modules.server_preferences as server_preferences
 
 class PoseDetector(): 
     #keypoints detected by the model in the detection order
@@ -112,7 +112,7 @@ class PoseDetector():
             self.recent_prediction_results.append(prediction_dict_template)
 
         return self.recent_prediction_results
-    
+
 
 # Test
 
@@ -125,15 +125,6 @@ if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-    # Read frame from webcam
-
-    nvmlInit()
-    h = nvmlDeviceGetHandleByIndex(0)
-    info = nvmlDeviceGetMemoryInfo(h)
-    print(f'\ntotal    : {info.total // 1024 ** 2} MB')
-    print(f'free     : {info.free // 1024**2} MB')
-    print(f'used     : {info.used// 1024**2} MB')
     
     while True:
         ret, frame = cap.read()
