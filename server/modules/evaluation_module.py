@@ -61,9 +61,9 @@ class EvaluationManager():
             self.camera_usefulness[camera_uuid] = {"usefulness_score":0}
         
         if was_usefull:
-            self.camera_usefulness[camera_uuid]["usefulness_score"] = 1 + self.camera_usefulness[camera_uuid]["usefulness_score"]*server_preferences.DISCOUNT_FACTOR_FOR_EVALUATION_SCORE
+            self.camera_usefulness[camera_uuid]["usefulness_score"] = 1 + self.camera_usefulness[camera_uuid]["usefulness_score"]*server_preferences.USEFUL_DISCOUNT_FACTOR_FOR_EVALUATION_SCORE
         else:
-            self.camera_usefulness[camera_uuid]["usefulness_score"] = self.camera_usefulness[camera_uuid]["usefulness_score"]*server_preferences.DISCOUNT_FACTOR_FOR_EVALUATION_SCORE
+            self.camera_usefulness[camera_uuid]["usefulness_score"] = self.camera_usefulness[camera_uuid]["usefulness_score"]*server_preferences.NOT_USEFULL_DISCOUNT_FACTOR_FOR_EVALUATION_SCORE
 
         if self.camera_usefulness[camera_uuid]["usefulness_score"] < server_preferences.MINIMUM_USEFULNESS_SCORE_TO_CONSIDER:
             self.camera_usefulness[camera_uuid]["usefulness_score"] = 0
