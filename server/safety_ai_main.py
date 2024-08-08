@@ -12,7 +12,8 @@ import evaluation_module
 stream_manager = camera_module.StreamManager()
 stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
 
-evaluation_manager = evaluation_module.EvaluationManager(yolo_models_to_be_used = stream_manager.return_yolo_models_to_use())
+#evaluation_manager = evaluation_module.EvaluationManager(yolo_models_to_be_used = stream_manager.return_yolo_models_to_use())
+evaluation_manager = evaluation_module.EvaluationManager(yolo_models_to_be_used = ["yolov8n-pose"])
 
 while True:
     stream_manager.optimize_camera_fetching_delays()        
