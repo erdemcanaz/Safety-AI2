@@ -141,7 +141,6 @@ if __name__ == "__main__":
             "frame_timestamp":time.time()
         }        
         detections = pose_detector.predict_frame_and_return_detections(frame_info, bbox_confidence=0.75)
-        pprint.pprint(detections)
 
         for detection in detections:
             frame = copy.deepcopy(frame_info["frame"])
