@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Dict, List
 import jwt
 import time
-import json, os
+import json, os, platform
 from pathlib import Path
 import secrets
 import encryption_module
@@ -16,7 +16,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Load user database
 API_MODULE_PATH = Path(__file__).resolve()
-USER_DATABASE_JSON_PATH = API_MODULE_PATH.parent.parent / "configs" / "static_database.json"
+
+is_linux = platform.system() == "Linux"
+if is_linux:
+    USER_DATABASE_JSON_PATH = API_MODULE_PATH.parent.parent.parent.parent / "safety_AI_volume" / "static_database.json"
+else:
+    USER_DATABASE_JSON_PATH = API_MODULE_PATH.parent.parent / "configs" / "static_database.json"
 with open(USER_DATABASE_JSON_PATH, "r") as f:
     USER_DB: Dict[str, Dict[str, str]] = json.load(f)["user_db"]
 

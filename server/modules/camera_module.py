@@ -1,4 +1,4 @@
-import random, threading, time, json, math, uuid
+import random, threading, time, json, math, uuid, platform
 from pathlib import Path
 from typing import Dict, List
 import cv2
@@ -84,7 +84,12 @@ class CameraStreamFetcher:
 class StreamManager:
     def __init__(self) -> None:        
         CAMERA_MODULE_PATH = Path(__file__).resolve()
-        CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent / "configs" / "camera_configs.json"
+
+        is_linux = platform.system() == "Linux"
+        if is_linux:
+            CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent.parent.parent / "safety_AI_volume" / "static_database.json"
+        else:
+            CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent / "configs" / "camera_configs.json"
         with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
             self.CAMERA_CONFIGS= json.load(f)["cameras"]
         
