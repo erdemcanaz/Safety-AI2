@@ -90,6 +90,7 @@ class StreamManager:
             CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent.parent.parent / "safety_AI_volume" / "static_database.json"
         else:
             CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent / "configs" / "camera_configs.json"
+        print(CAMERA_CONFIGS_JSON_PATH)
         with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
             self.CAMERA_CONFIGS= json.load(f)["cameras"]
         
