@@ -92,6 +92,10 @@ class StreamManager:
             CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent / "configs" / "camera_configs.json"
         print(CAMERA_CONFIGS_JSON_PATH)
         with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
+            self.CAMERA_CONFIGS= json.load(f)
+
+            print(self.CAMERA_CONFIGS)
+        
             self.CAMERA_CONFIGS= json.load(f)["cameras"]
         
         # Create camera objects for alive cameras
