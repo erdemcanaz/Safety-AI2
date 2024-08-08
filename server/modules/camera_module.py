@@ -87,17 +87,13 @@ class StreamManager:
 
         is_linux = platform.system() == "Linux"
         if is_linux:
-            CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent.parent.parent / "safety_AI_volume" / "static_database.json"
+            CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent.parent.parent / "safety_AI_volume" / "camera_configs.json"
         else:
             CAMERA_CONFIGS_JSON_PATH = CAMERA_MODULE_PATH.parent.parent / "configs" / "camera_configs.json"
-        print(CAMERA_CONFIGS_JSON_PATH)
-        with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
-            self.CAMERA_CONFIGS= json.load(f)
 
-            print(self.CAMERA_CONFIGS)
-        
+        with open(CAMERA_CONFIGS_JSON_PATH, "r") as f:
             self.CAMERA_CONFIGS= json.load(f)["cameras"]
-        
+       
         # Create camera objects for alive cameras
         self.cameras = []
         for camera_config in self.CAMERA_CONFIGS:
