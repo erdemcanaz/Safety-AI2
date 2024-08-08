@@ -42,7 +42,6 @@ class CameraStreamFetcher:
         self.soon_camera_fetching_delay = new_delay
 
     def set_last_frame_as_evaluated_if_frame_uuid_matches(self, frame_uuids:List[str]=[]):
-        pprint.pprint(self.last_frame_info)
         if self.last_frame_info is not None and self.last_frame_info["frame_uuid"] in frame_uuids:
             self.last_frame_info["is_evaluated"] = True
 
