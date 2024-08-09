@@ -62,6 +62,10 @@ class LoginPage():
                     program_state[0] = 3
                     program_state[1] = 0
                     program_state[2] = 0   
+                elif status_code == 200: # user authenticated, direct to which app page
+                    program_state[0] = 4
+                    program_state[1] = 0
+                    program_state[2] = 0
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
