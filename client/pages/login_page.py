@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 
 import requests
+from typing import Dict, List
 
 class LoginPage():
 
@@ -29,7 +30,7 @@ class LoginPage():
             return True
         return False 
 
-    def do_page(self, program_state:list[int,int,int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
+    def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
         # Mouse input
         if mouse_input.get_last_leftclick_position() is not None:
