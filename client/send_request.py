@@ -15,8 +15,8 @@ def get_dummy_data(url:str = None, acces_token:str = None):
 
 if __name__ == '__main__':
 
-    GET_TOKEN_ENDPOINT = f"http:/{PARAM_SERVER_IP}/get_token"
-    GET_ALLOWED_TOS_ENDPOINT = f"http:/{PARAM_SERVER_IP}/get_allowed_tos"
+    GET_TOKEN_ENDPOINT = f"http://{PARAM_SERVER_IP}/get_token"
+    GET_ALLOWED_TOS_ENDPOINT = f"http://{PARAM_SERVER_IP}/get_allowed_tos"
     user_datas = [["erdem.canaz", "erdem123"], ["akif.tufan.perciner", "akif123"], ["ui.node", "ui123"], ["not_existing","123"]]
 
     for user_data in user_datas:
