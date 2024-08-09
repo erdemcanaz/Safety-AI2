@@ -7,6 +7,9 @@ IMAGE_PATHS = {
     "server_failure_page_template": "src/templates/server_failure_page_template.png",
     "user_not_found_page_template": "src/templates/user_not_found_page_template.png",
     "which_app_page_template": "src/templates/which_app_page_template.png",
+
+    "anil_right_looking": "src/icons/anil_right_looking.png",
+    "anil_left_looking": "src/icons/anil_left_looking.png",
 }
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):

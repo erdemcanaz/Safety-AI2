@@ -90,9 +90,10 @@ class LoginPage():
         
         if self.show_password:
             cv2.putText(ui_frame, active_user.get_password(), (self.CONSTANTS["password_text_bleft"][0], self.CONSTANTS["password_text_bleft"][1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (170,95,0), 2, cv2.LINE_AA)
+            picasso.draw_image_on_frame(ui_frame, image_name="anil_right_looking", x=self.CONSTANTS["show_password_bbox"][0], y=self.CONSTANTS["show_password_bbox"][1], width=100, height=100, maintain_aspect_ratio=True)
         else:
             cv2.putText(ui_frame, "*"*len(active_user.get_password()), (self.CONSTANTS["password_text_bleft"][0], self.CONSTANTS["password_text_bleft"][1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (170,95,0), 2, cv2.LINE_AA)
-
+            picasso.draw_image_on_frame(ui_frame, image_name="anil_left_looking", x=self.CONSTANTS["show_password_bbox"][0], y=self.CONSTANTS["show_password_bbox"][1], width=100, height=100, maintain_aspect_ratio=True)
         cv2.imshow(cv2_window_name, ui_frame)
 
         
