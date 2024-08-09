@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Dict
-import json, hashlib
+import json, hashlib, platform
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
@@ -10,7 +10,13 @@ import base64
 
 # Load user database
 ENCRPYTION_MODULE_PATH = Path(__file__).resolve()
-USER_DATABASE_JSON_PATH = ENCRPYTION_MODULE_PATH.parent.parent / "configs" / "static_database.json"
+
+is_linux = platform.system() == "Linux"
+if is_linux:
+    USER_DATABASE_JSON_PATH = ENCRPYTION_MODULE_PATH.parent.parent.parent.parent / "safety_AI_volume" / "static_database.json"
+else:
+    USER_DATABASE_JSON_PATH = ENCRPYTION_MODULE_PATH.parent.parent / "configs" / "static_database.json"
+
 with open(USER_DATABASE_JSON_PATH, "r") as f:
     SYMMETRIC_ENCRYPTION_KEY = json.load(f)["symmetric_encryption_key"]
 

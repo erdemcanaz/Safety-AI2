@@ -1,6 +1,6 @@
 import requests
 
-PARAM_SERVER_URL = "http://127.0.0.1:8000"
+PARAM_SERVER_URL = input("Enter the server IP address: ")
 
 def get_acces_token(url:str = None, username:str = None, password:str = None):
     payload = {'username': username, 'password': password}
