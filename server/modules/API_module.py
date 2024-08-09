@@ -117,4 +117,5 @@ async def return_test_text(current_user: User = Depends(get_current_user)):
 #Run the application
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app)
+    server_ip_address = input("Enter the server IP address: ")
+    uvicorn.run(app, host=server_ip_address, port=8000)

@@ -21,4 +21,6 @@ while True:
 
     evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
     stream_manager.update_frame_evaluations(evaluated_frame_uuids = evaluated_uuids)
+
+    
     
