@@ -4,6 +4,8 @@ import numpy as np
 IMAGE_PATHS = {
     "press_key_page_template": "src/templates/press_key_page_template.png",
     "login_page_template": "src/templates/login_page_template.png",
+    "server_failure_page_template": "src/templates/server_failure_page_template.png",
+    "user_not_found_page_template": "src/templates/user_not_found_page_template.png",
 }
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):

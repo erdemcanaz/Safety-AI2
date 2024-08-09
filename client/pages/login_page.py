@@ -43,7 +43,25 @@ class LoginPage():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_password_bbox"]):
                 self.show_password = not self.show_password
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["login"]):
-                pass #TODO: send request to server for login
+                status_code = None
+                try:
+                    is_authenticated, status_code = active_user.get_acces_token()
+                    print(f"User {active_user.get_username()} is authenticated -> {is_authenticated} -> {status_code}")
+                except Exception as e:
+                    print(f"Error: {e}")       
+                
+                print(f"Status code: {status_code}")
+                if status_code is None: # server is not reachable
+                    program_state[0] = 2
+                    program_state[1] = 0
+                    program_state[2] = 0    
+                elif status_code != 200: # user not found
+                    active_user.set_username(new_username = "")
+                    active_user.set_password(new_password = "")   
+                
+                    program_state[0] = 3
+                    program_state[1] = 0
+                    program_state[2] = 0   
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -51,7 +69,6 @@ class LoginPage():
             program_state[0] = 0
             program_state[1] = 0
             program_state[2] = 0
-            print("ESC pressed")
         elif pressed_key == 8: #BACKSPACE
             if self.secondary_mode == 1 and len(active_user.get_username())>0: #username
                 active_user.set_username(new_username = active_user.get_username()[:-1])

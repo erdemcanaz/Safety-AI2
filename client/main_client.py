@@ -1,5 +1,5 @@
 # Built-in imports
-import pprint, time, sys, os
+import pprint, time, sys, os, requests
 import numpy as np
 import cv2
 
@@ -7,15 +7,17 @@ import cv2
 project_directory = os.path.dirname(os.path.abspath(__file__))
 modules_directory = os.path.join(project_directory, 'modules')
 sys.path.append(modules_directory) # Add the modules directory to the system path so that imports work
-from pages import login_page, popups
+from pages import login_page, server_failure_page, user_not_found_page
 from modules import picasso
 
-class LoggedInUser():
-    def __init__(self):
+class User():
+    def __init__(self, server_ip_address:str=None):
         self.USERNAME = None
         self.PASSWORD = None
         self.JWT_TOKEN = None
-        self.IS_AUTHENTICATED = False     
+        self.TOKEN_STATUS_CODE = None
+        self.IS_AUTHENTICATED = False  
+        self.SERVER_IP_ADDRESS = server_ip_address   
 
     def get_username(self)->str:
         return self.USERNAME if self.USERNAME is not None else ""
@@ -28,6 +30,18 @@ class LoggedInUser():
     
     def set_password(self, new_password:str=None):
         self.PASSWORD = new_password
+
+    def get_acces_token(self) -> bool:
+        payload = {'username': self.USERNAME, 'password': self.PASSWORD}
+        response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_token", data=payload, timeout=1)
+        acces_token = response.json().get("access_token")
+
+        self.TOKEN_STATUS_CODE = response.status_code
+        if response.status_code == 200:
+            self.IS_AUTHENTICATED = True
+            self.JWT_TOKEN = acces_token
+
+        return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
 
 class MouseInput():
     def __init__(self):
@@ -53,7 +67,7 @@ class MouseInput():
         self.last_click_position = None
         
 # SETUP ================================================================================================================
-DYNAMIC_ACTIVE_USER = LoggedInUser()
+DYNAMIC_USER = User(server_ip_address = input("Enter the server IP address: "))
 DYNAMIC_MOUSE_INPUT = MouseInput()
 
 CV2_WINDOW_NAME = "Safety-AI Client"
@@ -86,10 +100,20 @@ while True:
             DYNAMIC_PROGRAM_STATE = [1,0,0] # Direct to login page
     elif DYNAMIC_PROGRAM_STATE[0] == 1: # LOGIN PAGE
         if not isinstance(DYNAMIC_PAGE_DEALER, login_page.LoginPage):
-            DYNAMIC_PAGE_DEALER = login_page.LoginPage()
-            
-        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_ACTIVE_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+            DYNAMIC_PAGE_DEALER = login_page.LoginPage()            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
     
+    elif DYNAMIC_PROGRAM_STATE[0] == 2: # SERVER FAILURE PAGE        
+        if not isinstance(DYNAMIC_PAGE_DEALER, server_failure_page.ServerFailurePage):
+            DYNAMIC_PAGE_DEALER = server_failure_page.ServerFailurePage()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+   
+    elif DYNAMIC_PROGRAM_STATE[0] == 3: # USER NOT FOUND PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, user_not_found_page.UserNotFound):
+            DYNAMIC_PAGE_DEALER = user_not_found_page.UserNotFound()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
 
 cv2.destroyAllWindows()
 
