@@ -12,7 +12,7 @@ class ISGApp():
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
         "isg_data_fetch_period_s": 5, # fetch data every 5 seconds     
         "six_data_change_period_s": 2.5, # change the data every 10 seconds
-
+        "gaussian_blur_kernel_size": 31, # odd number
         "main_image_bbox": (944, 84, 1854, 600),
         "image_bbox_0": (37, 145, 430, 368),
         "image_bbox_1": (475, 148, 868, 371),
@@ -107,7 +107,7 @@ class ISGApp():
                 roi = image[y1:y2, x1:x2]
                 
                 # Apply Gaussian blur to the ROI
-                blurred_roi = cv2.GaussianBlur(roi, (30, 30), 0)
+                blurred_roi = cv2.GaussianBlur(roi, (self.CONSTANTS["gaussian_blur_kernel_size"], self.CONSTANTS["gaussian_blur_kernel_size"]), 0)
                 
                 # Replace the original ROI with the blurred ROI
                 image[y1:y2, x1:x2] = blurred_roi
