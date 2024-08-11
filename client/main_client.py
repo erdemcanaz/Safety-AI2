@@ -77,7 +77,7 @@ class User():
         fetched_list = []
         try:
             response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_isg_ui_data", headers=headers, timeout=1)    
-            fetched_list = response.json()["isg_ui_data"]
+            fetched_list = response.json()["list_"]
             return fetched_list, response.status_code
         except:
             return [], 404       
