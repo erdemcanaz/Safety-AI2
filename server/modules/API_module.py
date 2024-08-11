@@ -118,7 +118,7 @@ async def return_test_text(current_user: User = Depends(get_current_user)):
 
 @app.get("/get_isg_ui_data", response_model=ListResponse)
 async def return_test_text(current_user: User = Depends(get_current_user)):
-    return {"list_":current_user.allowed_tos}
+    return {"list_":["erdem"]}
 
 
 # @app.get("/get_isg_ui_data", response_model=ListResponse)
