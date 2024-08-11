@@ -10,6 +10,8 @@ IMAGE_PATHS = {
 
     "anil_right_looking": "src/icons/anil_right_looking.png",
     "anil_left_looking": "src/icons/anil_left_looking.png",
+    "app_bar_dark_blue": "src/icons/app_bar_dark_blue.png",
+    "app_bar_light_blue": "src/icons/app_bar_light_blue.png",
 }
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):
