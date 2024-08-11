@@ -55,6 +55,7 @@ class User():
             self.IS_AUTHENTICATED = True
             self.JWT_TOKEN = acces_token
             self.DECODED_TOKEN = jwt.decode(self.JWT_TOKEN, options={"verify_signature": False})
+            print(f"Token: {self.DECODED_TOKEN}")
 
         return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
     
