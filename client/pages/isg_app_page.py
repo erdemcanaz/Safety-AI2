@@ -38,10 +38,29 @@ class ISGApp():
         self.last_time_isg_data_fetch = 0
         self.fetched_data:list = []
 
-        self.last_time_six_data_to_render_update = 0
-        self.last_six_data_to_render = None    
+        self.last_time_six_data_index_to_render_update = 0
+        self.data_index_to_render = []    
 
-    def generate_frame_using_data(self, data:Dict=None):
+    def __update_six_data_index_to_render(self):        
+        violation_data_indexes = []
+        no_violation_data_indexes = []
+        for data_index, data in enumerate(self.fetched_data):
+            is_violation = False
+            for person in data.get("person_normalized_bboxes"):
+                if not person[4]:
+                    is_violation = True
+                    break
+            if is_violation:
+                violation_data_indexes.append(data_index)
+            else:
+                no_violation_data_indexes.append(data_index)
+
+        if len(violation_data_indexes) >= 6:
+            self.data_index_to_render = random.sample(violation_data_indexes,6)
+        else:
+            self.data_index_to_render = violation_data_indexes + random.sample(no_violation_data_indexes, 6-len(violation_data_indexes))
+
+    def __generate_frame_using_data(self, data:Dict=None):
         camera_uuid = data.get("camera_uuid")
         camera_hr_name = data.get("camera_hr_name")
         date_time = data.get("date_time")        
@@ -72,6 +91,10 @@ class ISGApp():
                 self.fetched_data = fetched_list
             print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | ISG data fetched with status code: {status_code}")
        
+        if (time.time() - self.last_time_six_data_index_to_render_update) > self.CONSTANTS["six_data_change_period_s"]:
+            self.last_time_six_data_index_to_render_update = time.time()
+            self.__update_six_data_index_to_render()
+
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
         if pressed_key == 27: #ESC
@@ -97,12 +120,10 @@ class ISGApp():
         cv2.rectangle(ui_frame, (314, 95), (314+int(560*percentage), 110), (169, 96, 0), -1)
 
         # Draw fetched data      
-        for i, data in enumerate(self.fetched_data):
-            if i == 6: break
-
+        for i, data_index in enumerate(self.data_index_to_render):         
             x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
             width, height = x2-x1, y2-y1
-            image, is_violation, camera_hr_name = self.generate_frame_using_data(data)
+            image, is_violation, camera_hr_name = self.__generate_frame_using_data(self.fetched_data[data_index])
             picasso.draw_frame_on_frame(ui_frame, image, x1, y1, width, height, maintain_aspect_ratio=False)
 
             color = (0,0,169) if is_violation else (169,96,0)
