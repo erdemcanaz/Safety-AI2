@@ -93,6 +93,7 @@ class ISGApp():
                 pass
         
         region_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
+        print(f"camera_name: {camera_name} | camera_uuid: {camera_uuid[:8]} | datetime: {datetime_str} | violation_detected: {is_violation_detected}")
         return image, region_name, is_violation_detected
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
