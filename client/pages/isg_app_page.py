@@ -10,8 +10,10 @@ class ISGApp():
 
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
-        "data_fetch_period_s": 5, # fetch data every 5 seconds       
+        "data_fetch_period_s": 10, # fetch data every 5 seconds     
+        "six_data_change_period_s": 3, # change the data every 10 seconds
 
+        "main_image_bbox": (944, 84, 1854, 600),
         "image_bbox_0": (37, 145, 430, 368),
         "image_bbox_1": (475, 148, 868, 371),
         "image_bbox_2": (33, 444, 426, 666),
@@ -24,6 +26,9 @@ class ISGApp():
     def __init__(self):
         self.last_time_data_fetch = 0
         self.fetched_data:list = None
+
+        self.last_time_six_data_fetch = 0
+        self.last_six_data_to_render = None
         pass
 
     def __return_six_data_from_fetched_data(self) -> List[Dict]:
@@ -84,7 +89,8 @@ class ISGApp():
                     is_violation_detected = True
             else:
                 print(f"Skipping invalid ROI: ({x1}, {y1}, {x2}, {y2})")
-                return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
+        
+        return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
         return image, return_name, is_violation_detected
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
@@ -121,9 +127,12 @@ class ISGApp():
         cv2.putText(ui_frame, today_shift+today_date, (387, 76), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.rectangle(ui_frame, (314, 95), (314+int(560*percentage), 110), (169, 96, 0), -1)
 
-        six_data_to_render = self.__return_six_data_from_fetched_data() 
-        if six_data_to_render is not None:            
-            for i, data in enumerate(six_data_to_render):
+        if (time.time() - self.last_time_six_data_fetch) > self.CONSTANTS["six_data_change_period_s"]:
+            self.last_time_six_data_fetch = time.time()
+            self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
+            
+        if self.last_six_data_to_render is not None:            
+            for i, data in enumerate(self.last_six_data_to_render):
 
                 x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
                 width, height = x2-x1, y2-y1
@@ -132,7 +141,13 @@ class ISGApp():
                 picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
                 if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 cv2.putText(ui_frame, region_name, (x1+50, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
-            
+
+                if i == 0:
+                    picasso.draw_frame_on_frame(ui_frame, frame, *self.CONSTANTS["main_image_bbox"], maintain_aspect_ratio=False)
+                    if is_violation_detected: cv2.rectangle(ui_frame, (self.CONSTANTS["main_image_bbox"][0], self.CONSTANTS["main_image_bbox"][1]), (self.CONSTANTS["main_image_bbox"][2], self.CONSTANTS["main_image_bbox"][3]), (0, 0, 255), 2)
+                    cv2.putText(ui_frame, region_name, (self.CONSTANTS["main_image_bbox"][0]+50, self.CONSTANTS["main_image_bbox"][3]+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+
+
         cv2.imshow(cv2_window_name, ui_frame)
 
         
