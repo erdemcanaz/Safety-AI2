@@ -93,7 +93,7 @@ class ISGApp():
                 pass
         
         region_name = camera_name if camera_name else camera_uuid[:8]+"..."
-        print(f"camera_name: {camera_name} | camera_uuid: {camera_uuid[:8]} | datetime: {datetime_str} | violation_detected: {is_violation_detected}")
+        #print(f"camera_name: {camera_name} | camera_uuid: {camera_uuid[:8]} | datetime: {datetime_str} | violation_detected: {is_violation_detected}")
         return image, region_name, is_violation_detected
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
@@ -138,15 +138,14 @@ class ISGApp():
             self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
             
             for i, data in enumerate(self.last_six_data_to_render):
-                pprint.pprint(data)
                 is_violated = False
                 for person_normalized_bbox in data.get("person_normalized_bboxes"):
-
                     if person_normalized_bbox[4]:
                         is_violated = True
                         break
                 if is_violated:
                     print(f"{i} Violation detected in {data.get('camera_name')}")
+                    pprint.pprint(data)
 
         if self.last_six_data_to_render is not None:            
             for i, data in enumerate(self.last_six_data_to_render):
