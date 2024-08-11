@@ -105,7 +105,7 @@ class ISGApp():
                 picasso.draw_image_on_frame(image, image_name="red_hardhat_transp", x=x2+5, y=y1, width=30, height=30, maintain_aspect_ratio=False)
                 violation_types_found.append("hard_hat")
             elif violation_type == "restricted_area":
-                picasso.draw_image_on_frame(image, image_name="red_restricted_area_transp", x=x2+5, y=y1+50, width=30, height=30, maintain_aspect_ratio=False)
+                picasso.draw_image_on_frame(image, image_name="red_restricted_area_transp", x=x2+5, y=y1, width=30, height=30, maintain_aspect_ratio=False)
                 violation_types_found.append("restricted_area")
             cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
             is_violation = True if violation_type in ["hard_hat", "restricted_area"] else is_violation
