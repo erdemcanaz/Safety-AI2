@@ -16,6 +16,7 @@ from pages import (
     isg_app_page,
     kalite_app_page,
     guvenlik_app_page,
+    ozet_app_page,
 )
 from modules import picasso, text_transformer
 
@@ -109,7 +110,7 @@ def mouse_callback(event, x, y, flags, param):
     
 cv2.setMouseCallback(CV2_WINDOW_NAME, mouse_callback)
 
-DYNAMIC_PROGRAM_STATE = [8,0,0] #page no, page state, other if required -> login page: [0,0,0]
+DYNAMIC_PROGRAM_STATE = [9,0,0] #page no, page state, other if required -> login page: [0,0,0]
 DYNAMIC_PAGE_DEALER = None
 
 # MAIN LOOP ============================================================================================================
@@ -169,6 +170,11 @@ while True:
             
         DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
 
+    elif DYNAMIC_PROGRAM_STATE[0] == 9: # OZET APP PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, ozet_app_page.OzetApp):
+            DYNAMIC_PAGE_DEALER = ozet_app_page.OzetApp()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
 
 cv2.destroyAllWindows()
 

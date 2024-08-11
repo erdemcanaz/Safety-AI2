@@ -55,6 +55,10 @@ class WhichApp():
                         program_state[0] = 8
                         program_state[1] = 0
                         program_state[2] = 0
+                    elif app_name == "OZET_APP":
+                        program_state[0] = 9
+                        program_state[1] = 0
+                        program_state[2] = 0
                     break
            
 
