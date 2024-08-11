@@ -52,7 +52,7 @@ class ISGApp():
             if status_code == 200:
                 self.fetched_data = fetched_list
                 pprint.pprint(fetched_list)
-            print(f"{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | ISG data fetched with status code: {status_code}")
+            print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | ISG data fetched with status code: {status_code}")
        
         # Mouse input
 
@@ -82,7 +82,7 @@ class ISGApp():
         six_data_to_render = self.__return_six_data_from_fetched_data() 
         if six_data_to_render is not None:            
             print(" Rendering six data")   
-                              
+
         cv2.imshow(cv2_window_name, ui_frame)
 
         
