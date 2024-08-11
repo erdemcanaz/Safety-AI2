@@ -47,7 +47,7 @@ class ISGApp():
         for data_index, data in enumerate(self.fetched_data):
             is_violation = False
             for person in data.get("person_normalized_bboxes"):
-                if not person[4]:
+                if person[4] in ["hard_hat", "restricted_area"]:
                     is_violation = True
                     break
             if is_violation:
