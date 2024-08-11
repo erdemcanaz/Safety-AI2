@@ -126,6 +126,8 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print("allowed_tos: ", current_user.allowed_tos)
+    
     if "ISG_APP" not in current_user.allowed_tos:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
