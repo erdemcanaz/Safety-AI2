@@ -40,6 +40,7 @@ class User(BaseModel):
     username: str = None
     full_name: str = None
     email: str = None
+    job_title: str = None
     plain_password : str = None
     hashed_password : str = None
     allowed_tos : List[str] = None
@@ -103,7 +104,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(data={"sub": user.username, "job_title":"developer"})
+    access_token = create_access_token(data={"sub": user.username, "job_title":"developer", "allowed_tos":user.allowed_tos})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me/", response_model=User)
