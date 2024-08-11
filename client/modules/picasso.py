@@ -12,6 +12,8 @@ IMAGE_PATHS = {
     "kalite_app_page_template": "src/templates/kalite_app_page_template.png",
     "guvenlik_app_page_template": "src/templates/guvenlik_app_page_template.png",
     "ozet_app_page_template": "src/templates/ozet_app_page_template.png",
+    "ihlal_raporlari_app_page": "src/templates/ihlal_raporlari_app_page_template.png",
+    "kurallar_app_page_template": "src/templates/kurallar_app_page_template.png",
 
     "anil_right_looking": "src/icons/anil_right_looking.png",
     "anil_left_looking": "src/icons/anil_left_looking.png",
