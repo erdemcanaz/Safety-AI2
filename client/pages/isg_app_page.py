@@ -21,6 +21,12 @@ class ISGApp():
         "image_bbox_4": (35, 740, 428, 962),
         "image_bbox_5": (475, 740, 868, 962),
 
+
+        "person_count": (1132,788),
+        "frame_count": (1600,788),
+        "hard_hat_count": (1132, 945),
+        "restricted_area_count": (1600,945)
+
     }
 
 # dummy_dict = {
@@ -41,6 +47,14 @@ class ISGApp():
         self.last_time_six_data_index_to_render_update = 0
         self.data_index_to_render = []    
 
+    def __format_count_to_hr(self, number:int):
+        if number < 1000:
+            return str(number)
+        elif number < 1000000:
+            return f"{number/1000:.1f}K"
+        else:
+            return f"{number//1000000:.2f}M"
+        
     def __update_six_data_index_to_render(self):        
         violation_data_indexes = []
         no_violation_but_person_data_indexes = []
@@ -147,7 +161,18 @@ class ISGApp():
                 cv2.putText(ui_frame, camera_hr_name, (x1+10, y2+30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
                 if is_violation:
                     cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 5)
-    
+
+                color = (169,96,0)
+                people_analyzed = self.__format_count_to_hr(self.fetched_data[data_index].get("people_analyzed"))
+                frame_analyzed = self.__format_count_to_hr(self.fetched_data[data_index].get("frame_analyzed"))
+                hard_hat_violation_counts = self.fetched_data[data_index].get("hard_hat_violation_counts")
+                restricted_area_violation_counts = self.fetched_data[data_index].get("restricted_area_violation_counts")
+
+                cv2.putText(ui_frame, f"{people_analyzed}", self.CONSTANTS["person_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{frame_analyzed}", self.CONSTANTS["frame_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"%{100*hard_hat_violation_counts[0]/(hard_hat_violation_counts[0]+hard_hat_violation_counts[1]):.1f}", self.CONSTANTS["hard_hat_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{100*restricted_area_violation_counts[0]/(restricted_area_violation_counts[0]+restricted_area_violation_counts[1]):.1f}", self.CONSTANTS["restricted_area_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                            
         cv2.imshow(cv2_window_name, ui_frame)
 
         
