@@ -87,31 +87,7 @@ class LoginPage():
             if self.secondary_mode == 1:
                 active_user.set_username(new_username = active_user.get_username() + chr(pressed_key))
             elif self.secondary_mode == 2:
-                active_user.set_password(new_password = active_user.get_password() + chr(pressed_key))    
-        elif pressed_key == 10: #ENTER
-            status_code = None
-            try:
-                is_authenticated, status_code = active_user.get_acces_token()
-                print(f"User {active_user.get_username()} is authenticated -> {is_authenticated} -> {status_code}")
-            except Exception as e:
-                print(f"Error: {e}")       
-            
-            print(f"Status code: {status_code}")
-            if status_code is None: # server is not reachable
-                program_state[0] = 2
-                program_state[1] = 0
-                program_state[2] = 0    
-            elif status_code != 200: # user not found
-                active_user.set_username(new_username = "")
-                active_user.set_password(new_password = "")   
-            
-                program_state[0] = 3
-                program_state[1] = 0
-                program_state[2] = 0   
-            elif status_code == 200: # user authenticated, direct to which app page
-                program_state[0] = 4
-                program_state[1] = 0
-                program_state[2] = 0         
+                active_user.set_password(new_password = active_user.get_password() + chr(pressed_key))         
 
         # Draw UI
         picasso.draw_image_on_frame(ui_frame, image_name="login_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
