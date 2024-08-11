@@ -102,10 +102,10 @@ class ISGApp():
             x1, y1, x2, y2 = int(x1*image.shape[1]), int(y1*image.shape[0]), int(x2*image.shape[1]), int(y2*image.shape[0])
             color = (0,0,169) if violation_type in ["hard_hat", "restricted_area"] else (169,96,0)
             if violation_type == "hard_hat":
-                picasso.draw_image_on_frame(image, image_name="red_hardhat", x=x2+5, y=y1, width=50, height=50, maintain_aspect_ratio=False)
+                picasso.draw_image_on_frame(image, image_name="red_hardhat", x=x2+5, y=y1, width=30, height=30, maintain_aspect_ratio=False)
                 violation_types_found.append("hard_hat")
             elif violation_type == "restricted_area":
-                picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=x2+5, y=y1+50, width=50, height=50, maintain_aspect_ratio=False)
+                picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=x2+5, y=y1+50, width=30, height=30, maintain_aspect_ratio=False)
                 violation_types_found.append("restricted_area")
             cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
             is_violation = True if violation_type in ["hard_hat", "restricted_area"] else is_violation
@@ -116,7 +116,7 @@ class ISGApp():
         if "hard_hat" in violation_types_found:
             picasso.draw_image_on_frame(image, image_name="red_hardhat", x=image.shape[1]-50, y=10, width=50, height=50, maintain_aspect_ratio=False)
         if "restricted_area" in violation_types_found:
-            picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=image.shape[1]-50*len(violation_types_found), y=60, width=50, height=50, maintain_aspect_ratio=False)
+            picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=image.shape[1]-50*len(violation_types_found), y=10, width=50, height=50, maintain_aspect_ratio=False)
 
         camera_hr_name = camera_hr_name if camera_hr_name else camera_uuid[:8]+"..."
         return image, is_violation, camera_hr_name
