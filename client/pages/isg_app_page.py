@@ -51,7 +51,7 @@ class ISGApp():
 
         return return_list
     
-    def __convert_data_to_frame(self, data:dict, width:int, height:int) -> np.ndarray:
+    def __convert_data_to_frame(self, data:dict) -> np.ndarray:
         camera_uuid = data.get("camera_uuid")
         camera_name = data.get("camera_name")
         datetime_str = data.get("datetime")
@@ -62,11 +62,13 @@ class ISGApp():
         np_array = np.frombuffer(image_bytes, np.uint8)
         image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
 
-        image.resize((width, height))
+        for person_normalized_bbox in person_normalized_bboxes:
+            x1, y1, x2, y2, violation = person_normalized_bbox
+            x1, y1, x2, y2 = int(x1*image.shape[1]), int(y1*image.shape[0]), int(x2*image.shape[1]), int(y2*image.shape[0])
+            color = (0, 0, 255) if violation != "" else (0, 255, 0)
+            cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+                        
         return image
-
-
-
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
