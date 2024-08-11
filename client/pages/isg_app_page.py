@@ -23,12 +23,45 @@ class ISGApp():
 
     }
 
+# dummy_dict = {
+# "camera_uuid": uuid.uuid4(),
+# "camera_hr_name" : random.choice(["A","B","C","D","E","F","G","H","I","J"]),
+# "date_time" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+# "people_analyzed" : random.randint(0,5000),
+# "frame_analyzed" : random.randint(0,5000),
+# "hard_hat_violation_counts" : [random.randint(0,5000),random.randint(0,5000)],
+# "restricted_area_violation_counts" : [random.randint(0,5000),random.randint(0,5000)],            
+# "person_normalized_bboxes" : [ [random.uniform(0,0.45), random.uniform(0,0.45), random.uniform(0.55,1), random.uniform(0.55,1), random.choice(["","","","", "hard_hat", "restricted_area"]),] for _ in range(random.randint(0,3))],
+
+
     def __init__(self):
         self.last_time_isg_data_fetch = 0
-        self.fetched_data:list = None
+        self.fetched_data:list = []
 
         self.last_time_six_data_to_render_update = 0
-        self.last_six_data_to_render = None           
+        self.last_six_data_to_render = None    
+
+    def generate_frame_using_data(self, data:Dict=None):
+        camera_uuid = data.get("camera_uuid")
+        camera_hr_name = data.get("camera_hr_name")
+        date_time = data.get("date_time")        
+        person_normalized_bboxes = data.get("person_normalized_bboxes")
+        image_base_64 = data.get("image_base_64")
+
+        image_bytes = base64.b64decode(image_base_64)
+        np_array = np.frombuffer(image_bytes, np.uint8)
+        image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+
+        is_violation = False
+        for person in person_normalized_bboxes:
+            x1, y1, x2, y2, violation_type = person
+            x1, y1, x2, y2 = int(x1*image.shape[1]), int(y1*image.shape[0]), int(x2*image.shape[1]), int(y2*image.shape[0])
+            color = (169,96,0) if violation_type=="" else (0,0,169)
+            cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+            is_violation = True if violation_type else False
+        
+        camera_hr_name = camera_hr_name if camera_hr_name else camera_uuid[:8]+"..."
+        return image, is_violation, camera_hr_name
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):    
         # Fetch ISG data
@@ -63,7 +96,18 @@ class ISGApp():
         cv2.putText(ui_frame, today_shift+today_date, (387, 76), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.rectangle(ui_frame, (314, 95), (314+int(560*percentage), 110), (169, 96, 0), -1)
 
+        # Draw fetched data      
+        for i, data in enumerate(self.fetched_data):
+            if i == 6: break
 
+            x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
+            width, height = x2-x1, y2-y1
+            image, is_violation, camera_hr_name = self.generate_frame_using_data(data)
+            picasso.draw_frame_on_frame(ui_frame, image, x1, y1, width, height, maintain_aspect_ratio=False)
+
+            color = (0,0,169) if is_violation else (169,96,0)
+            cv2.putText(ui_frame, camera_hr_name, (x1+10, y2+30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+    
         cv2.imshow(cv2_window_name, ui_frame)
 
         
