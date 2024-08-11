@@ -139,7 +139,7 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
 
         test_list.append(dummy_dict)
     
-    return [{"list_": test_list}]
+    return {"list_": test_list}
 
 
 #Run the application
