@@ -136,10 +136,13 @@ class ISGApp():
         if (time.time() - self.last_time_six_data_to_render_update) > self.CONSTANTS["six_data_change_period_s"]:
             self.last_time_six_data_to_render_update = time.time()
             self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
+            
             for i, data in enumerate(self.last_six_data_to_render):
+                pprint.pprint(data)
                 is_violated = False
-                for person_normalized_bbox in data.get("person_normalized_bboxes", []):
-                    if person_normalized_bbox[4] != "":
+                for person_normalized_bbox in data.get("person_normalized_bboxes"):
+
+                    if person_normalized_bbox[4]:
                         is_violated = True
                         break
                 if is_violated:
@@ -152,7 +155,7 @@ class ISGApp():
                 width, height = x2-x1, y2-y1
     
                 frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
-                print(f"Region: {region_name} | Violation: {is_violation_detected}")
+                #print(f"Region: {region_name} | Violation: {is_violation_detected}")
                 picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
                 color = (0,0,169) if is_violation_detected else (169,96,0)
                 if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
