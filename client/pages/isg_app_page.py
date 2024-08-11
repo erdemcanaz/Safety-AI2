@@ -2,7 +2,7 @@ from modules import picasso
 import cv2
 import numpy as np
 
-import requests
+import requests, pprint
 from typing import Dict, List
 import datetime, time
 
@@ -25,6 +25,7 @@ class ISGApp():
             fetched_list, status_code = active_user.request_ISG_ui_data()
             if status_code == 200:
                 self.fetched_data = fetched_list
+                pprint.pprint(fetched_list)
             print(f"ISG data fetched with status code: {status_code}")
        
         # Mouse input

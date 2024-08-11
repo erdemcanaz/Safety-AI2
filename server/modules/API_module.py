@@ -128,7 +128,7 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
         )
     
     test_list = []
-    for i in range(1):
+    for i in range(10):
         dummy_dict = {
             "camera_uuid": uuid.uuid4(),
             "camera_region" : random.choice(["A","B","C","D","E","F","G","H","I","J"]),
