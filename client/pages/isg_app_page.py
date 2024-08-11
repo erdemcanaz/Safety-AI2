@@ -43,7 +43,8 @@ class ISGApp():
 
     def __update_six_data_index_to_render(self):        
         violation_data_indexes = []
-        no_violation_data_indexes = []
+        no_violation_but_person_data_indexes = []
+        neither_violation_nor_person_data_indexes = []
         for data_index, data in enumerate(self.fetched_data):
             is_violation = False
             for person in data.get("person_normalized_bboxes"):
@@ -52,14 +53,18 @@ class ISGApp():
                     break
             if is_violation:
                 violation_data_indexes.append(data_index)
+            elif len(data.get("person_normalized_bboxes")) > 0:
+                no_violation_but_person_data_indexes.append(data_index)
             else:
-                no_violation_data_indexes.append(data_index)
+                neither_violation_nor_person_data_indexes.append(data_index)
 
         if len(violation_data_indexes) >= 6:
             self.data_index_to_render = random.sample(violation_data_indexes,6)
+        elif len(violation_data_indexes) + len(no_violation_but_person_data_indexes) >= 6:
+            self.data_index_to_render = violation_data_indexes + random.sample(no_violation_but_person_data_indexes, 6-len(violation_data_indexes))
         else:
-            self.data_index_to_render = violation_data_indexes + random.sample(no_violation_data_indexes, 6-len(violation_data_indexes))
-
+            self.data_index_to_render = violation_data_indexes + no_violation_but_person_data_indexes + random.sample(neither_violation_nor_person_data_indexes, 6-len(violation_data_indexes)-len(no_violation_but_person_data_indexes))
+    
     def __generate_frame_using_data(self, data:Dict=None):
         camera_uuid = data.get("camera_uuid")
         camera_hr_name = data.get("camera_hr_name")
