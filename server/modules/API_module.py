@@ -52,6 +52,7 @@ class MessageResponse(BaseModel):
 class ListResponse(BaseModel):
     list_ : List
 
+
 # Helper functions
 def verify_password(plain_password, hashed_password):
     hashed_password_candidate = encryption_module.hash_string(plain_text=plain_password) # uses SHA256 hashing
@@ -136,7 +137,7 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
 
         test_list.append(dummy_dict)
     
-    return {"isg_ui_data": test_list}
+    return [{"list_": test_list}]
 
 
 #Run the application
