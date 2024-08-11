@@ -142,6 +142,7 @@ class ISGApp():
                 is_violated = False
                 for person_normalized_bbox in data.get("person_normalized_bboxes"):
                     if person_normalized_bbox[4]:
+                        print(f"Violation type: {person_normalized_bbox[4]}")
                         is_violated = True
                         break
                 if is_violated:
