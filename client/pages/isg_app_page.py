@@ -69,18 +69,22 @@ class ISGApp():
         for person_normalized_bbox in person_normalized_bboxes:
             x1, y1, x2, y2, violation = person_normalized_bbox
             x1, y1, x2, y2 = int(x1 * image.shape[1]), int(y1 * image.shape[0]), int(x2 * image.shape[1]), int(y2 * image.shape[0])
-    
-            roi = image[y1:y2, x1:x2]
-            blurred_roi = cv2.GaussianBlur(roi, (15, 15), 0)  # You can adjust the kernel size (15, 15) for more or less blur
-            image[y1:y2, x1:x2] = blurred_roi
             
-            color = (0, 0, 255) if violation != "" else (0, 255, 0)
-            cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(image.shape[1], x2), min(image.shape[0], y2)
+            
+            if x1 < x2 and y1 < y2:
+                roi = image[y1:y2, x1:x2]
+                blurred_roi = cv2.GaussianBlur(roi, (15, 15), 0)  # Adjust the kernel size for desired blur
+                image[y1:y2, x1:x2] = blurred_roi
 
-            if violation != "":
-                is_violation_detected = True
-
-        return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
+                color = (0, 0, 255) if violation != "" else (0, 255, 0)
+                cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+                if violation != "":
+                    is_violation_detected = True
+            else:
+                print(f"Skipping invalid ROI: ({x1}, {y1}, {x2}, {y2})")
+                return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
         return image, return_name, is_violation_detected
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
