@@ -127,6 +127,8 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+
+    # GENERATE DUMMY DATA TODO: Replace this with real data
     test_list = []
     for i in range(10):
         dummy_dict = {

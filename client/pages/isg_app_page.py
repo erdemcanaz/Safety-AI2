@@ -4,7 +4,7 @@ import numpy as np
 
 import requests, pprint
 from typing import Dict, List
-import datetime, time
+import datetime, time, random
 
 class ISGApp():
 
@@ -18,6 +18,32 @@ class ISGApp():
         self.fetched_data:list = None
         pass
 
+    def __return_six_data_from_fetched_data(self) -> List[Dict]:
+        if self.fetched_data is None: return None
+
+        return_list = []
+
+        no_violation_detected_datas = []
+        violation_detected_datas = []
+        for data in self.fetched_data:
+            for person_normalized_bbox in data.get("person_normalized_bboxes"):
+                if person_normalized_bbox[4] != "":
+                    violation_detected_datas.append(data)
+                    break
+            else:
+                no_violation_detected_datas.append(data)
+
+        if len(violation_detected_datas) >= 6:
+            return_list = violation_detected_datas[:6]
+        else:
+            return_list = violation_detected_datas
+
+            random.shuffle(no_violation_detected_datas)
+            return_list.extend(no_violation_detected_datas[:min( len(no_violation_detected_datas), 6-len(violation_detected_datas) )])
+
+        return return_list
+            
+
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
         if  (time.time() - self.last_time_data_fetch) > self.CONSTANTS["data_fetch_period_s"]:
@@ -26,7 +52,7 @@ class ISGApp():
             if status_code == 200:
                 self.fetched_data = fetched_list
                 pprint.pprint(fetched_list)
-            print(f"ISG data fetched with status code: {status_code}")
+            print(f"{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | ISG data fetched with status code: {status_code}")
        
         # Mouse input
 
@@ -52,7 +78,11 @@ class ISGApp():
 
         cv2.putText(ui_frame, today_shift+today_date, (387, 76), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.rectangle(ui_frame, (314, 95), (314+int(560*percentage), 110), (169, 96, 0), -1)
-                                                                          
+
+        six_data_to_render = self.__return_six_data_from_fetched_data() 
+        if six_data_to_render is not None:            
+            print(" Rendering six data")   
+                              
         cv2.imshow(cv2_window_name, ui_frame)
 
         
