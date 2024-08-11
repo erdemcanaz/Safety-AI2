@@ -72,3 +72,36 @@ def draw_image_on_frame(frame:np.ndarray=None, image_name:str=None, x:int=None, 
             frame_roi[:, :, c] = (frame_roi[:, :, c] * (1 - image_alpha) + image_roi[:, :, c] * image_alpha).astype(np.uint8)
     else:
         frame[roi_y1:roi_y2, roi_x1:roi_x2] = image_roi
+
+def draw_frame_on_frame(frame:np.ndarray=None, frame_to_draw:np.ndarray=None, x:int=None, y:int=None, width:int=100, height:int=100, maintain_aspect_ratio:bool = True):
+    # Resize image
+    if maintain_aspect_ratio:
+        im_height, im_width = frame_to_draw.shape[0], frame_to_draw.shape[1]
+        scale = min((width / im_width), (height / im_height))
+        frame_to_draw = cv2.resize(frame_to_draw, (int(im_width * scale), int(im_height * scale)), interpolation=cv2.INTER_AREA)
+    else:
+        frame_to_draw = cv2.resize(frame_to_draw, (width, height),interpolation=cv2.INTER_AREA)
+
+    # Draw image on frame
+    frame_height, frame_width = frame.shape[0], frame.shape[1]
+    resized_image_height, resized_image_width = frame_to_draw.shape[0], frame_to_draw.shape[1]
+
+    roi_x1 = x
+    roi_x2 = min(max(x + resized_image_width, 0), frame_width)
+    roi_y1 = y
+    roi_y2 = min(max(y + resized_image_height, 0), frame_height)
+
+    if roi_x1<0 or roi_y1<0 or (roi_x2 - roi_x1 <= 0) or (roi_y2 - roi_y1 <= 0):
+        return
+    
+    frame_roi = frame[roi_y1:roi_y2, roi_x1:roi_x2]
+    image_roi = frame_to_draw[0:(roi_y2-roi_y1), 0:(roi_x2-roi_x1)]
+    
+    if frame_to_draw.shape[2]==4:                                   # If image has alpha channel           
+        b, g, r, a = cv2.split(image_roi)                   # Split the icon into its channels            
+        image_alpha = a / 255.0                             # Normalize the alpha channel to be in the range [0, 1]
+        
+        for c in range(0, 3):                               # Loop over the RGB channels
+            frame_roi[:, :, c] = (frame_roi[:, :, c] * (1 - image_alpha) + image_roi[:, :, c] * image_alpha).astype(np.uint8)
+    else:
+        frame[roi_y1:roi_y2, roi_x1:roi_x2] = image_roi
