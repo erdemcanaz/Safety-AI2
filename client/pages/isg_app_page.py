@@ -58,7 +58,7 @@ class ISGApp():
         if len(violation_data_indexes) >= 6:
             self.data_index_to_render = random.sample(violation_data_indexes,6)
         else:
-            self.data_index_to_render = violation_data_indexes + random.sample(no_violation_data_indexes, 6-len(violation_data_indexes))
+            self.data_index_to_render = violation_data_indexes
 
     def __generate_frame_using_data(self, data:Dict=None):
         camera_uuid = data.get("camera_uuid")
