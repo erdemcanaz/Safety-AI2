@@ -52,6 +52,9 @@ class MessageResponse(BaseModel):
 class ListResponse(BaseModel):
     list_ : List
 
+class ListOfDictsResponse(BaseModel):
+    list_ : List[Dict]
+
 
 # Helper functions
 def verify_password(plain_password, hashed_password):
@@ -116,7 +119,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 async def return_test_text(current_user: User = Depends(get_current_user)):
     return {"list_":current_user.allowed_tos}
 
-@app.get("/get_isg_ui_data", response_model=ListResponse)
+@app.get("/get_isg_ui_data", response_model=ListOfDictsResponse)
 async def login_for_access_token(current_user: User = Depends(get_current_user)):
     if "ISG_APP" not in current_user.allowed_tos:
         raise HTTPException(
