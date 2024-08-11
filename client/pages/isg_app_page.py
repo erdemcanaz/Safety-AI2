@@ -24,8 +24,12 @@ class ISGApp():
 
         "person_count": (1132,788),
         "frame_count": (1600,788),
-        "hard_hat_count": (1132, 945),
-        "restricted_area_count": (1600,945)
+        "hard_hat_percentage": (1132, 945),
+        "hard_hat_succes_count":(1071,903),
+        "hard_hat_failure_count":(1071,946),
+        "restricted_area_percentage": (1600,945),
+        "restricted_area_succes_count":(1552,903),
+        "restricted_area_failure_count":(1552,946),
 
     }
 
@@ -168,11 +172,17 @@ class ISGApp():
                 hard_hat_violation_counts = self.fetched_data[data_index].get("hard_hat_violation_counts")
                 restricted_area_violation_counts = self.fetched_data[data_index].get("restricted_area_violation_counts")
 
-                cv2.putText(ui_frame, f"{people_analyzed}", self.CONSTANTS["person_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-                cv2.putText(ui_frame, f"{frame_analyzed}", self.CONSTANTS["frame_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-                cv2.putText(ui_frame, f"%{100*hard_hat_violation_counts[0]/(hard_hat_violation_counts[0]+hard_hat_violation_counts[1]):.1f}", self.CONSTANTS["hard_hat_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-                cv2.putText(ui_frame, f"{100*restricted_area_violation_counts[0]/(restricted_area_violation_counts[0]+restricted_area_violation_counts[1]):.1f}", self.CONSTANTS["restricted_area_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-                            
+                cv2.putText(ui_frame, f"{people_analyzed}", self.CONSTANTS["person_count"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{frame_analyzed}", self.CONSTANTS["frame_count"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                
+                cv2.putText(ui_frame, f"%{100*hard_hat_violation_counts[0]/(hard_hat_violation_counts[0]+hard_hat_violation_counts[1]):.1f}", self.CONSTANTS["hard_hat_percentage"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{self.__format_count_to_hr(hard_hat_violation_counts[0])}", self.CONSTANTS["hard_hat_succes_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{self.__format_count_to_hr(hard_hat_violation_counts[1])}", self.CONSTANTS["hard_hat_failure_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+
+                cv2.putText(ui_frame, f"{100*restricted_area_violation_counts[0]/(restricted_area_violation_counts[0]+restricted_area_violation_counts[1]):.1f}", self.CONSTANTS["restricted_area_percentage"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{self.__format_count_to_hr(restricted_area_violation_counts[0])}", self.CONSTANTS["restricted_area_succes_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"{self.__format_count_to_hr(restricted_area_violation_counts[1])}", self.CONSTANTS["restricted_area_failure_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+
         cv2.imshow(cv2_window_name, ui_frame)
 
         
