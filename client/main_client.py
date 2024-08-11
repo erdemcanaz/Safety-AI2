@@ -72,10 +72,15 @@ class User():
         return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
     
     def request_ISG_ui_data(self)->list:
+
         headers = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-        response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_isg_ui_data", headers=headers, timeout=1)
-        pprint.pprint(response.json())
-        return response.json(), response.status_code
+        fetched_list = []
+        try:
+            response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_isg_ui_data", headers=headers, timeout=1)    
+            fetched_list = response.json()["isg_ui_data"]
+            return fetched_list, response.status_code
+        except:
+            return [], 404       
 
     
 class MouseInput():

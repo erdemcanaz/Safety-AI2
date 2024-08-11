@@ -117,17 +117,6 @@ async def return_test_text(current_user: User = Depends(get_current_user)):
 
 @app.get("/get_isg_ui_data", response_model=ListResponse)
 async def login_for_access_token(current_user: User = Depends(get_current_user)):
-    print("zaa",current_user)
-    if not current_user:
-        print("User not found")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    print("allowed_tos: ", current_user.allowed_tos)
-
     if "ISG_APP" not in current_user.allowed_tos:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -145,7 +134,7 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
             "person_normalized_bboxes" : [ [random.random(), random.random(), random.random(), random.random(), random.choice(["","","","","","","","", "hard_hat", "restricted_area"]),] for _ in range(random.randint(0,5))],
         }
 
-        test_list.apend(dummy_dict)
+        test_list.append(dummy_dict)
     
     return {"isg_ui_data": test_list}
 
