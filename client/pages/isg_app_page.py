@@ -137,6 +137,7 @@ class ISGApp():
             self.last_time_six_data_to_render_update = time.time()
             self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
             
+            print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Rendering new data")
             for i, data in enumerate(self.last_six_data_to_render):
                 is_violated = False
                 for person_normalized_bbox in data.get("person_normalized_bboxes"):
@@ -144,8 +145,7 @@ class ISGApp():
                         is_violated = True
                         break
                 if is_violated:
-                    print(f"{i} Violation detected in {data.get('camera_name')}")
-                    pprint.pprint(data)
+                    print(f"{i} Violation detected in {data.get('camera_uuid')}")
 
         if self.last_six_data_to_render is not None:            
             for i, data in enumerate(self.last_six_data_to_render):
