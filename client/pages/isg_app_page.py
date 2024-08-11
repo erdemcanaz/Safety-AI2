@@ -27,32 +27,34 @@ class ISGApp():
         self.last_time_data_fetch = 0
         self.fetched_data:list = None
 
-        self.last_time_six_data_fetch = 0
+        self.last_time_six_data_to_render_update = 0
         self.last_six_data_to_render = None
         pass
 
     def __return_six_data_from_fetched_data(self) -> List[Dict]:
-        if self.fetched_data is None: return None
+        if self.fetched_data is None:
+            return None
 
-        return_list = []
-
-        no_violation_detected_datas = []
         violation_detected_datas = []
+        no_violation_detected_datas = []
+
+        # Separate data into violation and no-violation lists
         for data in self.fetched_data:
-            for person_normalized_bbox in data.get("person_normalized_bboxes"):
-                if person_normalized_bbox[4] != "":
+            for person_normalized_bbox in data.get("person_normalized_bboxes", []):
+                if person_normalized_bbox[4] != "":  # Check if there's a violation
                     violation_detected_datas.append(data)
-                    break
+                    break  # Stop checking further bboxes once a violation is found
             else:
                 no_violation_detected_datas.append(data)
 
-        if len(violation_detected_datas) >= 6:
-            return_list = violation_detected_datas[:6]
-        else:
-            return_list = violation_detected_datas
+        # Create the return list, starting with violations
+        return_list = violation_detected_datas[:6]
 
+        # If fewer than 6 violations, fill the rest with no-violation data
+        if len(return_list) < 6:
+            remaining_slots = 6 - len(return_list)
             random.shuffle(no_violation_detected_datas)
-            return_list.extend(no_violation_detected_datas[:min( len(no_violation_detected_datas), 6-len(violation_detected_datas) )])
+            return_list.extend(no_violation_detected_datas[:remaining_slots])
 
         return return_list
     
@@ -118,17 +120,20 @@ class ISGApp():
         # Draw UI
         picasso.draw_image_on_frame(ui_frame, image_name="ISG_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
 
+        # Draw user name
         text = active_user.get_token_person_name()
         text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 2)[0]            
         x = 1910-text_size[0]
         y = text_size[1]+5
         cv2.putText(ui_frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (239, 237, 232), 2, cv2.LINE_AA)
 
+        # Draw date and shift
         cv2.putText(ui_frame, today_shift+today_date, (387, 76), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.rectangle(ui_frame, (314, 95), (314+int(560*percentage), 110), (169, 96, 0), -1)
 
-        if (time.time() - self.last_time_six_data_fetch) > self.CONSTANTS["six_data_change_period_s"]:
-            self.last_time_six_data_fetch = time.time()
+
+        if (time.time() - self.last_time_six_data_to_render_update) > self.CONSTANTS["six_data_change_period_s"]:
+            self.last_time_six_data_to_render_update = time.time()
             self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
 
         if self.last_six_data_to_render is not None:            
@@ -142,7 +147,12 @@ class ISGApp():
                 picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
                 color = (0,0,169) if is_violation_detected else (169,96,0)
                 if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
-                cv2.putText(ui_frame, region_name, (x1+50, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+
+                text_size = cv2.getTextSize(region_name, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 2)[0]
+                text_width, text_height = text_size
+                text_x = x1 + (width - text_width) // 2  # Center the text horizontally
+                text_y = y2 + 20  # Adjust y-coordinate as needed
+                cv2.putText(ui_frame, region_name, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
                 if i == 0:
                     main_frame_x1, main_frame_y1, main_frame_x2, main_frame_y2 = self.CONSTANTS["main_image_bbox"]
