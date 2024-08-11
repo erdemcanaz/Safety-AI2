@@ -36,6 +36,8 @@ class WhichApp():
           
         # Draw UI
         picasso.draw_image_on_frame(ui_frame, image_name="which_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
+        cv2.putText(ui_frame, f"{active_user.get_token_person_name()}", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.25, (0, 0, 0), 3, cv2.LINE_AA)
+
         cv2.imshow(cv2_window_name, ui_frame)
 
         

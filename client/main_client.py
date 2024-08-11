@@ -19,6 +19,30 @@ class User():
         self.IS_AUTHENTICATED = False  
         self.SERVER_IP_ADDRESS = server_ip_address   
 
+        self.DECODED_TOKEN = None
+
+        {'allowed_tos': ['DEVELOPER_PAGE',
+                 'GET_REPORT',
+                 'UPDATE_CONFIGS',
+                 'GET_VIOLATION_DATA',
+                 'GET_UI_DATA'],
+ 'exp': 1723373783.5959346,
+ 'job_title': 'developer',
+ 'person_name': 'Erdem Canaz',
+ 'user_name': 'erdem.canaz'}
+
+    def get_token_person_name(self)->str:
+        return self.DECODED_TOKEN.get("person_name") if self.DECODED_TOKEN is not None else ""
+    
+    def get_token_job_title(self)->str:
+        return self.DECODED_TOKEN.get("job_title") if self.DECODED_TOKEN is not None else ""
+    
+    def get_token_allowed_tos(self)->list:
+        return self.DECODED_TOKEN.get("allowed_tos") if self.DECODED_TOKEN is not None else []
+    
+    def get_token_remaining_time(self)->int:
+        return int(self.DECODED_TOKEN.get("exp") - time.time()) if self.DECODED_TOKEN is not None else 0
+    
     def get_username(self)->str:
         return self.USERNAME if self.USERNAME is not None else ""
     
@@ -40,11 +64,7 @@ class User():
         if response.status_code == 200:
             self.IS_AUTHENTICATED = True
             self.JWT_TOKEN = acces_token
-
-        print(f"jwt token: {self.JWT_TOKEN}")
-        # Decode the token without verifying the signature
-        decoded_token = jwt.decode(self.JWT_TOKEN, options={"verify_signature": False})
-        pprint.pprint(decoded_token)
+            self.DECODED_TOKEN = jwt.decode(self.JWT_TOKEN, options={"verify_signature": False})
 
         return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
     
