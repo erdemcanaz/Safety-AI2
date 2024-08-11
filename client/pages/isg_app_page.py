@@ -80,7 +80,7 @@ class ISGApp():
             
             if x1 < x2 and y1 < y2:
                 roi = image[y1:y2, x1:x2]
-                blurred_roi = cv2.GaussianBlur(roi, (15, 15), 0)  # Adjust the kernel size for desired blur
+                blurred_roi = cv2.GaussianBlur(roi, (31, 31), 0)  # Adjust the kernel size for desired blur
                 image[y1:y2, x1:x2] = blurred_roi
 
                 color = (0, 0, 255) if violation != "" else (0, 255, 0)
@@ -138,7 +138,7 @@ class ISGApp():
                 width, height = x2-x1, y2-y1
     
                 frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
-                region_name = "asdsaf"
+                print(f"Region: {region_name} | Violation: {is_violation_detected}")
                 picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
                 color = (0,0,169) if is_violation_detected else (169,96,0)
                 if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
