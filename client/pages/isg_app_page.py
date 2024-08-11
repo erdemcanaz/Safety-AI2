@@ -4,7 +4,7 @@ import numpy as np
 
 import requests
 from typing import Dict, List
-import datetime
+import datetime, time
 
 class ISGApp():
 
@@ -20,6 +20,13 @@ class ISGApp():
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
+        if  (time.time() - self.last_time_data_fetch) > self.CONSTANTS["data_fetch_period_s"]:
+            self.last_time_data_fetch = time.time()
+            fetched_list, status_code = active_user.request_ISG_ui_data()
+            if status_code == 200:
+                self.fetched_data = fetched_list
+            print(f"ISG data fetched with status code: {status_code}")
+       
         # Mouse input
 
         # Keyboard input

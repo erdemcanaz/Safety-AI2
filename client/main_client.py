@@ -71,6 +71,12 @@ class User():
 
         return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
     
+    def request_ISG_ui_data(self)->list:
+        headers = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_isg_ui_data", headers=headers, timeout=1)
+        return response.json()["ISG_ui_data"], response.status_code
+
+    
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None

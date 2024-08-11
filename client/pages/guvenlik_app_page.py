@@ -31,7 +31,7 @@ class GuvenlikApp():
 
         today_date = datetime.datetime.now().strftime("%d.%m.%Y / %H:%M:%S")
         today_shift = "Vardiya-I " if datetime.datetime.now().hour < 8 else "Vardiya-II " if datetime.datetime.now().hour < 16 else "Vardiya-III "
-        percentage = (datetime.datetime.now().hour%8+2) / 8
+        percentage = (datetime.datetime.now().hour%8) / 8
         # Draw UI
         picasso.draw_image_on_frame(ui_frame, image_name="guvenlik_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
 
