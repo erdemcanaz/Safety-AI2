@@ -14,10 +14,10 @@ class ISGApp():
 
         "image_bbox_0": (37, 145, 430, 368),
         "image_bbox_1": (475, 148, 868, 371),
-        "image_bbox_2": (0, 0, 1920, 1080),
-        "image_bbox_3": (0, 0, 1920, 1080),
-        "image_bbox_4": (0, 0, 1920, 1080),
-        "image_bbox_5": (0, 0, 1920, 1080),
+        "image_bbox_2": (33, 444, 426, 666),
+        "image_bbox_3": (475, 445, 868, 668),
+        "image_bbox_4": (35, 740, 428, 962),
+        "image_bbox_5": (475, 740, 868, 962),
 
     }
 
@@ -107,14 +107,13 @@ class ISGApp():
         six_data_to_render = self.__return_six_data_from_fetched_data() 
         if six_data_to_render is not None:            
             for i, data in enumerate(six_data_to_render):
-                if i != 0: continue
 
                 x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
                 width, height = x2-x1, y2-y1
     
                 frame = self.__convert_data_to_frame(data)
-                picasso.draw_frame_on_frame(ui_frame, frame, x, y, width, height, maintain_aspect_ratio=True)
-
+                picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=True)
+                
                 # for j, person_normalized_bbox in enumerate(data.get("person_normalized_bboxes")):
                 #     x1, y1, x2, y2, violation = person_normalized_bbox
                 #     x1, y1, x2, y2 = int(x1*width), int(y1*height), int(x2*width), int(y2*height)
