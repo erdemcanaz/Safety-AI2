@@ -101,12 +101,24 @@ class ISGApp():
             x1, y1, x2, y2, violation_type = person
             x1, y1, x2, y2 = int(x1*image.shape[1]), int(y1*image.shape[0]), int(x2*image.shape[1]), int(y2*image.shape[0])
             color = (0,0,169) if violation_type in ["hard_hat", "restricted_area"] else (169,96,0)
+            
+            if violation_type in ["hard_hat", "restricted_area"]:
+                # Extract the ROI
+                roi = image[y1:y2, x1:x2]
+                
+                # Apply Gaussian blur to the ROI
+                blurred_roi = cv2.GaussianBlur(roi, (30, 30), 0)
+                
+                # Replace the original ROI with the blurred ROI
+                image[y1:y2, x1:x2] = blurred_roi
+            
             if violation_type == "hard_hat":
                 picasso.draw_image_on_frame(image, image_name="red_hardhat_transp", x=x2+5, y=y1, width=30, height=30, maintain_aspect_ratio=False)
                 violation_types_found.append("hard_hat")
             elif violation_type == "restricted_area":
                 picasso.draw_image_on_frame(image, image_name="red_restricted_area_transp", x=x2+5, y=y1, width=30, height=30, maintain_aspect_ratio=False)
                 violation_types_found.append("restricted_area")
+            
             cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
             is_violation = True if violation_type in ["hard_hat", "restricted_area"] else is_violation
         
