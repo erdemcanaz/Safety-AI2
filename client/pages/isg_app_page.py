@@ -88,7 +88,7 @@ class ISGApp():
                 if violation != "":
                     is_violation_detected = True
             else:
-                print(f"Skipping invalid ROI: ({x1}, {y1}, {x2}, {y2})")
+                pass
         
         return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
         return image, return_name, is_violation_detected
@@ -130,22 +130,24 @@ class ISGApp():
         if (time.time() - self.last_time_six_data_fetch) > self.CONSTANTS["six_data_change_period_s"]:
             self.last_time_six_data_fetch = time.time()
             self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
-            
+
         if self.last_six_data_to_render is not None:            
             for i, data in enumerate(self.last_six_data_to_render):
 
                 x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
                 width, height = x2-x1, y2-y1
     
+                color = (0,0,169) if is_violation_detected else (169,96,0)
                 frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
                 picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
-                if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                cv2.putText(ui_frame, region_name, (x1+50, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+                if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
+                cv2.putText(ui_frame, region_name, (x1+50, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
                 if i == 0:
-                    picasso.draw_frame_on_frame(ui_frame, frame, *self.CONSTANTS["main_image_bbox"], maintain_aspect_ratio=False)
-                    if is_violation_detected: cv2.rectangle(ui_frame, (self.CONSTANTS["main_image_bbox"][0], self.CONSTANTS["main_image_bbox"][1]), (self.CONSTANTS["main_image_bbox"][2], self.CONSTANTS["main_image_bbox"][3]), (0, 0, 255), 2)
-                    cv2.putText(ui_frame, region_name, (self.CONSTANTS["main_image_bbox"][0]+50, self.CONSTANTS["main_image_bbox"][3]+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+                    main_frame_x1, main_frame_y1, main_frame_x2, main_frame_y2 = self.CONSTANTS["main_image_bbox"]
+                    picasso.draw_frame_on_frame(ui_frame, frame, (main_frame_x1, main_frame_y1), (main_frame_x2, main_frame_y2),  maintain_aspect_ratio=False)
+                    if is_violation_detected: cv2.rectangle(ui_frame,(main_frame_x1, main_frame_y1), (main_frame_x2, main_frame_y2), color, 2)
+                    cv2.putText(ui_frame, region_name,(main_frame_x1+50,main_frame_y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
 
         cv2.imshow(cv2_window_name, ui_frame)
