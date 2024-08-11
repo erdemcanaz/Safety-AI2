@@ -118,7 +118,7 @@ async def return_test_text(current_user: User = Depends(get_current_user)):
 
 @app.get("/get_isg_ui_data", response_model=ListResponse)
 async def login_for_access_token(current_user: User = Depends(get_current_user)):
-    print(current_user)
+    print("zaa",current_user)
     if not current_user:
         print("User not found")
         raise HTTPException(
