@@ -8,7 +8,7 @@ project_directory = os.path.dirname(os.path.abspath(__file__))
 modules_directory = os.path.join(project_directory, 'modules')
 sys.path.append(modules_directory) # Add the modules directory to the system path so that imports work
 from pages import login_page, server_failure_page, user_not_found_page, which_app_page
-from modules import picasso
+from modules import picasso, text_transformer
 
 class User():
     def __init__(self, server_ip_address:str=None):
@@ -21,21 +21,11 @@ class User():
 
         self.DECODED_TOKEN = None
 
-        {'allowed_tos': ['DEVELOPER_PAGE',
-                 'GET_REPORT',
-                 'UPDATE_CONFIGS',
-                 'GET_VIOLATION_DATA',
-                 'GET_UI_DATA'],
- 'exp': 1723373783.5959346,
- 'job_title': 'developer',
- 'person_name': 'Erdem Canaz',
- 'user_name': 'erdem.canaz'}
-
     def get_token_person_name(self)->str:
-        return self.DECODED_TOKEN.get("person_name") if self.DECODED_TOKEN is not None else ""
+        return text_transformer.translate_text_to_english(self.DECODED_TOKEN.get("person_name")) if self.DECODED_TOKEN is not None else ""
     
     def get_token_job_title(self)->str:
-        return self.DECODED_TOKEN.get("job_title") if self.DECODED_TOKEN is not None else ""
+        return text_transformer.translate_text_to_english(self.DECODED_TOKEN.get("job_title")) if self.DECODED_TOKEN is not None else ""
     
     def get_token_allowed_tos(self)->list:
         return self.DECODED_TOKEN.get("allowed_tos") if self.DECODED_TOKEN is not None else []
@@ -68,7 +58,6 @@ class User():
 
         return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
     
-
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None
