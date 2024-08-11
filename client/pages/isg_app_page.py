@@ -114,9 +114,9 @@ class ISGApp():
 
         violation_types_found = list(set(violation_types_found))
         if "hard_hat" in violation_types_found:
-            picasso.draw_image_on_frame(image, image_name="red_hardhat", x=image.shape[1]-50, y=10, width=50, height=50, maintain_aspect_ratio=False)
+            picasso.draw_image_on_frame(image, image_name="red_hardhat_transp", x=image.shape[1]-50, y=10, width=50, height=50, maintain_aspect_ratio=False)
         if "restricted_area" in violation_types_found:
-            picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=image.shape[1]-50*len(violation_types_found), y=10, width=50, height=50, maintain_aspect_ratio=False)
+            picasso.draw_image_on_frame(image, image_name="red_restricted_area_transp", x=image.shape[1]-50*len(violation_types_found), y=10, width=50, height=50, maintain_aspect_ratio=False)
 
         camera_hr_name = camera_hr_name if camera_hr_name else camera_uuid[:8]+"..."
         return image, is_violation, camera_hr_name
