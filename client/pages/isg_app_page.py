@@ -4,7 +4,7 @@ import numpy as np
 
 import requests, pprint
 from typing import Dict, List
-import datetime, time, random, base64
+import datetime, time, random, base64, copy
 
 class ISGApp():
 
@@ -135,44 +135,31 @@ class ISGApp():
 
         if (time.time() - self.last_time_six_data_to_render_update) > self.CONSTANTS["six_data_change_period_s"]:
             self.last_time_six_data_to_render_update = time.time()
-            self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
+            self.last_six_data_to_render = copy.deepcopy(self.__return_six_data_from_fetched_data())
             
-            print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Rendering new data")
+        if self.last_six_data_to_render is not None:            
             for i, data in enumerate(self.last_six_data_to_render):
-                is_violated = False
-                for person_normalized_bbox in data.get("person_normalized_bboxes"):
-                    if person_normalized_bbox[4]:
-                        print(f"Violation type: {person_normalized_bbox[4]}")
-                        is_violated = True
-                        break
-                if is_violated:
-                    print(f"{i} Violation detected in {data.get('camera_uuid')}")
-                else:
-                    print(f"{i} ---------- {data.get('camera_uuid')}")
 
-            if self.last_six_data_to_render is not None:            
-                for i, data in enumerate(self.last_six_data_to_render):
+                x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
+                width, height = x2-x1, y2-y1
+    
+                frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
+                print(f" i: {i} | Region: {region_name} | Violation: {is_violation_detected}")
+                picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
+                color = (0,0,169) if is_violation_detected else (169,96,0)
+                if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
 
-                    x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
-                    width, height = x2-x1, y2-y1
-        
-                    frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
-                    print(f" i: {i} | Region: {region_name} | Violation: {is_violation_detected}")
-                    picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
-                    color = (0,0,169) if is_violation_detected else (169,96,0)
-                    if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
+                text_size = cv2.getTextSize(region_name, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 2)[0]
+                text_width, text_height = text_size
+                text_x = x1 + (width - text_width) // 2  # Center the text horizontally
+                text_y = y2 + 20  # Adjust y-coordinate as needed
+                cv2.putText(ui_frame, region_name, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
-                    text_size = cv2.getTextSize(region_name, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 2)[0]
-                    text_width, text_height = text_size
-                    text_x = x1 + (width - text_width) // 2  # Center the text horizontally
-                    text_y = y2 + 20  # Adjust y-coordinate as needed
-                    cv2.putText(ui_frame, region_name, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-
-                    if i == 0:
-                        main_frame_x1, main_frame_y1, main_frame_x2, main_frame_y2 = self.CONSTANTS["main_image_bbox"]
-                        picasso.draw_frame_on_frame(ui_frame, frame, main_frame_x1, main_frame_y1, main_frame_x2-main_frame_x1, main_frame_y2-main_frame_y1, maintain_aspect_ratio=False)
-                        if is_violation_detected: cv2.rectangle(ui_frame,(main_frame_x1, main_frame_y1), (main_frame_x2, main_frame_y2), color, 2)
-                        cv2.putText(ui_frame, region_name,(main_frame_x1+50,main_frame_y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                if i == 0:
+                    main_frame_x1, main_frame_y1, main_frame_x2, main_frame_y2 = self.CONSTANTS["main_image_bbox"]
+                    picasso.draw_frame_on_frame(ui_frame, frame, main_frame_x1, main_frame_y1, main_frame_x2-main_frame_x1, main_frame_y2-main_frame_y1, maintain_aspect_ratio=False)
+                    if is_violation_detected: cv2.rectangle(ui_frame,(main_frame_x1, main_frame_y1), (main_frame_x2, main_frame_y2), color, 2)
+                    cv2.putText(ui_frame, region_name,(main_frame_x1+50,main_frame_y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
 
         cv2.imshow(cv2_window_name, ui_frame)
