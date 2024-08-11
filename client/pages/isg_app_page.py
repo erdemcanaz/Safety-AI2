@@ -172,14 +172,14 @@ class ISGApp():
                 hard_hat_violation_counts = self.fetched_data[data_index].get("hard_hat_violation_counts")
                 restricted_area_violation_counts = self.fetched_data[data_index].get("restricted_area_violation_counts")
 
-                cv2.putText(ui_frame, f"{people_analyzed}", self.CONSTANTS["person_count"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
-                cv2.putText(ui_frame, f"{frame_analyzed}", self.CONSTANTS["frame_count"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"   {people_analyzed}", self.CONSTANTS["person_count"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"   {frame_analyzed}", self.CONSTANTS["frame_count"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
                 
-                cv2.putText(ui_frame, f"    %{100*hard_hat_violation_counts[0]/(hard_hat_violation_counts[0]+hard_hat_violation_counts[1]):.1f}", self.CONSTANTS["hard_hat_percentage"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"   %{100*hard_hat_violation_counts[0]/(hard_hat_violation_counts[0]+hard_hat_violation_counts[1]):.1f}", self.CONSTANTS["hard_hat_percentage"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
                 cv2.putText(ui_frame, f"{self.__format_count_to_hr(hard_hat_violation_counts[0])}", self.CONSTANTS["hard_hat_succes_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
                 cv2.putText(ui_frame, f"{self.__format_count_to_hr(hard_hat_violation_counts[1])}", self.CONSTANTS["hard_hat_failure_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
-                cv2.putText(ui_frame, f"    %{100*restricted_area_violation_counts[0]/(restricted_area_violation_counts[0]+restricted_area_violation_counts[1]):.1f}", self.CONSTANTS["restricted_area_percentage"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
+                cv2.putText(ui_frame, f"   %{100*restricted_area_violation_counts[0]/(restricted_area_violation_counts[0]+restricted_area_violation_counts[1]):.1f}", self.CONSTANTS["restricted_area_percentage"], cv2.FONT_HERSHEY_SIMPLEX, 1.5, color, 2, cv2.LINE_AA)
                 cv2.putText(ui_frame, f"{self.__format_count_to_hr(restricted_area_violation_counts[0])}", self.CONSTANTS["restricted_area_succes_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
                 cv2.putText(ui_frame, f"{self.__format_count_to_hr(restricted_area_violation_counts[1])}", self.CONSTANTS["restricted_area_failure_count"], cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
