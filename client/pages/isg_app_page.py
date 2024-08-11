@@ -71,6 +71,7 @@ class ISGApp():
         np_array = np.frombuffer(image_bytes, np.uint8)
         image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
 
+        
         is_violation = False
         for person in person_normalized_bboxes:
             x1, y1, x2, y2, violation_type = person
@@ -79,6 +80,8 @@ class ISGApp():
             cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
             is_violation = True if violation_type else False
         
+        cv2.putText(image, date_time, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169,96,0), 2, cv2.LINE_AA)
+
         camera_hr_name = camera_hr_name if camera_hr_name else camera_uuid[:8]+"..."
         return image, is_violation, camera_hr_name
 
@@ -86,6 +89,7 @@ class ISGApp():
         # Fetch ISG data
         if  (time.time() - self.last_time_isg_data_fetch) > self.CONSTANTS["isg_data_fetch_period_s"]:
             self.last_time_isg_data_fetch = time.time()
+            self.last_time_six_data_index_to_render_update = 0 # force update
             fetched_list, status_code = active_user.request_ISG_ui_data()
             if status_code == 200:
                 self.fetched_data = fetched_list
@@ -128,6 +132,16 @@ class ISGApp():
 
             color = (0,0,169) if is_violation else (169,96,0)
             cv2.putText(ui_frame, camera_hr_name, (x1+10, y2+30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+            if is_violation:
+                cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 5)
+
+            if i == 0: # Main image
+                x1, y1, x2, y2 = self.CONSTANTS["main_image_bbox"]
+                width, height = x2-x1, y2-y1
+                picasso.draw_frame_on_frame(ui_frame, image, x1, y1, width, height, maintain_aspect_ratio=False)
+                cv2.putText(ui_frame, camera_hr_name, (x1+10, y2+30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
+                if is_violation:
+                    cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 5)
     
         cv2.imshow(cv2_window_name, ui_frame)
 
