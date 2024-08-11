@@ -1,7 +1,7 @@
 # Built-in imports
 import pprint, time, sys, os, requests
 import numpy as np
-import cv2
+import cv2, jwt
 
 # Local imports
 project_directory = os.path.dirname(os.path.abspath(__file__))
@@ -42,6 +42,9 @@ class User():
             self.JWT_TOKEN = acces_token
 
         print(f"jwt token: {self.JWT_TOKEN}")
+        # Decode the token without verifying the signature
+        decoded_token = jwt.decode(self.JWT_TOKEN, options={"verify_signature": False})
+        pprint.pprint(decoded_token)
 
         return self.IS_AUTHENTICATED,  self.TOKEN_STATUS_CODE
     
