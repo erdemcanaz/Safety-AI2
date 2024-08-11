@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Dict, List, Any
 import jwt
 import time
 import json, os, platform
@@ -53,8 +53,7 @@ class ListResponse(BaseModel):
     list_ : List
 
 class ListOfDictsResponse(BaseModel):
-    list_ : List[Dict]
-
+    list_: List[Dict[str, Any]]  # Adjusted to expect a list of dictionaries
 
 # Helper functions
 def verify_password(plain_password, hashed_password):
