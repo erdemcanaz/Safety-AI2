@@ -11,7 +11,7 @@ class ISGApp():
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
         "data_fetch_period_s": 10, # fetch data every 5 seconds     
-        "six_data_change_period_s": 3, # change the data every 10 seconds
+        "six_data_change_period_s": 2.5, # change the data every 10 seconds
 
         "main_image_bbox": (944, 84, 1854, 600),
         "image_bbox_0": (37, 145, 430, 368),
@@ -136,6 +136,14 @@ class ISGApp():
         if (time.time() - self.last_time_six_data_to_render_update) > self.CONSTANTS["six_data_change_period_s"]:
             self.last_time_six_data_to_render_update = time.time()
             self.last_six_data_to_render = self.__return_six_data_from_fetched_data() 
+            for i, data in enumerate(self.last_six_data_to_render):
+                is_violated = False
+                for person_normalized_bbox in data.get("person_normalized_bboxes", []):
+                    if person_normalized_bbox[4] != "":
+                        is_violated = True
+                        break
+                if is_violated:
+                    print(f"{i} Violation detected in {data.get('camera_name')}")
 
         if self.last_six_data_to_render is not None:            
             for i, data in enumerate(self.last_six_data_to_render):
