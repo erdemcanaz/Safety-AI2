@@ -116,8 +116,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 async def return_test_text(current_user: User = Depends(get_current_user)):
     return {"list_":current_user.allowed_tos}
 
-# Routes
-@app.post("/get_isg_ui_data", response_model=ListResponse)
+@app.get("/get_isg_ui_data", response_model=ListResponse)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(USER_DB, form_data.username, form_data.password)
     if not user:
