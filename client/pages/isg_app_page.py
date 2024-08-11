@@ -145,7 +145,7 @@ class ISGApp():
 
                 if i == 0:
                     main_frame_x1, main_frame_y1, main_frame_x2, main_frame_y2 = self.CONSTANTS["main_image_bbox"]
-                    picasso.draw_frame_on_frame(ui_frame, frame, (main_frame_x1, main_frame_y1), (main_frame_x2, main_frame_y2),  maintain_aspect_ratio=False)
+                    picasso.draw_frame_on_frame(ui_frame, frame, main_frame_x1, main_frame_y1, main_frame_x2-main_frame_x1, main_frame_y2-main_frame_y1, maintain_aspect_ratio=False)
                     if is_violation_detected: cv2.rectangle(ui_frame,(main_frame_x1, main_frame_y1), (main_frame_x2, main_frame_y2), color, 2)
                     cv2.putText(ui_frame, region_name,(main_frame_x1+50,main_frame_y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
 
