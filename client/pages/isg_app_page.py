@@ -90,8 +90,8 @@ class ISGApp():
             else:
                 pass
         
-        return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
-        return image, return_name, is_violation_detected
+        region_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
+        return image, region_name, is_violation_detected
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -138,6 +138,7 @@ class ISGApp():
                 width, height = x2-x1, y2-y1
     
                 frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
+                region_name = "asdsaf"
                 picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
                 color = (0,0,169) if is_violation_detected else (169,96,0)
                 if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), color, 2)
