@@ -104,7 +104,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = create_access_token(data={"sub": user.username, "job_title":"developer", "allowed_tos":user.allowed_tos})
+    access_token = create_access_token(data={"user_name": user.username, "person_name": user.full_name, "job_title":"developer", "allowed_tos":user.allowed_tos})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me/", response_model=User)
