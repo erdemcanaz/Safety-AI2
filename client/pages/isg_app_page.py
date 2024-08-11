@@ -62,13 +62,26 @@ class ISGApp():
         np_array = np.frombuffer(image_bytes, np.uint8)
         image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
 
+        # Draw camera name and datetime
+
+        cv2.putText(image, datetime_str, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)                
+        is_violation_detected = False
         for person_normalized_bbox in person_normalized_bboxes:
             x1, y1, x2, y2, violation = person_normalized_bbox
-            x1, y1, x2, y2 = int(x1*image.shape[1]), int(y1*image.shape[0]), int(x2*image.shape[1]), int(y2*image.shape[0])
+            x1, y1, x2, y2 = int(x1 * image.shape[1]), int(y1 * image.shape[0]), int(x2 * image.shape[1]), int(y2 * image.shape[0])
+    
+            roi = image[y1:y2, x1:x2]
+            blurred_roi = cv2.GaussianBlur(roi, (15, 15), 0)  # You can adjust the kernel size (15, 15) for more or less blur
+            image[y1:y2, x1:x2] = blurred_roi
+            
             color = (0, 0, 255) if violation != "" else (0, 255, 0)
             cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
-                        
-        return image
+
+            if violation != "":
+                is_violation_detected = True
+
+        return_name = camera_name if camera_name != "" else camera_uuid[:8]+"..."
+        return image, return_name, is_violation_detected
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -111,17 +124,11 @@ class ISGApp():
                 x1, y1, x2, y2 = self.CONSTANTS[f"image_bbox_{i}"]
                 width, height = x2-x1, y2-y1
     
-                frame = self.__convert_data_to_frame(data)
-                picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=True)
-                
-                # for j, person_normalized_bbox in enumerate(data.get("person_normalized_bboxes")):
-                #     x1, y1, x2, y2, violation = person_normalized_bbox
-                #     x1, y1, x2, y2 = int(x1*width), int(y1*height), int(x2*width), int(y2*height)
-                #     color = (0, 0, 255) if violation != "" else (0, 255, 0)
-                #     cv2.rectangle(ui_frame, (x+x1, y+y1), (x+x2, y+y2), color, 2)
-                #     cv2.putText(ui_frame, str(j+1), (x+x1, y+y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-                #     cv2.putText(ui_frame, violation, (x+x1, y+y1-25), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2, cv2.LINE_AA)
-
+                frame, region_name, is_violation_detected = self.__convert_data_to_frame(data)
+                picasso.draw_frame_on_frame(ui_frame, frame, x1, y1, width, height, maintain_aspect_ratio=False)
+                if is_violation_detected: cv2.rectangle(ui_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                cv2.putText(ui_frame, region_name, (x1+50, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+            
         cv2.imshow(cv2_window_name, ui_frame)
 
         
