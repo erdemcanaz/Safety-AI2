@@ -7,6 +7,7 @@ IMAGE_PATHS = {
     "server_failure_page_template": "src/templates/server_failure_page_template.png",
     "user_not_found_page_template": "src/templates/user_not_found_page_template.png",
     "which_app_page_template": "src/templates/which_app_page_template.png",
+    "user_not_authorized_for_app_page_template": "src/templates/user_not_authorized_for_app_page_template.png",
 
     "anil_right_looking": "src/icons/anil_right_looking.png",
     "anil_left_looking": "src/icons/anil_left_looking.png",

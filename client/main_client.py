@@ -7,7 +7,7 @@ import cv2, jwt
 project_directory = os.path.dirname(os.path.abspath(__file__))
 modules_directory = os.path.join(project_directory, 'modules')
 sys.path.append(modules_directory) # Add the modules directory to the system path so that imports work
-from pages import login_page, server_failure_page, user_not_found_page, which_app_page
+from pages import login_page, server_failure_page, user_not_found_page, which_app_page, user_not_authorized_for_app_page
 from modules import picasso, text_transformer
 
 class User():
@@ -137,6 +137,11 @@ while True:
             
         DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
     
+    elif DYNAMIC_PROGRAM_STATE[0] == 5: # USER NOT AUTHORIZED FOR APP PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, user_not_authorized_for_app_page.UserNotAuthorizedForApp):
+            DYNAMIC_PAGE_DEALER = user_not_authorized_for_app_page.UserNotAuthorizedForApp()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
 
 cv2.destroyAllWindows()
 

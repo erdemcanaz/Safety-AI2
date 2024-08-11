@@ -21,9 +21,30 @@ class WhichApp():
         return False 
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
-        
+        app_names = ["ISG_APP","KALITE_APP","GUVENLIK_APP","IHLAL_RAPORLARI_APP","OZET_APP","KURALLAR_APP","KAMERALAR_APP","IOT_CIHAZLAR_APP","TERCIHLER_APP"]
+        app_name_bboxs = [
+            (212, 288, 212+589, 288+63),
+            (212, 363, 212+589, 363+63),
+            (212, 438, 212+589, 438+63),
+            (212, 513, 212+589, 513+63),
+            (212, 588, 212+589, 588+63),
+            (212, 663, 212+589, 663+63),
+            (212, 738, 212+589, 738+63),
+            (212, 813, 212+589, 813+63),
+            (212, 888, 212+589, 888+63),
+        ]
         # Mouse input
-        #TODO:
+        if mouse_input.get_last_leftclick_position() is not None:
+            x, y = mouse_input.get_last_leftclick_position()
+            mouse_input.clear_last_leftclick_position()
+            for app_no, app_name in enumerate(app_names):
+                if self.__is_xy_in_bbox(x, y, app_name_bboxs[app_no]):
+                    if app_name not in active_user.get_token_allowed_tos(): # 
+                        program_state[0] = 5
+                        program_state[1] = 0
+                        program_state[2] = 0
+                    break
+           
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -48,7 +69,7 @@ class WhichApp():
             "IOT_CIHAZLAR_APP": "IoT Cihazlar",
             "TERCIHLER_APP": "Tercihler Sayfasi",
         }
-        for app_no, app_name in enumerate(["ISG_APP","KALITE_APP","GUVENLIK_APP","IHLAL_RAPORLARI_APP","OZET_APP","KURALLAR_APP","KAMERALAR_APP","IOT_CIHAZLAR_APP","TERCIHLER_APP"]):        
+        for app_no, app_name in enumerate(app_names):        
             if app_name in active_user.get_token_allowed_tos():
                 picasso.draw_image_on_frame(ui_frame, image_name="app_bar_dark_blue", x=212, y=288+app_no*75, width=589, height=63, maintain_aspect_ratio=True)
             else:
