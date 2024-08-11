@@ -43,6 +43,18 @@ class WhichApp():
                         program_state[0] = 5
                         program_state[1] = 0
                         program_state[2] = 0
+                    elif app_name == "ISG_APP":
+                        program_state[0] = 6
+                        program_state[1] = 0
+                        program_state[2] = 0
+                    elif app_name == "KALITE_APP":
+                        program_state[0] = 7
+                        program_state[1] = 0
+                        program_state[2] = 0
+                    elif app_name == "GUVENLIK_APP":
+                        program_state[0] = 8
+                        program_state[1] = 0
+                        program_state[2] = 0
                     break
            
 

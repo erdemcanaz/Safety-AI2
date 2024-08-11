@@ -7,7 +7,16 @@ import cv2, jwt
 project_directory = os.path.dirname(os.path.abspath(__file__))
 modules_directory = os.path.join(project_directory, 'modules')
 sys.path.append(modules_directory) # Add the modules directory to the system path so that imports work
-from pages import login_page, server_failure_page, user_not_found_page, which_app_page, user_not_authorized_for_app_page
+from pages import (
+    login_page,
+    server_failure_page,
+    user_not_found_page,
+    which_app_page,
+    user_not_authorized_for_app_page,
+    isg_app_page,
+    kalite_app_page,
+    guvenlik_app_page,
+)
 from modules import picasso, text_transformer
 
 class User():
@@ -100,7 +109,7 @@ def mouse_callback(event, x, y, flags, param):
     
 cv2.setMouseCallback(CV2_WINDOW_NAME, mouse_callback)
 
-DYNAMIC_PROGRAM_STATE = [4,0,0] #page no, page state, other if required -> login page: [0,0,0]
+DYNAMIC_PROGRAM_STATE = [8,0,0] #page no, page state, other if required -> login page: [0,0,0]
 DYNAMIC_PAGE_DEALER = None
 
 # MAIN LOOP ============================================================================================================
@@ -142,6 +151,24 @@ while True:
             DYNAMIC_PAGE_DEALER = user_not_authorized_for_app_page.UserNotAuthorizedForApp()
             
         DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+
+    elif DYNAMIC_PROGRAM_STATE[0] == 6: # ISG APP PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, isg_app_page.ISGApp):
+            DYNAMIC_PAGE_DEALER = isg_app_page.ISGApp()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+    elif DYNAMIC_PROGRAM_STATE[0] == 7: # KALITE APP PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, kalite_app_page.KaliteApp):
+            DYNAMIC_PAGE_DEALER = kalite_app_page.KaliteApp()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+    
+    elif DYNAMIC_PROGRAM_STATE[0] == 8: # GUVENLIK APP PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, guvenlik_app_page.GuvenlikApp):
+            DYNAMIC_PAGE_DEALER = guvenlik_app_page.GuvenlikApp()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+
 
 cv2.destroyAllWindows()
 
