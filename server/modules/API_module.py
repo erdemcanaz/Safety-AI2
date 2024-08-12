@@ -202,6 +202,7 @@ async def get_violation_image_with_uuid(violation_uuid: ViolationUUIDRequest, cu
     # GENERATE DUMMY DATA TODO: Replace this with real data   
     dummy_dict = {
             "camera_uuid": uuid.uuid4(),
+            "violation_uuid": violation_uuid.violation_uuid,
             "camera_hr_name" : ''.join([random.choice(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]) for _ in range(5)]),
             "date_time" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),    
             "person_normalized_bboxes" : [ [random.uniform(0,0.45), random.uniform(0,0.45), random.uniform(0.55,1), random.uniform(0.55,1), random.choice(["","","","", "hard_hat", "restricted_area"]),] for _ in range(random.randint(0,3))],

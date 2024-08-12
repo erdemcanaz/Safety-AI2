@@ -201,6 +201,7 @@ class IhlalRaporlariApp():
 
         if self.violation_image_dict is not None:
             camera_uuid = self.violation_image_dict.get("camera_uuid")
+            violation_uuid = self.violation_image_dict.get("violation_uuid")
             camera_hr_name = self.violation_image_dict.get("camera_hr_name")
             date_time = self.violation_image_dict.get("date_time")        
             person_normalized_bboxes = self.violation_image_dict.get("person_normalized_bboxes")
@@ -232,11 +233,16 @@ class IhlalRaporlariApp():
                 is_violation = True if violation_type in ["hard_hat", "restricted_area"] else is_violation
             
             violation_types_found = list(set(violation_types_found))
-            if "hard_hat" in violation_types_found:
-                picasso.draw_image_on_frame(image, image_name="red_hardhat", x=image.shape[1]-50, y=10, width=50, height=50, maintain_aspect_ratio=False)
-            if "restricted_area" in violation_types_found:
-                picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=image.shape[1]-50*len(violation_types_found), y=10, width=50, height=50, maintain_aspect_ratio=False)
 
+            #put info text
+            cv2.putText(image, f"{'Kamera UUID':<20}: {camera_uuid}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            cv2.putText(image, f"{'Ihlal UUID':<20}: {violation_uuid}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            cv2.putText(image, f"{'Gerceklesme Tarihi':<20}: {date_time}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            cv2.putText(image , f"{'Kamera Adi':<20}: {camera_hr_name}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            cv2.putText(image , f"{'Ihlal Turu':<20}: {violation_types_found}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            cv2.putText(image,  f"{'Talep Eden Kişi':<30}: {active_user.get_token_person_name()}")
+            cv2.putText(image, f"{'Talep ettiği tarih':<30}: {datetime.datetime.now().strftime("%d.%m.%Y - %H:%M:%S")}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            #
             picasso.draw_image_on_frame(ui_frame, image_name="violation_image_background", x=310, y=230, width=1316, height=785, maintain_aspect_ratio=False)
             picasso.draw_frame_on_frame(ui_frame, image, x=325, y=265, width=1280, height=720, maintain_aspect_ratio=False)
             
