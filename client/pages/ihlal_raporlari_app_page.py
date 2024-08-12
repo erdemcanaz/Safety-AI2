@@ -237,20 +237,46 @@ class IhlalRaporlariApp():
             
             violation_types_found = list(set(violation_types_found))
 
-            #put info text
-            fontsize = 0.75
-            font_color = (169,96,0)
+            cv2.resize(image, (1280, 720), interpolation=cv2.INTER_AREA) # Resize image to 1280x720 so that text can be written on it properly
+
+            # Define your font settings
+            header_color = (0, 0, 0)  # Black for headers
+            value_color = (255, 255, 255)   # White for values
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            fontsize = 0.6
             font_thickness = 1
 
-            cv2.resize(image, (1280, 720), interpolation=cv2.INTER_AREA)
+            # Define the starting position
+            start_x = 10
+            start_y = 30
+            line_spacing = 25
 
-            cv2.putText(image, f"{'Kamera UUID':<20}: {camera_uuid}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(image, f"{'Ihlal UUID':<20}: {violation_uuid}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(image, f"{'Gerceklesme Tarihi':<20}: {date_time}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(image , f"{'Kamera Adi':<20}: {camera_hr_name}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(image , f"{'Ihlal Turu':<20}: {violation_types_found}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(image,  f"{'Talep Eden Kisi':<20}: {active_user.get_token_person_name()}", (10, 210), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
-            cv2.putText(image, f"{'Talep ettigi tarih':<20}: {datetime.datetime.now().strftime('%d.%m.%Y - %H:%M:%S')}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            # Define the max header length for alignment
+            max_header_length = 20
+
+            # Define the text elements
+            texts = [
+                ('Kamera UUID', camera_uuid),
+                ('Ihlal UUID', violation_uuid),
+                ('Gerceklesme Tarihi', date_time),
+                ('Kamera Adi', camera_hr_name),
+                ('Ihlal Turu', violation_types_found),
+                ('Talep Eden Kisi', active_user.get_token_person_name()),
+                ('Talep ettigi tarih', datetime.datetime.now().strftime('%d.%m.%Y - %H:%M:%S'))
+            ]
+
+            # Draw each header and value with different colors
+            for i, (header, value) in enumerate(texts):
+                header_text = f"{header:<{max_header_length}}:"
+                header_position = (start_x, start_y + i * line_spacing)
+                value_position = (start_x + 200, start_y + i * line_spacing)  # Adjust 200 based on your text size
+
+                # Draw header
+                cv2.putText(image, header_text, header_position, font, fontsize, header_color, font_thickness, cv2.LINE_AA)
+                
+                # Draw value
+                cv2.putText(image, value, value_position, font, fontsize, value_color, font_thickness, cv2.LINE_AA)
+            
             #
             picasso.draw_image_on_frame(ui_frame, image_name="violation_image_background", x=310, y=230, width=1316, height=785, maintain_aspect_ratio=False)
             picasso.draw_frame_on_frame(ui_frame, image, x=325, y=265, width=1280, height=720, maintain_aspect_ratio=False)
