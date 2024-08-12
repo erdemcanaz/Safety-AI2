@@ -78,6 +78,7 @@ class IhlalRaporlariApp():
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
+        print(chr(pressed_key))
         if pressed_key == 27: #ESC
             program_state[0] = 4
             program_state[1] = 0
