@@ -238,9 +238,11 @@ class IhlalRaporlariApp():
             violation_types_found = list(set(violation_types_found))
 
             #put info text
-            fontsize = 0.25
+            fontsize = 0.5
             font_color = (169,96,0)
             font_thickness = 1
+
+            cv2.resize(image, (1280, 720), interpolation=cv2.INTER_AREA)
 
             cv2.putText(image, f"{'Kamera UUID':<20}: {camera_uuid}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
             cv2.putText(image, f"{'Ihlal UUID':<20}: {violation_uuid}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
