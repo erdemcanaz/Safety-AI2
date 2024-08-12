@@ -20,6 +20,8 @@ class IhlalRaporlariApp():
         "request_ihlal_raporlari_data_button": (1358,63, 1446,100),
         "assign_this_shift": (1464, 64, 1504, 100),
 
+        "decrease_data_index_button": (1860, 186, 1877, 214),
+        "increase_data_index_button": (1861, 976, 1877, 1005),
 
     }
 
@@ -91,6 +93,10 @@ class IhlalRaporlariApp():
                 self.start_date_shift = (datetime.datetime.now().hour//8)
                 self.end_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
                 self.end_date_shift = (datetime.datetime.now().hour//8)
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_data_index_button"]):
+                self.first_data_index_to_display = max(0, self.first_data_index_to_display-12)
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_data_index_button"]):
+                self.first_data_index_to_display = min(len(self.fetched_data)-12, self.first_data_index_to_display+12)
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -137,7 +143,7 @@ class IhlalRaporlariApp():
             y = 220 + report_no*65
             picasso.draw_image_on_frame(ui_frame, image_name="ihlal_row_light_blue" if report_no%2==0 else "ihlal_row_dark_blue", x=77, y=y, width=1763, height=58, maintain_aspect_ratio=True)
             cv2.putText(ui_frame, str(self.first_data_index_to_display+report_no+1), (88, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["violation_date"], (202, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["violation_date"], (202, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["region_name"]), (506, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_type"]), (872, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_score"]), (1116, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
