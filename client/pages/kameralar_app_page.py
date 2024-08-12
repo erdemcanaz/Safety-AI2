@@ -13,6 +13,7 @@ class KameralarApp():
         "clear_camera_configs_bbox": (364,143,436,194),
         "decrease_camera_index_button": (404, 208, 420, 238),
         "increase_camera_index_button": (405, 893, 421, 920),
+        "fetch_image_button": (1456, 648, 1692, 682),
 
         "camera_list_bbox": (74, 211, 391, 922),
 
@@ -88,7 +89,15 @@ class KameralarApp():
                         report_page_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
                         report_index = self.first_camera_index_to_show + report_page_index
                         if not report_index >= len(self.camera_configs):
-                            self.dummy_camera_dict = self.camera_configs[report_index]                            
+                            self.dummy_camera_dict = self.camera_configs[report_index]    
+                    fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
+                    if status_code == 200:
+                        self.camera_fetched_frame = fetched_frame                        
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["fetch_image_button"]):
+                fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
+                if status_code == 200:
+                    self.camera_fetched_frame = fetched_frame
+            
 
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
@@ -105,13 +114,11 @@ class KameralarApp():
             program_state[0] = 4
             program_state[1] = 0
             program_state[2] = 0
-        elif chr(pressed_key) == "x":
-            fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
-            if status_code == 200:
-                self.camera_fetched_frame = fetched_frame
+        elif chr(pressed_key) == "x":          
+            pass
+            
 
         # Draw UI
-        picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         
         for camera_index, camera_dict in enumerate(self.__get_cameras_to_show()):
             x, y = 75, 207 + camera_index * 65
@@ -143,6 +150,7 @@ class KameralarApp():
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 799), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         
         if self.camera_fetched_frame is not None:
-            picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=True)
+            picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=False)
         
+        picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
