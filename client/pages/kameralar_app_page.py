@@ -27,7 +27,7 @@ class KameralarApp():
         self.ORIGINAL_CAMERA_CONFIGS = None
         self.camera_configs = None
 
-        self.dummy_camera_dict = self.reset_dummy_camera_dict()
+        self.reset_dummy_camera_dict()
 
     def reset_dummy_camera_dict(self):
         self.dummy_camera_dict = {
@@ -42,6 +42,7 @@ class KameralarApp():
             "stream_path": "profile2/media.smp",
             "active_rules": []
         }      
+
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
