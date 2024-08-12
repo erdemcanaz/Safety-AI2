@@ -96,7 +96,7 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_data_index_button"]):
                 self.first_data_index_to_display = max(0, self.first_data_index_to_display-12)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_data_index_button"]):
-                self.first_data_index_to_display = min(len(self.fetched_data)-12, self.first_data_index_to_display+12)
+                self.first_data_index_to_display = self.first_data_index_to_display+12
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
