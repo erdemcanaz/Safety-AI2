@@ -25,8 +25,8 @@ from modules import picasso, text_transformer
 
 class User():
     def __init__(self, server_ip_address:str=None):
-        self.USERNAME = None
-        self.PASSWORD = None
+        self.USERNAME = "erdem.canaz"
+        self.PASSWORD = "erdem123"
         self.JWT_TOKEN = None
         self.TOKEN_STATUS_CODE = None
         self.IS_AUTHENTICATED = False  

@@ -17,11 +17,8 @@ class LoginPage():
 
         "login": (222,690,800,752)
     }
-    def __init__(self):
-        self.username_text_field = "erdem.canaz"
-        self.password_text_field = "erdem123"
+    def __init__(self):       
         self.show_password = False
-
         self.secondary_mode = 0
     
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
