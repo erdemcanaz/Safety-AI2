@@ -217,7 +217,7 @@ class KameralarApp():
                     uuid_text = camera_dict.get("camera_uuid")
                     break
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_ip_address')}", (750, 765), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 799), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), font_thickness)
+        cv2.putText(ui_frame, f"{uuid_text}", (750, 799), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), font_thickness)
         cv2.putText(ui_frame, f"{is_alive_text}", (750, 833), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), 2)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('username')}", (750, 867), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{len(self.dummy_camera_dict.get('password'))*'*' if not self.show_password else self.dummy_camera_dict.get('password')}", (750, 902), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
