@@ -51,9 +51,11 @@ class IhlalRaporlariApp():
     def __get_reports_to_display(self):
         if self.first_data_index_to_display >= len(self.fetched_data):
             self.first_data_index_to_display = min(0, len(self.fetched_data)-12)
-        
-        return self.fetched_data[self.first_data_index_to_display:min(self.first_data_index_to_display+12, len(self.fetched_data))]
 
+        if self.fetched_data is not None:         
+            return self.fetched_data[self.first_data_index_to_display:min(self.first_data_index_to_display+12, len(self.fetched_data))]
+        else:
+            return []
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -134,7 +136,7 @@ class IhlalRaporlariApp():
             cv2.putText(ui_frame, report["ihlal_description"], (700, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
             cv2.putText(ui_frame, report["ihlal_location"], (1000, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
             cv2.putText(ui_frame, report["ihlal_status"], (1300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)     
-                                                  
+
         cv2.imshow(cv2_window_name, ui_frame)
 
         
