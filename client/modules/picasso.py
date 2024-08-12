@@ -25,6 +25,7 @@ IMAGE_PATHS = {
     "red_restricted_area_transp": "src/icons/red_restricted_area_transp.png",
     "ihlal_row_light_blue": "src/icons/ihlal_row_light_blue.png",
     "ihlal_row_dark_blue": "src/icons/ihlal_row_dark_blue.png",
+    "violation_image_background": "src/icons/violation_image_background.png",
 }
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):

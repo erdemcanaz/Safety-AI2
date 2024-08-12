@@ -124,6 +124,17 @@ class IhlalRaporlariApp():
             else: #Violation image dict is not None, should show the image and mouse click should be for closing the image
                 self.violation_image_dict = None 
 
+                if self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_report_image_bboxs"]):
+                    if self.fetched_data is not None:
+                        report_page_index = (y - self.CONSTANTS["show_report_image_bboxs"][1])//65
+                        report_index = self.first_data_index_to_display + report_page_index
+                        if not report_index >= len(self.fetched_data):
+                            report_uuid = self.fetched_data[report_index]["violation_uuid"]
+                            print(f"Report Index: {report_index}, Report UUID: {report_uuid}")
+                            self.violation_image_dict, status_code = active_user.request_violation_image_with_violation_uuid(violation_uuid=report_uuid)
+                
+                
+
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
         if pressed_key == 27: #ESC
@@ -226,8 +237,9 @@ class IhlalRaporlariApp():
             if "restricted_area" in violation_types_found:
                 picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=image.shape[1]-50*len(violation_types_found), y=10, width=50, height=50, maintain_aspect_ratio=False)
 
-            picasso.draw_frame_on_frame(ui_frame, image, x=500, y=500, width=500, height=500, maintain_aspect_ratio=False)
-
+            picasso.draw_image_on_frame(image, image_name="violation_image_background", x=300, y=250, width=1316, height=785, maintain_aspect_ratio=True)
+            picasso.draw_frame_on_frame(ui_frame, image, x=325, y=265, width=1280, height=720, maintain_aspect_ratio=False)
+            
         cv2.imshow(cv2_window_name, ui_frame)
 
 
