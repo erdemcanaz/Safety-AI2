@@ -90,7 +90,7 @@ class User():
         }
         fetched_list = []
         try:
-            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_isg_ui_data", headers=headers, json=json_body, timeout=1)    
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_violation_reports", headers=headers, json=json_body, timeout=1)    
             fetched_list = response.json()["list_"]
             return fetched_list, response.status_code
         except:
