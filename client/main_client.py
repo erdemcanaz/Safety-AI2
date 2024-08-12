@@ -18,7 +18,8 @@ from pages import (
     guvenlik_app_page,
     ozet_app_page,
     ihlal_raporlari_app_page,
-    kurallar_app_page
+    kurallar_app_page,
+    kameralar_app_page
 )
 from modules import picasso, text_transformer
 
@@ -30,7 +31,6 @@ class User():
         self.TOKEN_STATUS_CODE = None
         self.IS_AUTHENTICATED = False  
         self.SERVER_IP_ADDRESS = server_ip_address   
-
         self.DECODED_TOKEN = None
 
     def get_token_person_name(self)->str:
@@ -108,6 +108,15 @@ class User():
             return fetched_dict, response.status_code
         except:
             return None, 404
+        
+    def request_camera_configs_dict(self)->list:
+        headers = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        try:
+            response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_camera_configs_json", headers=headers, timeout=1)    
+            camera_configs = response.json()["dict_"]
+            return camera_configs, response.status_code
+        except:
+            return None, 404       
         
 class MouseInput():
     def __init__(self):
@@ -230,6 +239,12 @@ while True:
             
         DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
 
+    elif DYNAMIC_PROGRAM_STATE[0] == 12: # KAMERALAR APP PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, kameralar_app_page.KameralarApp):
+            DYNAMIC_PAGE_DEALER = kameralar_app_page.KameralarApp()
+            
+        DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+        
 cv2.destroyAllWindows()
 
 

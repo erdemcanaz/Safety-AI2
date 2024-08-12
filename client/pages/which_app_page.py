@@ -67,6 +67,10 @@ class WhichApp():
                         program_state[0] = 11
                         program_state[1] = 0
                         program_state[2] = 0
+                    elif app_name == "KAMERALAR_APP":
+                        program_state[0] = 12
+                        program_state[1] = 0
+                        program_state[2] = 0
                         
                     break
            

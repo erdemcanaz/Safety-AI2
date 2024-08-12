@@ -14,6 +14,7 @@ IMAGE_PATHS = {
     "ozet_app_page_template": "src/templates/ozet_app_page_template.png",
     "ihlal_raporlari_app_page": "src/templates/ihlal_raporlari_app_page_template.png",
     "kurallar_app_page_template": "src/templates/kurallar_app_page_template.png",
+    "kameralar_app_page_template": "src/templates/kameralar_app_page_template.png",
 
     "anil_right_looking": "src/icons/anil_right_looking.png",
     "anil_left_looking": "src/icons/anil_left_looking.png",

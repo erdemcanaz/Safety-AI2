@@ -213,6 +213,27 @@ async def get_violation_image_with_uuid(violation_uuid: ViolationUUIDRequest, cu
     return {"dict_": dummy_dict}
 
 
+@app.get("/get_camera_configs_json", response_class=DictResponse)
+async def get_camera_configs_json(current_user: User = Depends(get_current_user)):
+    if not all(app in current_user.allowed_tos for app in ["KAMERALAR_APP", "OZET_APP", "KURALLAR_APP"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authorized for this app",
+            headers={"WWW-Authenticate": "Bearer"},
+        )    
+
+    # Load user database
+    is_linux = platform.system() == "Linux"
+    if is_linux:
+        CAMERA_CONFIGS_PATH= Path(__file__).resolve().parent.parent.parent.parent / "safety_AI_volume" / "camera_configs.json"
+    else:
+        CAMERA_CONFIGS_PATH = Path(__file__).resolve().parent.parent / "configs" / "camera_configs.json"
+    
+    with open(USER_DATABASE_JSON_PATH, "r") as f:
+        CAMERA_CONFIGS_JSON: Dict[str, Dict[str, str]] = json.load(f)["user_db"]
+
+    return {"dict_": CAMERA_CONFIGS_JSON}
+
 #Run the application
 if __name__ == "__main__":
     import uvicorn
