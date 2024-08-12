@@ -1,7 +1,7 @@
 # Built-in imports
 import pprint, time, sys, os, requests
 import numpy as np
-import cv2, jwt
+import cv2, jwt, base64
 
 # Local imports
 project_directory = os.path.dirname(os.path.abspath(__file__))
@@ -129,7 +129,11 @@ class User():
             try:
                 response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_camera_frame", headers=headers, json=json_body, timeout=5)    
                 fetched_dict = response.json()["dict_"]
-                return fetched_dict["image_base_64"], response.status_code
+                image_base_64 = fetched_dict["image_base_64"]
+                image_bytes = base64.b64decode(image_base_64)
+                np_array = np.frombuffer(image_bytes, np.uint8)
+                fetched_frame = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+                return fetched_frame, response.status_code
             except:
                 return None, 404
             
