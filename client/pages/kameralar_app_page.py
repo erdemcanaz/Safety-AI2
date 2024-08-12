@@ -4,7 +4,7 @@ import numpy as np
 
 import requests
 from typing import Dict, List
-import time,copy
+import time,copy, uuid
 
 class KameralarApp():
 
@@ -14,6 +14,11 @@ class KameralarApp():
         "decrease_camera_index_button": (404, 208, 420, 238),
         "increase_camera_index_button": (405, 893, 421, 920),
         "fetch_image_button": (1456, 648, 1692, 682),
+        "show_password_bbox": (1087, 882, 1131, 910),
+        "clear_dummy_camera_dict_bbox": (696, 1017, 908, 1045),
+        "update_camera_configs_bbox": (922, 1017, 1137, 1045),
+        "create_camera_configs_bbox": (1149, 1017, 1364, 1045),
+        "delete_camera_configs_bbox": (1392, 1017, 1611, 1045),
 
         "camera_list_bbox": (74, 211, 391, 922),
 
@@ -28,11 +33,16 @@ class KameralarApp():
         self.ORIGINAL_CAMERA_CONFIGS = None
         self.camera_configs = None
 
+        self.show_password = False
 
-        self.reset_dummy_camera_dict()
+        self.__reset_dummy_camera_dict()
         self.camera_fetched_frame = None
+        self.camera_fetched_frame_ip  = ""
 
-    def reset_dummy_camera_dict(self):
+    def __reset_dummy_camera_dict(self):
+        self.camera_fetched_frame = None
+        self.camera_fetched_frame_ip  = ""
+
         self.dummy_camera_dict = {
             "is_alive": True,
             "camera_uuid": "",
@@ -42,8 +52,9 @@ class KameralarApp():
             "username": "",
             "password": "",
             "camera_ip_address": "",
+            "stream_path": "",
+            "active_rules": []
         }      
-
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
@@ -93,14 +104,44 @@ class KameralarApp():
                             fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
                             if status_code == 200:
                                 self.camera_fetched_frame = fetched_frame
-
-
+                                self.camera_fetched_frame_ip = self.dummy_camera_dict["camera_ip_address"]
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["fetch_image_button"]):
                 print("fetch image button clicked")
                 fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
                 if status_code == 200:
                     self.camera_fetched_frame = fetched_frame
-            
+                    self.camera_fetched_frame_ip = self.dummy_camera_dict["camera_ip_address"]
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_password_bbox"]):
+                self.show_password = not self.show_password
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["clear_dummy_camera_dict_bbox"]):
+                self.__reset_dummy_camera_dict()
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["update_camera_configs_bbox"]):
+                for camera_dict in self.camera_configs:
+                    if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
+                        _deep_copy_dummy_camera_dict = copy.deepcopy(self.dummy_camera_dict)
+                        camera_dict["is_alive"] = _deep_copy_dummy_camera_dict.get("is_alive")
+                        camera_dict["camera_region"] = _deep_copy_dummy_camera_dict.get("camera_region")
+                        camera_dict["camera_description"] = _deep_copy_dummy_camera_dict.get("camera_description")
+                        camera_dict["NVR_ip"] = _deep_copy_dummy_camera_dict.get("NVR_ip")
+                        camera_dict["username"] = _deep_copy_dummy_camera_dict.get("username")
+                        camera_dict["password"] = _deep_copy_dummy_camera_dict.get("password")
+                        break
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["create_camera_configs_bbox"]):
+                for camera_dict in self.camera_configs:
+                    if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
+                        break
+                else:
+                    _deep_copy_dummy_camera_dict = copy.deepcopy(self.dummy_camera_dict)
+                    _deep_copy_dummy_camera_dict["camera_uuid"] = uuid.uuid4()
+                    _deep_copy_dummy_camera_dict["stream_path"] = "profile2/media.smp" # For this project, stream path is fixed
+                    self.camera_configs.append(self._deep_copy_dummy_camera_dict)
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["delete_camera_configs_bbox"]):
+                for camera_dict in self.camera_configs:
+                    if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
+                        self.camera_configs.remove(camera_dict)
+                        break
+                    self.__reset_dummy_camera_dict()
+
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
             fetched_dict, status_code = active_user.request_camera_configs_dict()
@@ -146,13 +187,14 @@ class KameralarApp():
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 799), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), font_thickness)
         cv2.putText(ui_frame, f"{is_alive_text}", (750, 833), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), 2)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('username')}", (750, 867), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('password')}", (750, 902), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
+        cv2.putText(ui_frame, f"{len(self.dummy_camera_dict.get('password'))*"*" if not self.show_password else self.dummy_camera_dict.get('password')}", (750, 902), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('NVR_ip')}", (750, 936), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_region')}", (750, 971), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 799), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         
         if self.camera_fetched_frame is not None:
             picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=False)
-        
+            cv2.putText(ui_frame, f"{self.camera_fetched_frame_ip}", (610, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2)
+
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
