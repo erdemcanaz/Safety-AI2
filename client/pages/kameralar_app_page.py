@@ -27,7 +27,9 @@ class KameralarApp():
         self.ORIGINAL_CAMERA_CONFIGS = None
         self.camera_configs = None
 
+
         self.reset_dummy_camera_dict()
+        self.camera_fetched_frame = None
 
     def reset_dummy_camera_dict(self):
         self.dummy_camera_dict = {
@@ -104,9 +106,13 @@ class KameralarApp():
             program_state[1] = 0
             program_state[2] = 0
         elif chr(pressed_key) == "x":
-            active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
-          
+            fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
+            if status_code == 200:
+                self.camera_fetched_frame = fetched_frame
+
         # Draw UI
+        picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
+        
         for camera_index, camera_dict in enumerate(self.__get_cameras_to_show()):
             x, y = 75, 207 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
@@ -135,8 +141,8 @@ class KameralarApp():
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('NVR_ip')}", (750, 936), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_region')}", (750, 971), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 799), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
-
-        picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
-        cv2.imshow(cv2_window_name, ui_frame)
-
         
+        if self.camera_fetched_frame is not None:
+            picasso.draw_frame_on_frame(ui_frame, frame=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=True)
+        
+        cv2.imshow(cv2_window_name, ui_frame)
