@@ -98,7 +98,8 @@ class KameralarApp():
             x, y = mouse_input.get_last_leftclick_position()
             mouse_input.clear_last_leftclick_position()        
             if self.__is_xy_in_bbox(x, y, self.CONSTANTS["clear_camera_configs_bbox"]):
-                self.camera_configs = None  
+                self.camera_configs = None
+                self.__reset_dummy_camera_dict()  
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_camera_index_button"]):
                 self.first_camera_index_to_show = max(0, self.first_camera_index_to_show-11)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_button"]):
@@ -114,7 +115,6 @@ class KameralarApp():
                                 self.camera_fetched_frame = fetched_frame
                                 self.camera_fetched_frame_ip = self.dummy_camera_dict["camera_ip_address"]
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["fetch_image_button"]):
-                print("fetch image button clicked")
                 fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
                 if status_code == 200:
                     self.camera_fetched_frame = fetched_frame
