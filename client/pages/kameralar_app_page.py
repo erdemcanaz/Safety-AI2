@@ -83,7 +83,7 @@ class KameralarApp():
                 self.first_camera_index_to_show = max(0, self.first_camera_index_to_show-11)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_button"]):
                 self.first_camera_index_to_show = self.first_camera_index_to_show+11
-            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_report_image_bboxs"]):
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
                     if self.fetched_data is not None:
                         report_page_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
                         report_index = self.first_camera_index_to_show + report_page_index
@@ -118,15 +118,18 @@ class KameralarApp():
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+90, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
         #put the camera configs to the dummy camera dict
+        font_size = 0.5
+        font_thickness = 1
+
         is_alive_text = "Aktif" if self.dummy_camera_dict.get("is_alive") else "Pasif"
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_ip_address')}", (750, 775), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 809), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{is_alive_text}", (750, 843), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('username')}", (750, 877), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('password')}", (750, 912), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('NVR_ip')}", (750, 946), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_region')}", (750, 981), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 809), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_ip_address')}", (750, 775), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 809), cv2.FONT_HERSHEY_SIMPLEX, font_size, (180,180,180), font_thickness)
+        cv2.putText(ui_frame, f"{is_alive_text}", (750, 843), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('username')}", (750, 877), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('password')}", (750, 912), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('NVR_ip')}", (750, 946), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_region')}", (750, 981), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 809), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
 
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
