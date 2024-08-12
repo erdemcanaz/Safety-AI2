@@ -33,17 +33,6 @@ class ISGApp():
 
     }
 
-# dummy_dict = {
-# "camera_uuid": uuid.uuid4(),
-# "camera_hr_name" : random.choice(["A","B","C","D","E","F","G","H","I","J"]),
-# "date_time" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-# "people_analyzed" : random.randint(0,5000),
-# "frame_analyzed" : random.randint(0,5000),
-# "hard_hat_violation_counts" : [random.randint(0,5000),random.randint(0,5000)],
-# "restricted_area_violation_counts" : [random.randint(0,5000),random.randint(0,5000)],            
-# "person_normalized_bboxes" : [ [random.uniform(0,0.45), random.uniform(0,0.45), random.uniform(0.55,1), random.uniform(0.55,1), random.choice(["","","","", "hard_hat", "restricted_area"]),] for _ in range(random.randint(0,3))],
-
-
     def __init__(self):
         self.last_time_isg_data_fetch = 0
         self.fetched_data:list = []
