@@ -80,7 +80,7 @@ class KameralarApp():
         return self.camera_configs[self.first_camera_index_to_show:self.first_camera_index_to_show+11]
     
     def __check_if_camera_is_old_updated_or_new(self, camera_dict:Dict = None) -> str:
-        keys_to_check = ["is_alive", "camera_uuid", "camera_region", "camera_description", "NVRip", "username", "password", "camera_ip_address", "stream_path", "active_rules"]
+        keys_to_check = ["is_alive", "camera_uuid", "camera_region", "camera_description", "NVR_ip", "username", "password", "camera_ip_address", "stream_path", "active_rules"]
         
         for _camera_dict in self.ORIGINAL_CAMERA_CONFIGS:
             if _camera_dict.get("camera_ip_address") == camera_dict["camera_ip_address"]: # if camera is already in the list
