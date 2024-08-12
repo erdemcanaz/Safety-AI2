@@ -275,7 +275,7 @@ class IhlalRaporlariApp():
                 cv2.putText(image, header_text, header_position, font, fontsize, header_color, font_thickness, cv2.LINE_AA)
                 
                 # Draw value
-                cv2.putText(image, value, value_position, font, fontsize, value_color, font_thickness, cv2.LINE_AA)
+                cv2.putText(image,str(value), value_position, font, fontsize, value_color, font_thickness, cv2.LINE_AA)
             
             #
             picasso.draw_image_on_frame(ui_frame, image_name="violation_image_background", x=310, y=230, width=1316, height=785, maintain_aspect_ratio=False)
