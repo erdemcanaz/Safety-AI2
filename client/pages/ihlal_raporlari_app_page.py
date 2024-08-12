@@ -137,11 +137,11 @@ class IhlalRaporlariApp():
             picasso.draw_image_on_frame(ui_frame, image_name="ihlal_row_light_blue" if report_no%2==0 else "ihlal_row_dark_blue", x=77, y=y, width=1763, height=58, maintain_aspect_ratio=True)
             cv2.putText(ui_frame, str(self.first_data_index_to_display+report_no+1), (88, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
             cv2.putText(ui_frame, report["violation_date"], (202, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["region_name"]), (506, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_type"]), (872, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_score"]), (1116, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (1285, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1504, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["region_name"]), (506, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_type"]), (872, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_score"]), (1116, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (1285, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1504, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, 2, cv2.LINE_AA)
 
         cv2.imshow(cv2_window_name, ui_frame)
 
