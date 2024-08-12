@@ -152,7 +152,7 @@ class IhlalRaporlariApp():
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (1285, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1504, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
         if self.fetched_data is not None:
-            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (1865, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
+            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (202, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
 
             percentage = (self.first_data_index_to_display/len(self.fetched_data))
             scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
@@ -162,7 +162,7 @@ class IhlalRaporlariApp():
             bar_mid_y = int(self.CONSTANTS["scroll_bar_bbox"][1] + int(scroll_bar_height*percentage))
             bar_bottom_y = max(int(bar_mid_y - bar_height//2), self.CONSTANTS["scroll_bar_bbox"][1])
             bar_top_y = min(int(bar_mid_y + bar_height//2), self.CONSTANTS["scroll_bar_bbox"][3])
-            cv2.rectangle(ui_frame, (self.CONSTANTS["scroll_bar_bbox"][0]-5, bar_bottom_y), (self.CONSTANTS["scroll_bar_bbox"][2]+5, bar_top_y), (169,96,0), -1)
+            cv2.rectangle(ui_frame, (self.CONSTANTS["scroll_bar_bbox"][0]-6, bar_bottom_y), (self.CONSTANTS["scroll_bar_bbox"][2]+5, bar_top_y), (169,96,0), -1)
 
        
         cv2.imshow(cv2_window_name, ui_frame)
