@@ -185,6 +185,7 @@ while True:
             DYNAMIC_PAGE_DEALER = isg_app_page.ISGApp()
             
         DYNAMIC_PAGE_DEALER.do_page(program_state = DYNAMIC_PROGRAM_STATE, cv2_window_name = CV2_WINDOW_NAME, ui_frame = ui_frame, active_user = DYNAMIC_USER, mouse_input = DYNAMIC_MOUSE_INPUT)
+    
     elif DYNAMIC_PROGRAM_STATE[0] == 7: # KALITE APP PAGE
         if not isinstance(DYNAMIC_PAGE_DEALER, kalite_app_page.KaliteApp):
             DYNAMIC_PAGE_DEALER = kalite_app_page.KaliteApp()

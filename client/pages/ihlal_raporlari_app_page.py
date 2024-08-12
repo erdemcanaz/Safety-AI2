@@ -31,7 +31,7 @@ class IhlalRaporlariApp():
         self.end_date_dd_mm_yyyy:str = datetime.datetime.now().strftime("%d.%m.%Y")
         self.end_date_shift:str = (datetime.datetime.now().hour//8)
 
-
+        self.first_data_index_to_display:int = 0
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
@@ -48,6 +48,12 @@ class IhlalRaporlariApp():
             return False
         return True
     
+    def __get_reports_to_display(self):
+        if self.first_data_index_to_display >= len(self.fetched_data):
+            self.first_data_index_to_display = min(0, len(self.fetched_data)-12)
+        
+        return self.fetched_data[self.first_data_index_to_display:min(self.first_data_index_to_display+12, len(self.fetched_data))]
+
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -69,8 +75,8 @@ class IhlalRaporlariApp():
                     fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
                     if status_code == 200:
                         self.fetched_data = fetched_list
-                    else: # Unauthorized -> login again
-                        program_state[0] = 1
+                    else: # Unauthorized -> USER NOT AUTHORIZED page
+                        program_state[0] = 5
                         program_state[1] = 0
                         program_state[2] = 0
 
@@ -117,7 +123,18 @@ class IhlalRaporlariApp():
         cv2.putText(ui_frame, str(self.start_date_shift+1), (761, 89), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.putText(ui_frame, str(self.end_date_dd_mm_yyyy), (960, 94), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.putText(ui_frame, str(self.end_date_shift+1), (1155, 89), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-                                                               
+
+        # Draw reports
+        reports_to_draw = self.__get_reports_to_display()
+        for report_no, report in enumerate(reports_to_draw):
+            y = 200 + report_no*60
+            cv2.putText(ui_frame, report["start_date"], (100, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["end_date"], (300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["ihlal_type"], (500, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["ihlal_description"], (700, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["ihlal_location"], (1000, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["ihlal_status"], (1300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)     
+                                                  
         cv2.imshow(cv2_window_name, ui_frame)
 
         

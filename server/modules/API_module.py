@@ -168,11 +168,14 @@ async def get_isg_ui_data(date_range: DateRangeRequest, current_user: User = Dep
 
     # GENERATE DUMMY DATA TODO: Replace this with real data
     test_list = []
-    for i in range(1000):
+    for i in range(1785):
         dummy_dict = {
-            "camera_uuid": str(uuid.uuid4()),  # Convert UUID to string
-            "camera_hr_name" : random.choice(["A","B","C","D","E","F","G","H","I","J"]),
-            "date_time" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),    
+            "violation_date" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),    
+            "region_name": ''.join([random.choice(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]) for _ in range(5)]),
+            "violation_type": random.choice(["Yasaklı Alan", "Baret Kuralı"]),
+            "violation_score": str(int(random.random()*100)),
+            "camera_uuid": str(uuid.uuid4()),
+            "violation_uuid":str(uuid.uuid4())
         }
 
         test_list.append(dummy_dict)
