@@ -213,7 +213,7 @@ async def get_violation_image_with_uuid(violation_uuid: ViolationUUIDRequest, cu
     return {"dict_": dummy_dict}
 
 
-@app.get("/get_camera_configs_json", response_class=ListOfDictsResponse)
+@app.get("/get_camera_configs_json")
 async def get_camera_configs_json(current_user: User = Depends(get_current_user)):
     if not all(app in current_user.allowed_tos for app in ["KAMERALAR_APP", "OZET_APP", "KURALLAR_APP"]):
         raise HTTPException(
