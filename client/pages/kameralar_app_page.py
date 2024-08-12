@@ -50,6 +50,18 @@ class KameralarApp():
         
         return self.camera_configs[self.first_camera_index_to_show:self.first_camera_index_to_show+11]
     
+    def __check_if_camera_is_old_updated_or_new(self, camera_dict:Dict = None) -> str:
+        keys_to_check = ["is_alive", "camera_uuid", "camera_region", "camera_description", "NVRip", "username", "password", "camera_ip_address", "stream_path", "active_rules"]
+        
+        for _camera_dict in self.ORIGINAL_CAMERA_CONFIGS:
+            if _camera_dict.get("camera_ip_address") == camera_dict["camera_ip_address"]: # if camera is already in the list
+                for key in keys_to_check:
+                    if _camera_dict.get(key) != camera_dict.get(key):
+                        return "updated"
+                else:
+                    return "old"
+        else: # if camera is not in the list
+            return "new"
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None): 
         # Mouse input
@@ -84,8 +96,11 @@ class KameralarApp():
             x, y = 75, 207 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
             cv2.putText(ui_frame, f"{self.first_camera_index_to_show+camera_index+1}", (x+10, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-            picasso.draw_image_on_frame(ui_frame, image_name="old_camera_icon", x=x+25, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
-            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+50, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+            
+            camera_status = self.__check_if_camera_is_old_updated_or_new(camera_dict)
+            camera_status_image = "new_camera_icon" if camera_status == "new" else "updated_camera_icon" if camera_status == "updated" else "old_camera_icon"
+            picasso.draw_image_on_frame(ui_frame, image_name=camera_status_image, x=x+45, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
+            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+90, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
