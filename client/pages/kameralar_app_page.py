@@ -67,8 +67,8 @@ class KameralarApp():
             x, y = 75, 207 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
             picasso.draw_image_on_frame(ui_frame, image_name="old_camera_icon", x=x+10, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
-            text_transformer.draw_text_on_frame(ui_frame, text=f"{camera_dict['camera_ip_address']}", x=x, y=y, font_scale=0.5, thickness=1, color=(0,0,0), font=cv2.FONT_HERSHEY_SIMPLEX)
-
+            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+50, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+            
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
 
