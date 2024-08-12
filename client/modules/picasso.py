@@ -27,6 +27,10 @@ IMAGE_PATHS = {
     "ihlal_row_light_blue": "src/icons/ihlal_row_light_blue.png",
     "ihlal_row_dark_blue": "src/icons/ihlal_row_dark_blue.png",
     "violation_image_background": "src/icons/violation_image_background.png",
+    "kamera_list_bar": "src/icons/kamera_list_bar.png",
+    "old_camera_icon": "src/icons/old_camera_icon.png",
+    "changed_camera_icon": "src/icons/changed_camera_icon.png",
+    "new_camera_icon": "src/icons/new_camera_icon.png",
 }
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):

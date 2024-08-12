@@ -4,7 +4,7 @@ import numpy as np
 
 import requests
 from typing import Dict, List
-import time
+import time,copy
 
 class KameralarApp():
 
@@ -17,7 +17,9 @@ class KameralarApp():
 
     def __init__(self):
         self.last_time_camera_configs_fetched = 0
+        self.first_camera_index_to_show = 0
 
+        self.ORIGINAL_CAMERA_CONFIGS = None
         self.camera_configs = None
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
@@ -25,6 +27,16 @@ class KameralarApp():
         if x >= x1 and x <= x2 and y >= y1 and y <= y2:
             return True
         return False 
+    
+    def __get_cameras_to_show(self) -> List[Dict]:
+        if self.camera_configs is None:
+            return []
+        
+        if self.first_camera_index_to_show >= len(self.camera_configs):
+            self.first_camera_index_to_show = max(0, len(self.camera_configs) - 11)
+        
+        return self.camera_configs[self.first_camera_index_to_show:self.first_camera_index_to_show+11]
+    
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None): 
         # Mouse input
@@ -39,6 +51,7 @@ class KameralarApp():
             fetched_dict, status_code = active_user.request_camera_configs_dict()
             if status_code == 200:
                 self.camera_configs = fetched_dict
+                self.ORIGINAL_CAMERA_CONFIGS = copy.deepcopy(fetched_dict)
             
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -50,6 +63,12 @@ class KameralarApp():
             program_state[2] = 0
           
         # Draw UI
+        for camera_index, camera_dict in enumerate(self.__get_cameras_to_show()):
+            x, y = 75, 207 + camera_index * 65
+            picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
+            picasso.draw_image_on_frame(ui_frame, image_name="old_camera_icon", x=x+10, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
+            text_transformer.draw_text_on_frame(ui_frame, text=f"{camera_dict['camera_ip_address']}", x=x, y=y, font_scale=0.5, thickness=1, color=(0,0,0), font=cv2.FONT_HERSHEY_SIMPLEX)
+
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
 
