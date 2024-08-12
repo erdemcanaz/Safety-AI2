@@ -96,6 +96,19 @@ class User():
         except:
             return [], 404       
             
+    def request_violation_image_with_violation_uuid(self, violation_uuid:str=None)->np.ndarray:
+        headers = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        json_body = {
+            "violation_uuid": violation_uuid,            
+        }
+        fetched_dict = None
+        try:
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_violation_image_with_uuid", headers=headers, json=json_body, timeout=1)    
+            fetched_dict = response.json()["dict_"]
+            return fetched_dict, response.status_code
+        except:
+            return None, 404
+        
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None
@@ -151,6 +164,7 @@ while True:
             break
         else:
             DYNAMIC_PROGRAM_STATE = [1,0,0] # Direct to login page
+    
     elif DYNAMIC_PROGRAM_STATE[0] == 1: # LOGIN PAGE
         if not isinstance(DYNAMIC_PAGE_DEALER, login_page.LoginPage):
             DYNAMIC_PAGE_DEALER = login_page.LoginPage()            
