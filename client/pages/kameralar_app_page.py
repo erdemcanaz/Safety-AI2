@@ -20,6 +20,14 @@ class KameralarApp():
         "create_camera_configs_bbox": (1149, 1017, 1364, 1045),
         "delete_camera_configs_bbox": (1392, 1017, 1611, 1045),
 
+        "ip_address_bbox": (744, 744, 1132, 772),
+        "uuid_bbox": (744, 779, 1132, 807),
+        "is_alive_bbox": (744, 813, 1132, 841),
+        "username_bbox": (744, 847, 1132, 875),
+        "password_bbox": (744, 882, 1083, 910),
+        "NVR_ip_bbox": (744, 916, 1132, 944),
+        "camera_region_bbox": (744, 951, 1132, 979),
+
         "camera_list_bbox": (74, 211, 391, 922),
 
         "camera_config_fetching_min_interval": 5 # seconds
@@ -143,7 +151,9 @@ class KameralarApp():
                         print(f"len of camera_configs after: {len(self.camera_configs)}")
                         break
                 self.__reset_dummy_camera_dict()
-
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["is_alive_bbox"]):
+                self.dummy_camera_dict["is_alive"] = not self.dummy_camera_dict["is_alive"]
+                
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
             fetched_dict, status_code = active_user.request_camera_configs_dict()
@@ -153,15 +163,38 @@ class KameralarApp():
             
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
-        if pressed_key == 27: #ESC -> direct to login page
-            active_user.set_username(new_username = "")
-            active_user.set_password(new_password = "")
-            program_state[0] = 4
-            program_state[1] = 0
-            program_state[2] = 0
-        elif chr(pressed_key) == "x":          
-            pass
-            
+        if pressed_key == 27: #ESC
+            if self.violation_image_dict is None:
+                program_state[0] = 4
+                program_state[1] = 0
+                program_state[2] = 0    
+            else:
+                self.violation_image_dict = None
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["ip_address_bbox"]):
+            if pressed_key == 8: # Backspace
+                self.dummy_camera_dict["camera_ip_address"] = self.dummy_camera_dict["camera_ip_address"][:-1]
+            elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
+                self.dummy_camera_dict["camera_ip_address"] += text_transformer.translate_text_to_english(chr(pressed_key))
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["username"]):
+            if pressed_key == 8:
+                self.dummy_camera_dict["username"] = self.dummy_camera_dict["username"][:-1]
+            elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
+                self.dummy_camera_dict["username"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["password"]):
+            if pressed_key == 8:
+                self.dummy_camera_dict["password"] = self.dummy_camera_dict["password"][:-1]
+            elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
+                self.dummy_camera_dict["password"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["NVR_ip"]):
+            if pressed_key == 8:
+                self.dummy_camera_dict["NVR_ip"] = self.dummy_camera_dict["NVR_ip"][:-1]
+            elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
+                self.dummy_camera_dict["NVR_ip"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["camera_region"]):
+            if pressed_key == 8:
+                self.dummy_camera_dict["camera_region"] = self.dummy_camera_dict["camera_region"][:-1]
+            elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
+                self.dummy_camera_dict["camera_region"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
 
         # Draw UI
         
@@ -195,8 +228,8 @@ class KameralarApp():
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 799), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         
         if self.camera_fetched_frame is not None:
-            picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=False)
-            cv2.putText(ui_frame, f"{self.camera_fetched_frame_ip}", (610, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 2)
+            picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=85, width=1106, height=614, maintain_aspect_ratio=False)
+            cv2.putText(ui_frame, f"{self.camera_fetched_frame_ip}", (610, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169,96,0), 2)
 
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
