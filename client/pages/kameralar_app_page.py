@@ -11,8 +11,11 @@ class KameralarApp():
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",      
         "clear_camera_configs_bbox": (364,143,436,194),
+        "decrease_camera_index_button": (404, 208, 420, 238),
+        "increase_camera_index_button": (405, 893, 421, 920),
 
         "camera_config_fetching_min_interval": 5 # seconds
+
     }
 
     def __init__(self):
@@ -21,6 +24,16 @@ class KameralarApp():
 
         self.ORIGINAL_CAMERA_CONFIGS = None
         self.camera_configs = None
+
+        self.writing_to_which_one = 0
+        self.ipv4 = "" #0
+        self.UUID = "" #1
+        self.is_active = False 
+        self.username = "" #2
+        self.password = "" #3
+        self.NVRip = "" #4 
+        self.region_name = "" #5
+        self.description = "" #6
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
@@ -45,6 +58,10 @@ class KameralarApp():
             mouse_input.clear_last_leftclick_position()        
             if self.__is_xy_in_bbox(x, y, self.CONSTANTS["clear_camera_configs_bbox"]):
                 self.camera_configs = None  
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_camera_index_button"]):
+                self.first_camera_index_to_show = max(0, self.first_camera_index_to_show-11)
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_button"]):
+                self.first_camera_index_to_show = self.first_camera_index_to_show+11
 
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
@@ -67,7 +84,7 @@ class KameralarApp():
             x, y = 75, 207 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
             picasso.draw_image_on_frame(ui_frame, image_name="old_camera_icon", x=x+10, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
-            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+50, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
+            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+50, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
