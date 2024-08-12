@@ -99,6 +99,13 @@ class IhlalRaporlariApp():
                 self.first_data_index_to_display = max(0, self.first_data_index_to_display-12)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_data_index_button"]):
                 self.first_data_index_to_display = self.first_data_index_to_display+12
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["scroll_bar_bbox"]):
+                scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
+                percentage = (y - self.CONSTANTS["scroll_bar_bbox"][1])/scroll_bar_height                
+                index = int(percentage*len(self.fetched_data))
+                while index % 12 != 0:
+                    index -= 1
+                self.first_data_index_to_display = index               
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
