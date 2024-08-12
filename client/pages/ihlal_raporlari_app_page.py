@@ -100,12 +100,13 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_data_index_button"]):
                 self.first_data_index_to_display = self.first_data_index_to_display+12
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["scroll_bar_bbox"]):
-                scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
-                percentage = (y - self.CONSTANTS["scroll_bar_bbox"][1])/scroll_bar_height                
-                index = int(percentage*len(self.fetched_data))
-                while index % 12 != 0:
-                    index -= 1
-                self.first_data_index_to_display = index               
+                if self.fetched_data is not None:
+                    scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
+                    percentage = (y - self.CONSTANTS["scroll_bar_bbox"][1])/scroll_bar_height                
+                    index = int(percentage*len(self.fetched_data))
+                    while index % 12 != 0:
+                        index -= 1
+                    self.first_data_index_to_display = index               
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -159,7 +160,7 @@ class IhlalRaporlariApp():
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (1285, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1504, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
         if self.fetched_data is not None:
-            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (202, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
+            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (88, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
 
             percentage = (self.first_data_index_to_display/len(self.fetched_data))
             scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
