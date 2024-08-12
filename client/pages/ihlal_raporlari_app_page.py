@@ -235,13 +235,17 @@ class IhlalRaporlariApp():
             violation_types_found = list(set(violation_types_found))
 
             #put info text
-            cv2.putText(image, f"{'Kamera UUID':<20}: {camera_uuid}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
-            cv2.putText(image, f"{'Ihlal UUID':<20}: {violation_uuid}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
-            cv2.putText(image, f"{'Gerceklesme Tarihi':<20}: {date_time}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
-            cv2.putText(image , f"{'Kamera Adi':<20}: {camera_hr_name}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
-            cv2.putText(image , f"{'Ihlal Turu':<20}: {violation_types_found}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
-            cv2.putText(image,  f"{'Talep Eden Kişi':<30}: {active_user.get_token_person_name()}", (10, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
-            cv2.putText(image, f"{'Talep ettiği tarih':<30}: {datetime.datetime.now().strftime('%d.%m.%Y - %H:%M:%S')}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (169,96,0), 2, cv2.LINE_AA)
+            fontsize = 0.25
+            font_color = (169,96,0)
+            font_thickness = 1
+
+            cv2.putText(image, f"{'Kamera UUID':<20}: {camera_uuid}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(image, f"{'Ihlal UUID':<20}: {violation_uuid}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(image, f"{'Gerceklesme Tarihi':<20}: {date_time}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(image , f"{'Kamera Adi':<20}: {camera_hr_name}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(image , f"{'Ihlal Turu':<20}: {violation_types_found}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(image,  f"{'Talep Eden Kisi':<30}: {active_user.get_token_person_name()}", (10, 210), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
+            cv2.putText(image, f"{'Talep ettigi tarih':<30}: {datetime.datetime.now().strftime('%d.%m.%Y - %H:%M:%S')}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, fontsize, font_color, font_thickness, cv2.LINE_AA)
             #
             picasso.draw_image_on_frame(ui_frame, image_name="violation_image_background", x=310, y=230, width=1316, height=785, maintain_aspect_ratio=False)
             picasso.draw_frame_on_frame(ui_frame, image, x=325, y=265, width=1280, height=720, maintain_aspect_ratio=False)
