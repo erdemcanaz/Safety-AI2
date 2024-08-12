@@ -138,9 +138,11 @@ class KameralarApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["delete_camera_configs_bbox"]):
                 for camera_dict in self.camera_configs:
                     if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
+                        print(f"len of camera_configs before: {len(self.camera_configs)}")
                         self.camera_configs.remove(camera_dict)
+                        print(f"len of camera_configs after: {len(self.camera_configs)}")
                         break
-                    self.__reset_dummy_camera_dict()
+                self.__reset_dummy_camera_dict()
 
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
