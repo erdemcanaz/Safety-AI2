@@ -132,12 +132,11 @@ class IhlalRaporlariApp():
         reports_to_draw = self.__get_reports_to_display()
         for report_no, report in enumerate(reports_to_draw):
             y = 200 + report_no*60
-            cv2.putText(ui_frame, report["start_date"], (100, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["end_date"], (300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["ihlal_type"], (500, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["ihlal_description"], (700, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["ihlal_location"], (1000, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["ihlal_status"], (1300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)     
+            cv2.putText(ui_frame, report["violation_date"], (100, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["region_name"], (300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["violation_type"], (500, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["camera_uuid"], (700, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, report["violation_uuid"], (1000, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
 
         cv2.imshow(cv2_window_name, ui_frame)
 
