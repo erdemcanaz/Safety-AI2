@@ -118,6 +118,23 @@ class User():
         except:
             return None, 404       
         
+    def request_camera_frame(self,username:str=None, password:str=None, camera_ip_address:str=None)->np.ndarray:
+            headers = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+            json_body = {
+                "username": username,
+                "password": password,
+                "camera_ip_address": camera_ip_address        
+            }
+            fetched_dict = None
+            try:
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_camera_frame", headers=headers, json=json_body, timeout=5)    
+                fetched_dict = response.json()["dict_"]
+                return fetched_dict, response.status_code
+            except:
+                return None, 404
+            
+           
+
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None

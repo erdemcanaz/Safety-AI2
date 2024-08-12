@@ -103,6 +103,8 @@ class KameralarApp():
             program_state[0] = 4
             program_state[1] = 0
             program_state[2] = 0
+        elif chr(pressed_key) == "x":
+            active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
           
         # Draw UI
         for camera_index, camera_dict in enumerate(self.__get_cameras_to_show()):
@@ -120,9 +122,14 @@ class KameralarApp():
         font_thickness = 1
 
         is_alive_text = "Aktif" if self.dummy_camera_dict.get("is_alive") else "Pasif"
+        uuid_text = "Henüz belirlenmedi"
+        for camera_dict in self.camera_configs:
+            if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
+                uuid_text = camera_dict.get("camera_uuid")
+                break
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_ip_address')}", (750, 765), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
-        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 799), cv2.FONT_HERSHEY_SIMPLEX, font_size, (180,180,180), font_thickness)
-        cv2.putText(ui_frame, f"{is_alive_text}", (750, 843), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 799), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), font_thickness)
+        cv2.putText(ui_frame, f"{is_alive_text}", (750, 833), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), 2)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('username')}", (750, 867), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('password')}", (750, 902), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('NVR_ip')}", (750, 936), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
