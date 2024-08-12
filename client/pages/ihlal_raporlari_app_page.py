@@ -73,8 +73,7 @@ class IhlalRaporlariApp():
             x, y = mouse_input.get_last_leftclick_position()
             mouse_input.clear_last_leftclick_position()
 
-            if self.violation_image_dict is not None:
-                print("Violation image dict is not None, should show the image and mouse click should be for closing the image")
+            if self.violation_image_dict is None:
                 if self.__is_xy_in_bbox(x, y, self.CONSTANTS["start_date_shift_change_bbox"]):
                     self.start_date_shift = (self.start_date_shift + 1) % 3
                 elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["end_date_shift_change_bbox"]):
