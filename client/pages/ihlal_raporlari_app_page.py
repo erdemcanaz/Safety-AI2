@@ -138,9 +138,12 @@ class IhlalRaporlariApp():
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
         if pressed_key == 27: #ESC
-            program_state[0] = 4
-            program_state[1] = 0
-            program_state[2] = 0    
+            if self.violation_image_dict is None:
+                program_state[0] = 4
+                program_state[1] = 0
+                program_state[2] = 0    
+            else:
+                self.violation_image_dict = None
         elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["start_date_text_field_bbox"]): 
             if chr(pressed_key) in self.CONSTANTS["allowed_date_keys"]:
                 self.start_date_dd_mm_yyyy += chr(pressed_key)
