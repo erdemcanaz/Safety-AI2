@@ -29,7 +29,7 @@ IMAGE_PATHS = {
     "violation_image_background": "src/icons/violation_image_background.png",
     "camera_list_bar": "src/icons/camera_list_bar.png",
     "old_camera_icon": "src/icons/old_camera_icon.png",
-    "updated_camera_icon": "src/icons/changed_camera_icon.png",
+    "updated_camera_icon": "src/icons/updated_camera_icon.png",
     "new_camera_icon": "src/icons/new_camera_icon.png",
 }
 
