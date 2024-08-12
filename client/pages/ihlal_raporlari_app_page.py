@@ -207,6 +207,7 @@ class IhlalRaporlariApp():
             violation_uuid = self.violation_image_dict.get("violation_uuid")
             camera_hr_name = self.violation_image_dict.get("camera_hr_name")
             date_time = self.violation_image_dict.get("date_time")        
+            date_requested = self.violation_image_dict.get("date_requested")
             person_normalized_bboxes = self.violation_image_dict.get("person_normalized_bboxes")
             image_base_64 = self.violation_image_dict.get("image_base_64")
 
@@ -243,13 +244,13 @@ class IhlalRaporlariApp():
             header_color = (0, 0, 0)  # Black for headers
             value_color = (255, 255, 255)   # White for values
             font = cv2.FONT_HERSHEY_SIMPLEX
-            fontsize = 0.35
+            fontsize = 0.4
             font_thickness = 1
 
             # Define the starting position
             start_x = 10
-            start_y = 30
-            line_spacing = 10
+            start_y = 15
+            line_spacing = 13
 
             # Define the max header length for alignment
             max_header_length = 20
@@ -262,14 +263,14 @@ class IhlalRaporlariApp():
                 ('Kamera Adi', camera_hr_name),
                 ('Ihlal Turu', violation_types_found),
                 ('Talep Eden Kisi', active_user.get_token_person_name()),
-                ('Talep ettigi tarih', datetime.datetime.now().strftime('%d.%m.%Y - %H:%M:%S'))
+                ('Talep ettigi tarih', date_requested)
             ]
 
             # Draw each header and value with different colors
             for i, (header, value) in enumerate(texts):
                 header_text = f"{header:<{max_header_length}}"
                 header_position = (start_x, start_y + i * line_spacing)
-                value_position = (start_x + 200, start_y + i * line_spacing)  # Adjust 200 based on your text size
+                value_position = (start_x + 50, start_y + i * line_spacing)  # Adjust 200 based on your text size
 
                 # Draw header
                 cv2.putText(image, header_text, header_position, font, fontsize, header_color, font_thickness, cv2.LINE_AA)
