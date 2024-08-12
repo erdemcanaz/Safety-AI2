@@ -136,9 +136,7 @@ class User():
                 return fetched_frame, response.status_code
             except:
                 return None, 404
-            
-           
-
+                    
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None
