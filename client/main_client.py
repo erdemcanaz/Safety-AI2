@@ -95,8 +95,7 @@ class User():
             return fetched_list, response.status_code
         except:
             return [], 404       
-        
-        
+            
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None

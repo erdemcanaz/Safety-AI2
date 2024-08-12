@@ -10,23 +10,28 @@ class IhlalRaporlariApp():
 
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
-        "data_fetch_period_s": 5, # fetch data every 5 seconds       
+        "allowed_date_keys": "1234567890.",
+        "data_fetch_period_s": 5, # fetch data every 5 seconds  
+        "start_date_text_field_bbox": (554, 64, 745, 100), 
         "start_date_shift_change_bbox": (752, 64, 826, 98),
+        "end_date_text_field_bbox": (951, 64, 1140, 100),
         "end_date_shift_change_bbox": (1148, 64, 1222, 98),
         "request_ihlal_raporlari_data_button": (1358,63, 1446,100),
         "assign_this_shift": (1464, 64, 1504, 100),
+
+
     }
 
     def __init__(self):
         self.last_time_data_fetch = 0
         self.fetched_data:list = None
 
-        self.start_date_dd_mm_yyyy:str = ""
-        self.end_date_dd_mm_yyyy:str = ""
-        self.start_date_shift:int = 0
-        self.end_date_shift:int = 0
+        self.start_date_dd_mm_yyyy:str = datetime.datetime.now().strftime("%d.%m.%Y")
+        self.start_date_shift:str = (datetime.datetime.now().hour//8)
+        self.end_date_dd_mm_yyyy:str = datetime.datetime.now().strftime("%d.%m.%Y")
+        self.end_date_shift:str = (datetime.datetime.now().hour//8)
 
-        pass
+
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
@@ -34,6 +39,15 @@ class IhlalRaporlariApp():
             return True
         return False 
 
+    def __check_date_format_dd_mm_yyyy(self, date:str):
+        if len(date) != 10: # dd.mm.yyyy
+            return False
+        if date[2] != "." or date[5] != ".":
+            return False
+        if not date[0:2].isdigit() or not date[3:5].isdigit() or not date[6:].isdigit():
+            return False
+        return True
+    
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -48,23 +62,36 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["request_ihlal_raporlari_data_button"]):
                 _start_date = self.start_date_dd_mm_yyyy+","+str(self.start_date_shift)
                 _end_date = self.end_date_dd_mm_yyyy+","+str(self.end_date_shift)
-                fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
-                if status_code == 200:
-                    self.fetched_data = fetched_list
-                print(f"İhlal raporlari data is fetched with status code: {status_code}")
+                if not self.__check_date_format_dd_mm_yyyy(_start_date) or not self.__check_date_format_dd_mm_yyyy(_end_date):
+                    _start_date = ""
+                    _end_date = ""
+                else:
+                    fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
+                    if status_code == 200:
+                        self.fetched_data = fetched_list
+                    print(f"İhlal raporlari data is fetched with status code: {status_code}")
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["assign_this_shift"]):
                 self.start_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
                 self.start_date_shift = (datetime.datetime.now().hour//8)
                 self.end_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
                 self.end_date_shift = (datetime.datetime.now().hour//8)
 
-
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
         if pressed_key == 27: #ESC
             program_state[0] = 4
             program_state[1] = 0
-            program_state[2] = 0          
+            program_state[2] = 0    
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["start_date_text_field_bbox"]):
+            if chr(pressed_key) in self.CONSTANTS["allowed_date_keys"]:
+                self.start_date_dd_mm_yyyy += chr(pressed_key)
+            elif pressed_key == 8:
+                self.start_date_dd_mm_yyyy = self.start_date_dd_mm_yyyy[:-1]
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["end_date_text_field_bbox"]):
+            if chr(pressed_key) in self.CONSTANTS["allowed_date_keys"]:
+                self.end_date_dd_mm_yyyy += chr(pressed_key)
+            elif pressed_key == 8:
+                self.end_date_dd_mm_yyyy = self.end_date_dd_mm_yyyy[:-1]
 
         today_date = datetime.datetime.now().strftime("%d.%m.%Y / %H:%M:%S / ")
         today_shift = "I" if datetime.datetime.now().hour < 8 else "II" if datetime.datetime.now().hour < 16 else "III"
