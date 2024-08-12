@@ -4,15 +4,20 @@ import numpy as np
 
 import requests
 from typing import Dict, List
+import time
 
 class KameralarApp():
 
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",      
-        "clear_camera_configs_bbox": (364,143,436,194)
+        "clear_camera_configs_bbox": (364,143,436,194),
+
+        "camera_config_fetching_min_interval": 5 # seconds
     }
 
     def __init__(self):
+        self.last_time_camera_configs_fetched = 0
+
         self.camera_configs = None
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
@@ -29,7 +34,8 @@ class KameralarApp():
             if self.__is_xy_in_bbox(x, y, self.CONSTANTS["clear_camera_configs_bbox"]):
                 self.camera_configs = None  
 
-        if self.camera_configs is None:
+        if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
+            self.last_time_camera_configs_fetched = time.time()
             fetched_dict, status_code = active_user.request_camera_configs_dict()
             if status_code == 200:
                 self.camera_configs = fetched_dict
