@@ -49,13 +49,15 @@ class IhlalRaporlariApp():
         return True
     
     def __get_reports_to_display(self):
+        if self.fetched_data is None:
+            self.first_data_index_to_display = 0
+            return []
+        
         if self.first_data_index_to_display >= len(self.fetched_data):
             self.first_data_index_to_display = min(0, len(self.fetched_data)-12)
 
-        if self.fetched_data is not None:         
-            return self.fetched_data[self.first_data_index_to_display:min(self.first_data_index_to_display+12, len(self.fetched_data))]
-        else:
-            return []
+        return self.fetched_data[self.first_data_index_to_display:min(self.first_data_index_to_display+12, len(self.fetched_data))]
+     
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
