@@ -237,7 +237,7 @@ class IhlalRaporlariApp():
             if "restricted_area" in violation_types_found:
                 picasso.draw_image_on_frame(image, image_name="red_restricted_area", x=image.shape[1]-50*len(violation_types_found), y=10, width=50, height=50, maintain_aspect_ratio=False)
 
-            picasso.draw_image_on_frame(image, image_name="violation_image_background", x=300, y=250, width=1316, height=785, maintain_aspect_ratio=True)
+            picasso.draw_image_on_frame(image, image_name="violation_image_background", x=100, y=100, width=1316, height=785, maintain_aspect_ratio=False)
             picasso.draw_frame_on_frame(ui_frame, image, x=325, y=265, width=1280, height=720, maintain_aspect_ratio=False)
             
         cv2.imshow(cv2_window_name, ui_frame)
