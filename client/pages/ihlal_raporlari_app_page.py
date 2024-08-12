@@ -58,7 +58,7 @@ class IhlalRaporlariApp():
             return []
         
         if self.first_data_index_to_display >= len(self.fetched_data):
-            self.first_data_index_to_display = min(0, len(self.fetched_data)-12)
+            self.first_data_index_to_display = max(0, len(self.fetched_data)-12)
 
         return self.fetched_data[self.first_data_index_to_display:min(self.first_data_index_to_display+12, len(self.fetched_data))]
      
@@ -159,7 +159,7 @@ class IhlalRaporlariApp():
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (1285, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1504, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
         if self.fetched_data is not None:
-            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (88, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
+            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (88, 1020), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
 
             percentage = (self.first_data_index_to_display/len(self.fetched_data))
             scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
