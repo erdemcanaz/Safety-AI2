@@ -14,6 +14,8 @@ class KameralarApp():
         "decrease_camera_index_button": (404, 208, 420, 238),
         "increase_camera_index_button": (405, 893, 421, 920),
 
+        "camera_list_bbox": (74, 211, 391, 922),
+
         "camera_config_fetching_min_interval": 5 # seconds
 
     }
@@ -25,15 +27,21 @@ class KameralarApp():
         self.ORIGINAL_CAMERA_CONFIGS = None
         self.camera_configs = None
 
-        self.writing_to_which_one = 0
-        self.ipv4 = "" #0
-        self.UUID = "" #1
-        self.is_active = False 
-        self.username = "" #2
-        self.password = "" #3
-        self.NVRip = "" #4 
-        self.region_name = "" #5
-        self.description = "" #6
+        self.dummy_camera_dict = self.reset_dummy_camera_dict()
+
+    def reset_dummy_camera_dict(self):
+        self.dummy_camera_dict = {
+            "is_alive": True,
+            "camera_uuid": "94edc97e-1c91-49da-8004-f4a1b7ef1360",
+            "camera_region": "",
+            "camera_description": "",
+            "NVR_ip": "172.16.0.23",
+            "username": "admin",
+            "password": "Besan.23",
+            "camera_ip_address": "172.16.14.13",
+            "stream_path": "profile2/media.smp",
+            "active_rules": []
+        }      
 
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
@@ -74,6 +82,12 @@ class KameralarApp():
                 self.first_camera_index_to_show = max(0, self.first_camera_index_to_show-11)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_button"]):
                 self.first_camera_index_to_show = self.first_camera_index_to_show+11
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_report_image_bboxs"]):
+                    if self.fetched_data is not None:
+                        report_page_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
+                        report_index = self.first_camera_index_to_show + report_page_index
+                        if not report_index >= len(self.camera_configs):
+                            self.dummy_camera_dict = self.camera_configs[report_index]                            
 
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
@@ -102,6 +116,17 @@ class KameralarApp():
             picasso.draw_image_on_frame(ui_frame, image_name=camera_status_image, x=x+45, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+90, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
+        #put the camera configs to the dummy camera dict
+        is_alive_text = "Aktif" if self.dummy_camera_dict.get("is_alive") else "Pasif"
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_ip_address')}", (750, 775), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 809), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{is_alive_text}", (750, 843), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('username')}", (750, 877), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('password')}", (750, 912), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('NVR_ip')}", (750, 946), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_region')}", (750, 981), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+        cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 809), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
 
