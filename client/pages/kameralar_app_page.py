@@ -9,23 +9,31 @@ class KameralarApp():
 
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",      
+        "clear_camera_configs_bbox": (364,143,436,194)
     }
 
     def __init__(self):
-        pass       
-    
+        self.camera_configs = None
+
     def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
         x1, y1, x2, y2 = bbox
         if x >= x1 and x <= x2 and y >= y1 and y <= y2:
             return True
         return False 
 
-    def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
+    def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None): 
         # Mouse input
         if mouse_input.get_last_leftclick_position() is not None:
             x, y = mouse_input.get_last_leftclick_position()
-            mouse_input.clear_last_leftclick_position()         
+            mouse_input.clear_last_leftclick_position()        
+            if self.__is_xy_in_bbox(x, y, self.CONSTANTS["clear_camera_configs_bbox"]):
+                self.camera_configs = None  
 
+        if self.camera_configs is None:
+            fetched_dict, status_code = active_user.request_camera_configs_dict()
+            if status_code == 200:
+                self.camera_configs = fetched_dict
+            
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
         if pressed_key == 27: #ESC -> direct to login page
