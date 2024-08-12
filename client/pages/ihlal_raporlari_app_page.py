@@ -238,7 +238,7 @@ class IhlalRaporlariApp():
             violation_types_found = list(set(violation_types_found))
 
             #put info text
-            fontsize = 0.5
+            fontsize = 0.75
             font_color = (169,96,0)
             font_thickness = 1
 
