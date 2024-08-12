@@ -60,12 +60,12 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["end_date_shift_change_bbox"]):
                 self.end_date_shift = (self.end_date_shift + 1) % 3
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["request_ihlal_raporlari_data_button"]):
-                _start_date = self.start_date_dd_mm_yyyy+","+str(self.start_date_shift)
-                _end_date = self.end_date_dd_mm_yyyy+","+str(self.end_date_shift)
-                if not self.__check_date_format_dd_mm_yyyy(_start_date) or not self.__check_date_format_dd_mm_yyyy(_end_date):
-                    _start_date = ""
-                    _end_date = ""
+                if not self.__check_date_format_dd_mm_yyyy(self.start_date_dd_mm_yyyy) or not self.__check_date_format_dd_mm_yyyy(self.end_date_dd_mm_yyyy):
+                    self.start_date_dd_mm_yyyy = ""
+                    self.end_date_dd_mm_yyyy = ""              
                 else:
+                    _start_date = self.start_date_dd_mm_yyyy+","+str(self.start_date_shift)
+                    _end_date = self.end_date_dd_mm_yyyy+","+str(self.end_date_shift)
                     fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
                     if status_code == 200:
                         self.fetched_data = fetched_list
@@ -82,7 +82,7 @@ class IhlalRaporlariApp():
             program_state[0] = 4
             program_state[1] = 0
             program_state[2] = 0    
-        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["start_date_text_field_bbox"]):
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["start_date_text_field_bbox"]): 
             if chr(pressed_key) in self.CONSTANTS["allowed_date_keys"]:
                 self.start_date_dd_mm_yyyy += chr(pressed_key)
             elif pressed_key == 8:
