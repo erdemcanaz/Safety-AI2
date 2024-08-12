@@ -32,15 +32,13 @@ class KameralarApp():
     def reset_dummy_camera_dict(self):
         self.dummy_camera_dict = {
             "is_alive": True,
-            "camera_uuid": "94edc97e-1c91-49da-8004-f4a1b7ef1360",
+            "camera_uuid": "",
             "camera_region": "",
             "camera_description": "",
-            "NVR_ip": "172.16.0.23",
-            "username": "admin",
-            "password": "Besan.23",
-            "camera_ip_address": "172.16.14.13",
-            "stream_path": "profile2/media.smp",
-            "active_rules": []
+            "NVR_ip": "",
+            "username": "",
+            "password": "",
+            "camera_ip_address": "",
         }      
 
 
@@ -84,7 +82,7 @@ class KameralarApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_button"]):
                 self.first_camera_index_to_show = self.first_camera_index_to_show+11
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
-                    if self.fetched_data is not None:
+                    if self.camera_configs is not None:
                         report_page_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
                         report_index = self.first_camera_index_to_show + report_page_index
                         if not report_index >= len(self.camera_configs):
