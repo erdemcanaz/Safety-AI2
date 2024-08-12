@@ -25,6 +25,8 @@ class IhlalRaporlariApp():
         "increase_data_index_button": (1861, 976, 1877, 1005),
         "scroll_bar_bbox": (1862, 215, 1880, 974),
 
+        "gaussian_blur_kernel_size": 31,
+
     }
 
     def __init__(self):
