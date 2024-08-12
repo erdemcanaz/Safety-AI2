@@ -55,6 +55,10 @@ class ListResponse(BaseModel):
 class ListOfDictsResponse(BaseModel):
     list_: List[Dict[str, Any]]  # Adjusted to expect a list of dictionaries
 
+class DateRangeRequest(BaseModel):
+    start_date: str
+    end_date: str
+
 # Helper functions
 def verify_password(plain_password, hashed_password):
     hashed_password_candidate = encryption_module.hash_string(plain_text=plain_password) # uses SHA256 hashing
@@ -119,7 +123,7 @@ async def return_test_text(current_user: User = Depends(get_current_user)):
     return {"list_":current_user.allowed_tos}
 
 @app.get("/get_isg_ui_data", response_model=ListOfDictsResponse)
-async def login_for_access_token(current_user: User = Depends(get_current_user)):
+async def get_isg_ui_data(current_user: User = Depends(get_current_user)):
     if "ISG_APP" not in current_user.allowed_tos:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -131,8 +135,6 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
     # GENERATE DUMMY DATA TODO: Replace this with real data
     test_list = []
     for i in range(10):
-
-
         dummy_dict = {
             "camera_uuid": uuid.uuid4(),
             "camera_hr_name" : random.choice(["A","B","C","D","E","F","G","H","I","J"]),
@@ -150,6 +152,32 @@ async def login_for_access_token(current_user: User = Depends(get_current_user))
     
     return {"list_": test_list}
 
+@app.post("/get_violation_reports", response_model=ListOfDictsResponse)
+async def get_isg_ui_data(date_range: DateRangeRequest, current_user: User = Depends(get_current_user)):
+    if "IHLAL_RAPORLARI_APP" not in current_user.allowed_tos:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authorized for this app",
+            headers={"WWW-Authenticate": "Bearer"},
+        )    
+
+    start_date = date_range.start_date
+    end_date = date_range.end_date
+
+    print(f"Start Date: {start_date}, End Date: {end_date}")
+
+    # GENERATE DUMMY DATA TODO: Replace this with real data
+    test_list = []
+    for i in range(1000):
+        dummy_dict = {
+            "camera_uuid": str(uuid.uuid4()),  # Convert UUID to string
+            "camera_hr_name" : random.choice(["A","B","C","D","E","F","G","H","I","J"]),
+            "date_time" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),    
+        }
+
+        test_list.append(dummy_dict)
+    
+    return {"list_": test_list}
 
 #Run the application
 if __name__ == "__main__":

@@ -81,8 +81,22 @@ class User():
             return fetched_list, response.status_code
         except:
             return [], 404       
-
-    
+        
+    def request_ihlal_raporlari_data(self, start_date:str=None, end_date:str=None)->list:
+        headers = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        json_body = {
+            "start_date": start_date,
+            "end_date": end_date
+        }
+        fetched_list = []
+        try:
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_isg_ui_data", headers=headers, json=json_body, timeout=1)    
+            fetched_list = response.json()["list_"]
+            return fetched_list, response.status_code
+        except:
+            return [], 404       
+        
+        
 class MouseInput():
     def __init__(self):
         self.last_mouse_position = None

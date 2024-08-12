@@ -13,13 +13,17 @@ class IhlalRaporlariApp():
         "data_fetch_period_s": 5, # fetch data every 5 seconds       
         "start_date_shift_change_bbox": (752, 64, 826, 98),
         "end_date_shift_change_bbox": (1148, 64, 1222, 98),
+        "request_ihlal_raporlari_data_button": (1358,63, 1446,67)
     }
 
     def __init__(self):
         self.last_time_data_fetch = 0
         self.fetched_data:list = None
-        self.start_date_shift = 0
-        self.end_date_shift = 0
+
+        self.start_date:str = ""
+        self.end_date:str = ""
+        self.start_date_shift:int = 0
+        self.end_date_shift:int = 0
 
         pass
 
@@ -40,6 +44,13 @@ class IhlalRaporlariApp():
                 self.start_date_shift = (self.start_date_shift + 1) % 3
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["end_date_shift_change_bbox"]):
                 self.end_date_shift = (self.end_date_shift + 1) % 3
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["request_ihlal_raporlari_data_button"]):
+                _start_date = self.start_date_shift+","+str(self.start_date_shift)
+                _end_date = self.end_date_shift+","+str(self.end_date_shift)
+                fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
+                if status_code == 200:
+                    self.fetched_data = fetched_list
+                print(f"İhlal raporlari data is fetched with status code: {status_code}")
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
