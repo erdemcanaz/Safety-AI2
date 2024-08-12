@@ -69,6 +69,11 @@ class IhlalRaporlariApp():
                     fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
                     if status_code == 200:
                         self.fetched_data = fetched_list
+                    else: # Unauthorized -> login again
+                        program_state[0] = 1
+                        program_state[1] = 0
+                        program_state[2] = 0
+
                     print(f"İhlal raporlari data is fetched with status code: {status_code}")
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["assign_this_shift"]):
                 self.start_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
