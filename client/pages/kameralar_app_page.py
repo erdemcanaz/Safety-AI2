@@ -89,16 +89,13 @@ class KameralarApp():
                         report_page_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
                         report_index = self.first_camera_index_to_show + report_page_index
                         if not report_index >= len(self.camera_configs):
-                            self.dummy_camera_dict = self.camera_configs[report_index]    
-                    fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
-                    if status_code == 200:
-                        self.camera_fetched_frame = fetched_frame                        
+                            self.dummy_camera_dict = self.camera_configs[report_index]                          
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["fetch_image_button"]):
+                print("fetch image button clicked")
                 fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
                 if status_code == 200:
                     self.camera_fetched_frame = fetched_frame
             
-
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
             fetched_dict, status_code = active_user.request_camera_configs_dict()
