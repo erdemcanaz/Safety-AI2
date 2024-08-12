@@ -108,10 +108,12 @@ class IhlalRaporlariApp():
                     index -= 1
                 self.first_data_index_to_display = index    
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_report_image_bboxs"]):
-                report_page_index = (y - self.CONSTANTS["show_report_image_bboxs"][1])//65
-                report_index = self.first_data_index_to_display + report_page_index
-                report_uuid = self.__get_reports_to_display()[report_index]["violation_uuid"]
-                print(f"Report Index: {report_index}, Report UUID: {report_uuid}")
+                if self.fetched_data is not None:
+                    report_page_index = (y - self.CONSTANTS["show_report_image_bboxs"][1])//65
+                    report_index = self.first_data_index_to_display + report_page_index
+                    if not report_index >= len(self.fetched_data):
+                        report_uuid = self.fetched_data[report_index]["violation_uuid"]
+                        print(f"Report Index: {report_index}, Report UUID: {report_uuid}")
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
