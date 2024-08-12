@@ -55,9 +55,6 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["assign_this_shift"]):
                 self.start_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
                 self.end_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
-                active_user.assign_this_shift(shift = self.start_date_shift)
-                print(f"Shift is assigned to the user")
-
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
