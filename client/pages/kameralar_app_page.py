@@ -163,13 +163,10 @@ class KameralarApp():
             
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
-        if pressed_key == 27: #ESC
-            if self.violation_image_dict is None:
+        if pressed_key == 27: #ESC            
                 program_state[0] = 4
                 program_state[1] = 0
-                program_state[2] = 0    
-            else:
-                self.violation_image_dict = None
+                program_state[2] = 0  
         elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["ip_address_bbox"]):
             if pressed_key == 8: # Backspace
                 self.dummy_camera_dict["camera_ip_address"] = self.dummy_camera_dict["camera_ip_address"][:-1]
