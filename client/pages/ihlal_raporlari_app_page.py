@@ -22,6 +22,7 @@ class IhlalRaporlariApp():
 
         "decrease_data_index_button": (1860, 186, 1877, 214),
         "increase_data_index_button": (1861, 976, 1877, 1005),
+        "scroll_bar_bbox": (1862, 215, 1880, 974),
 
     }
 
@@ -77,6 +78,7 @@ class IhlalRaporlariApp():
                     self.start_date_dd_mm_yyyy = ""
                     self.end_date_dd_mm_yyyy = ""              
                 else:
+                    self.first_data_index_to_display = 0
                     _start_date = self.start_date_dd_mm_yyyy+","+str(self.start_date_shift)
                     _end_date = self.end_date_dd_mm_yyyy+","+str(self.end_date_shift)
                     fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
@@ -149,7 +151,20 @@ class IhlalRaporlariApp():
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_score"]), (1116, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (1285, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
             cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1504, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, text_color, text_thickness, cv2.LINE_AA)
+        if self.fetched_data is not None:
+            cv2.putText(ui_frame, f"{len(self.fetched_data)}", (1865, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (136,136,136), text_thickness, cv2.LINE_AA)
 
+            percentage = (self.first_data_index_to_display/len(self.fetched_data))
+            scroll_bar_height = self.CONSTANTS["scroll_bar_bbox"][3] - self.CONSTANTS["scroll_bar_bbox"][1]
+            bar_height_percentage = max((12/len(self.fetched_data)), 1)
+            bar_height = min(int(scroll_bar_height*bar_height_percentage),10)
+
+            bar_mid_y = int(self.CONSTANTS["scroll_bar_bbox"][1] + int(scroll_bar_height*percentage))
+            bar_bottom_y = max(int(bar_mid_y - bar_height//2), self.CONSTANTS["scroll_bar_bbox"][1])
+            bar_top_y = min(int(bar_mid_y + bar_height//2), self.CONSTANTS["scroll_bar_bbox"][3])
+            cv2.rectangle(ui_frame, (self.CONSTANTS["scroll_bar_bbox"][0]-5, bar_bottom_y), (self.CONSTANTS["scroll_bar_bbox"][2]+5, bar_top_y), (169,96,0), -1)
+
+       
         cv2.imshow(cv2_window_name, ui_frame)
 
         
