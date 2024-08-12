@@ -54,7 +54,10 @@ class IhlalRaporlariApp():
                 print(f"İhlal raporlari data is fetched with status code: {status_code}")
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["assign_this_shift"]):
                 self.start_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
+                self.start_date_shift = (datetime.datetime.now().hour//8)
                 self.end_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
+                self.end_date_shift = (datetime.datetime.now().hour//8)
+
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
