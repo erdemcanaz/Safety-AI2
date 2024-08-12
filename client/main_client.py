@@ -129,7 +129,7 @@ class User():
             try:
                 response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_camera_frame", headers=headers, json=json_body, timeout=5)    
                 fetched_dict = response.json()["dict_"]
-                return fetched_dict, response.status_code
+                return fetched_dict["image_base_64"], response.status_code
             except:
                 return None, 404
             
