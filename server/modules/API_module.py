@@ -229,7 +229,7 @@ async def get_camera_configs_json(current_user: User = Depends(get_current_user)
     else:
         CAMERA_CONFIGS_PATH = Path(__file__).resolve().parent.parent / "configs" / "camera_configs.json"
     
-    with open(USER_DATABASE_JSON_PATH, "r") as f:
+    with open(CAMERA_CONFIGS_PATH, "r") as f:
         CAMERA_CONFIGS_JSON: Dict[str, Dict[str, str]] = json.load(f)["user_db"]
 
     return {"dict_": CAMERA_CONFIGS_JSON}
