@@ -20,8 +20,8 @@ class IhlalRaporlariApp():
         self.last_time_data_fetch = 0
         self.fetched_data:list = None
 
-        self.start_date:str = ""
-        self.end_date:str = ""
+        self.start_date_dd_mm_yyyy:str = ""
+        self.end_date_dd_mm_yyyy:str = ""
         self.start_date_shift:int = 0
         self.end_date_shift:int = 0
 
@@ -45,8 +45,8 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["end_date_shift_change_bbox"]):
                 self.end_date_shift = (self.end_date_shift + 1) % 3
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["request_ihlal_raporlari_data_button"]):
-                _start_date = self.start_date_shift+","+str(self.start_date_shift)
-                _end_date = self.end_date_shift+","+str(self.end_date_shift)
+                _start_date = self.start_date_dd_mm_yyyy+","+str(self.start_date_shift)
+                _end_date = self.end_date_dd_mm_yyyy+","+str(self.end_date_shift)
                 print(f"Requesting ihlal raporlari data with start date: {_start_date} and end date: {_end_date}")
                 fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
                 if status_code == 200:
