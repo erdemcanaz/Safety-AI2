@@ -5,6 +5,7 @@ import numpy as np
 import requests
 from typing import Dict, List
 import datetime
+from modules import picasso, text_transformer
 
 class IhlalRaporlariApp():
 
@@ -131,12 +132,13 @@ class IhlalRaporlariApp():
         # Draw reports
         reports_to_draw = self.__get_reports_to_display()
         for report_no, report in enumerate(reports_to_draw):
-            y = 200 + report_no*60
+            y = 220 + report_no*65
+            picasso.draw_image_on_frame(ui_frame, image_name="ihlal_row_light_blue" if report_no%2==0 else "ihlal_row_dark_blue", x=77, y=y, width=1763, height=58, maintain_aspect_ratio=True)
             cv2.putText(ui_frame, report["violation_date"], (100, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["region_name"], (300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["violation_type"], (500, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["camera_uuid"], (700, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
-            cv2.putText(ui_frame, report["violation_uuid"], (1000, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["region_name"]), (300, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_type"]), (500, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["camera_uuid"][:8]+"..."), (700, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, text_transformer.translate_text_to_english(report["violation_uuid"][:8]+"..."), (1000, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
 
         cv2.imshow(cv2_window_name, ui_frame)
 
