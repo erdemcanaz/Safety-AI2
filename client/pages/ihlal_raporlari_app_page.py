@@ -20,6 +20,7 @@ class IhlalRaporlariApp():
         "request_ihlal_raporlari_data_button": (1358,63, 1446,100),
         "assign_this_shift": (1464, 64, 1504, 100),
 
+        "show_report_image_bboxs": (1700,223,1835,989),
         "decrease_data_index_button": (1860, 186, 1877, 214),
         "increase_data_index_button": (1861, 976, 1877, 1005),
         "scroll_bar_bbox": (1862, 215, 1880, 974),
@@ -105,7 +106,12 @@ class IhlalRaporlariApp():
                 index = int(percentage*len(self.fetched_data))
                 while index % 12 != 0:
                     index -= 1
-                self.first_data_index_to_display = index               
+                self.first_data_index_to_display = index    
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["show_report_image_bboxs"]):
+                report_page_index = (y - self.CONSTANTS["show_report_image_bboxs"][1])//65
+                report_index = self.first_data_index_to_display + report_page_index
+                report_uuid = self.__get_reports_to_display()[report_index]["violation_uuid"]
+                print(f"Report Index: {report_index}, Report UUID: {report_uuid}")
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
