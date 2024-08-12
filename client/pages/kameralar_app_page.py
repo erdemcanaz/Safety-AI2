@@ -143,6 +143,6 @@ class KameralarApp():
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_description')}", (1181, 799), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         
         if self.camera_fetched_frame is not None:
-            picasso.draw_frame_on_frame(ui_frame, frame=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=True)
+            picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=88, width=1106, height=614, maintain_aspect_ratio=True)
         
         cv2.imshow(cv2_window_name, ui_frame)
