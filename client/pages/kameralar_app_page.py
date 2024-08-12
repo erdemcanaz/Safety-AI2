@@ -175,22 +175,22 @@ class KameralarApp():
                 self.dummy_camera_dict["camera_ip_address"] = self.dummy_camera_dict["camera_ip_address"][:-1]
             elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
                 self.dummy_camera_dict["camera_ip_address"] += text_transformer.translate_text_to_english(chr(pressed_key))
-        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["username"]):
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["username_bbox"]):
             if pressed_key == 8:
                 self.dummy_camera_dict["username"] = self.dummy_camera_dict["username"][:-1]
             elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
                 self.dummy_camera_dict["username"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
-        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["password"]):
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["password_bbox"]):
             if pressed_key == 8:
                 self.dummy_camera_dict["password"] = self.dummy_camera_dict["password"][:-1]
             elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
                 self.dummy_camera_dict["password"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
-        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["NVR_ip"]):
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["NVR_ip_bbox"]):
             if pressed_key == 8:
                 self.dummy_camera_dict["NVR_ip"] = self.dummy_camera_dict["NVR_ip"][:-1]
             elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
                 self.dummy_camera_dict["NVR_ip"] +=  text_transformer.translate_text_to_english(chr(pressed_key))
-        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["camera_region"]):
+        elif mouse_input.get_last_mouse_position() is not None and self.__is_xy_in_bbox(mouse_input.get_last_mouse_position()[0], mouse_input.get_last_mouse_position()[1], self.CONSTANTS["camera_region_bbox"]):
             if pressed_key == 8:
                 self.dummy_camera_dict["camera_region"] = self.dummy_camera_dict["camera_region"][:-1]
             elif chr(pressed_key) in self.CONSTANTS["allowed_keys"]:
