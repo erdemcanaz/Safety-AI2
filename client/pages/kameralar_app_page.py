@@ -108,7 +108,7 @@ class KameralarApp():
                         report_page_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
                         report_index = self.first_camera_index_to_show + report_page_index
                         if not report_index >= len(self.camera_configs):
-                            self.dummy_camera_dict = self.camera_configs[report_index]   
+                            self.dummy_camera_dict = copy.deepcopy(self.camera_configs[report_index])  
                             fetched_frame, status_code = active_user.request_camera_frame(username=self.dummy_camera_dict["username"], password=self.dummy_camera_dict["password"], camera_ip_address=self.dummy_camera_dict["camera_ip_address"])
                             if status_code == 200:
                                 self.camera_fetched_frame = fetched_frame
@@ -142,7 +142,7 @@ class KameralarApp():
                     _deep_copy_dummy_camera_dict = copy.deepcopy(self.dummy_camera_dict)
                     _deep_copy_dummy_camera_dict["camera_uuid"] = uuid.uuid4()
                     _deep_copy_dummy_camera_dict["stream_path"] = "profile2/media.smp" # For this project, stream path is fixed
-                    self.camera_configs.append(self._deep_copy_dummy_camera_dict)
+                    self.camera_configs.append(_deep_copy_dummy_camera_dict)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["delete_camera_configs_bbox"]):
                 for camera_dict in self.camera_configs:
                     if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
