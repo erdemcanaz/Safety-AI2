@@ -243,13 +243,13 @@ class IhlalRaporlariApp():
             header_color = (0, 0, 0)  # Black for headers
             value_color = (255, 255, 255)   # White for values
             font = cv2.FONT_HERSHEY_SIMPLEX
-            fontsize = 0.6
+            fontsize = 0.35
             font_thickness = 1
 
             # Define the starting position
             start_x = 10
             start_y = 30
-            line_spacing = 25
+            line_spacing = 10
 
             # Define the max header length for alignment
             max_header_length = 20
@@ -267,7 +267,7 @@ class IhlalRaporlariApp():
 
             # Draw each header and value with different colors
             for i, (header, value) in enumerate(texts):
-                header_text = f"{header:<{max_header_length}}:"
+                header_text = f"{header:<{max_header_length}}"
                 header_position = (start_x, start_y + i * line_spacing)
                 value_position = (start_x + 200, start_y + i * line_spacing)  # Adjust 200 based on your text size
 
