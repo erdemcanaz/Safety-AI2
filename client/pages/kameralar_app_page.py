@@ -153,7 +153,7 @@ class KameralarApp():
                 self.__reset_dummy_camera_dict()
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["is_alive_bbox"]):
                 self.dummy_camera_dict["is_alive"] = not self.dummy_camera_dict["is_alive"]
-                
+
         if self.camera_configs is None and (time.time() - self.last_time_camera_configs_fetched) > self.CONSTANTS["camera_config_fetching_min_interval"]:
             self.last_time_camera_configs_fetched = time.time()
             fetched_dict, status_code = active_user.request_camera_configs_dict()
@@ -229,7 +229,7 @@ class KameralarApp():
         
         if self.camera_fetched_frame is not None:
             picasso.draw_frame_on_frame(ui_frame, frame_to_draw=self.camera_fetched_frame, x=603, y=85, width=1106, height=614, maintain_aspect_ratio=False)
-            cv2.putText(ui_frame, f"{self.camera_fetched_frame_ip}", (610, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169,96,0), 2)
+            cv2.putText(ui_frame, f"{self.camera_fetched_frame_ip}", (630, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (169,96,0), 2)
 
         picasso.draw_image_on_frame(ui_frame, image_name="kameralar_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         cv2.imshow(cv2_window_name, ui_frame)
