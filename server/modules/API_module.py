@@ -188,7 +188,7 @@ async def get_isg_ui_data(date_range: DateRangeRequest, current_user: User = Dep
     
     return {"list_": test_list}
 
-@app.post("/get_violation_image_with_uuid", response_model=ListOfDictsResponse)
+@app.post("/get_violation_image_with_uuid", response_model=DictResponse)
 async def get_violation_image_with_uuid(violation_uuid: ViolationUUIDRequest, current_user: User = Depends(get_current_user)):
     if "IHLAL_RAPORLARI_APP" not in current_user.allowed_tos:
         raise HTTPException(
