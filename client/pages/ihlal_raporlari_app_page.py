@@ -13,7 +13,7 @@ class IhlalRaporlariApp():
         "data_fetch_period_s": 5, # fetch data every 5 seconds       
         "start_date_shift_change_bbox": (752, 64, 826, 98),
         "end_date_shift_change_bbox": (1148, 64, 1222, 98),
-        "request_ihlal_raporlari_data_button": (1358,63, 1446,67)
+        "request_ihlal_raporlari_data_button": (1358,63, 1446,100)
     }
 
     def __init__(self):
@@ -47,6 +47,7 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["request_ihlal_raporlari_data_button"]):
                 _start_date = self.start_date_shift+","+str(self.start_date_shift)
                 _end_date = self.end_date_shift+","+str(self.end_date_shift)
+                print(f"Requesting ihlal raporlari data with start date: {_start_date} and end date: {_end_date}")
                 fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
                 if status_code == 200:
                     self.fetched_data = fetched_list
