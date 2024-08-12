@@ -241,16 +241,16 @@ class IhlalRaporlariApp():
             cv2.resize(image, (1280, 720), interpolation=cv2.INTER_AREA) # Resize image to 1280x720 so that text can be written on it properly
 
             # Define your font settings
-            header_color = (0, 0, 0)  # Black for headers
+            header_color = (169, 96, 0)  # Black for headers
             value_color = (255, 255, 255)   # White for values
             font = cv2.FONT_HERSHEY_SIMPLEX
-            fontsize = 0.4
+            fontsize = 0.40
             font_thickness = 1
 
             # Define the starting position
             start_x = 10
             start_y = 15
-            line_spacing = 13
+            line_spacing = 15
 
             # Define the max header length for alignment
             max_header_length = 20
@@ -270,7 +270,7 @@ class IhlalRaporlariApp():
             for i, (header, value) in enumerate(texts):
                 header_text = f"{header:<{max_header_length}}"
                 header_position = (start_x, start_y + i * line_spacing)
-                value_position = (start_x + 50, start_y + i * line_spacing)  # Adjust 200 based on your text size
+                value_position = (start_x + 125, start_y + i * line_spacing)  # Adjust 200 based on your text size
 
                 # Draw header
                 cv2.putText(image, header_text, header_position, font, fontsize, header_color, font_thickness, cv2.LINE_AA)
