@@ -214,10 +214,11 @@ class KameralarApp():
 
         is_alive_text = "Aktif" if self.dummy_camera_dict.get("is_alive") else "Pasif"
         uuid_text = "Henüz belirlenmedi"
-        for camera_dict in self.camera_configs:
-            if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
-                uuid_text = camera_dict.get("camera_uuid")
-                break
+        if self.camera_configs is not None:
+            for camera_dict in self.camera_configs:
+                if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
+                    uuid_text = camera_dict.get("camera_uuid")
+                    break
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_ip_address')}", (750, 765), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), font_thickness)
         cv2.putText(ui_frame, f"{self.dummy_camera_dict.get('camera_uuid')}", (750, 799), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), font_thickness)
         cv2.putText(ui_frame, f"{is_alive_text}", (750, 833), cv2.FONT_HERSHEY_SIMPLEX, font_size, (169,69,0), 2)
