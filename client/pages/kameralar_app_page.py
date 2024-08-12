@@ -210,7 +210,7 @@ class KameralarApp():
         font_thickness = 1
 
         is_alive_text = "Aktif" if self.dummy_camera_dict.get("is_alive") else "Pasif"
-        uuid_text = "Henüz belirlenmedi"
+        uuid_text = "Henuz belirlenmedi"
         if self.camera_configs is not None:
             for camera_dict in self.camera_configs:
                 if camera_dict.get("camera_ip_address") == self.dummy_camera_dict.get("camera_ip_address"):
