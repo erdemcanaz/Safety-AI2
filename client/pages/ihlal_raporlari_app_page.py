@@ -13,7 +13,8 @@ class IhlalRaporlariApp():
         "data_fetch_period_s": 5, # fetch data every 5 seconds       
         "start_date_shift_change_bbox": (752, 64, 826, 98),
         "end_date_shift_change_bbox": (1148, 64, 1222, 98),
-        "request_ihlal_raporlari_data_button": (1358,63, 1446,100)
+        "request_ihlal_raporlari_data_button": (1358,63, 1446,100),
+        "assign_this_shift": (1464, 64, 1504, 100),
     }
 
     def __init__(self):
@@ -47,11 +48,16 @@ class IhlalRaporlariApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["request_ihlal_raporlari_data_button"]):
                 _start_date = self.start_date_dd_mm_yyyy+","+str(self.start_date_shift)
                 _end_date = self.end_date_dd_mm_yyyy+","+str(self.end_date_shift)
-                print(f"Requesting ihlal raporlari data with start date: {_start_date} and end date: {_end_date}")
                 fetched_list, status_code = active_user.request_ihlal_raporlari_data(start_date = _start_date, end_date = _end_date)
                 if status_code == 200:
                     self.fetched_data = fetched_list
                 print(f"İhlal raporlari data is fetched with status code: {status_code}")
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["assign_this_shift"]):
+                self.start_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
+                self.end_date_dd_mm_yyyy = datetime.datetime.now().strftime("%d.%m.%Y")
+                active_user.assign_this_shift(shift = self.start_date_shift)
+                print(f"Shift is assigned to the user")
+
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -75,7 +81,9 @@ class IhlalRaporlariApp():
         # put start date and shift
         cv2.putText(ui_frame, today_date+today_shift, (1515, 89), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
         # put start and end date shift
+        cv2.putText(ui_frame, self.start_date_dd_mm_yyyy, (564, 93), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.putText(ui_frame, str(self.start_date_shift+1), (761, 89), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
+        cv2.putText(ui_frame, str(self.end_date_dd_mm_yyyy), (960, 94), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
         cv2.putText(ui_frame, str(self.end_date_shift+1), (1155, 89), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169, 96, 0), 2, cv2.LINE_AA)
                                                                
         cv2.imshow(cv2_window_name, ui_frame)
