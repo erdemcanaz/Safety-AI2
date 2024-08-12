@@ -170,7 +170,7 @@ async def get_isg_ui_data(date_range: DateRangeRequest, current_user: User = Dep
     test_list = []
     for i in range(1785):
         dummy_dict = {
-            "violation_date" : datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),    
+            "violation_date" : datetime.datetime.now().strftime("%Y.%m.%d - %H:%M:%S"),    
             "region_name": ''.join([random.choice(["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]) for _ in range(5)]),
             "violation_type": random.choice(["Yasaklı Alan", "Baret Kuralı"]),
             "violation_score": str(int(random.random()*100)),
