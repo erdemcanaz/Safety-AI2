@@ -18,8 +18,8 @@ class LoginPage():
         "login": (222,690,800,752)
     }
     def __init__(self):
-        self.username_text_field = ""
-        self.password_text_field = ""
+        self.username_text_field = "erdem.canaz"
+        self.password_text_field = "erdem123"
         self.show_password = False
 
         self.secondary_mode = 0
