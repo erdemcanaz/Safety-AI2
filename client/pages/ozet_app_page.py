@@ -52,7 +52,7 @@ class OzetApp():
             self.mock_shift_data = {}
             self.last_time_data_fetch = time.time()
             for i in range(8):
-                self.mock_shift_data[f"shift_{i}"] = {
+                self.mock_shift_data[f"entry_{i}"] = {
                     "hard_hat_approved": random.randint(0, 10000),
                     "hard_hat_rejected": random.randint(0, 10000),
                     "restricted_area_approved": random.randint(0, 10000),
@@ -68,23 +68,33 @@ class OzetApp():
 
         # plot bars data
         bar_height = 362
-        period = 160
-        bar_width = 20
+        period = 152
+        bar_width = 30
         spacing = (160-2*bar_width)//3
         for i in range(8):
-            shift_data = self.mock_shift_data[f"shift_{i}"]
+            shift_data = self.mock_shift_data[f"entry_{i}"]
             hard_hat_suces = shift_data["hard_hat_approved"]/(shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"] > 0 else 5
             restricted_area_suces = shift_data["restricted_area_approved"]/(shift_data["restricted_area_rejected"]+shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"]+shift_data["restricted_area_approved"] > 0 else 5
             
             top_y = 608
-            hard_hat_y = top_y + int(bar_height*(1-hard_hat_suces))
-            restricted_area_y = top_y + int(bar_height*(1-restricted_area_suces))
+            hard_hat_top_y = top_y + int(bar_height*(1-hard_hat_suces))
+            restricted_area__top_y = top_y + int(bar_height*(1-restricted_area_suces))
             hard_hat_x = 554+spacing + i*period
             restricted_area_x = 554+2*spacing + bar_width + i*period
 
-            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
-            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
-
+            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_top_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
+            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (195, 184, 161), 2)
+            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area__top_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
+            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (206, 168, 182), 2)
+            
+    def __format_count_to_hr(self, number:int):
+        if number < 1000:
+            return str(number)
+        elif number < 1000000:
+            return f"{number/1000:.1f}K"
+        else:
+            return f"{number//1000000:.1f}M"
+        
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
         # Fetch camera configs
@@ -124,7 +134,6 @@ class OzetApp():
         today_date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         today_shift = "Vardiya-I" if datetime.datetime.now().hour < 8 else "Vardiya-II" if datetime.datetime.now().hour < 16 else"Vardiya-III "
         # Draw UI
-        picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
 
         text = active_user.get_token_person_name()
         text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 2)[0]            
@@ -149,6 +158,8 @@ class OzetApp():
         if self.summary_types[self.summary_type_index] == "Vardiya":
             self.plot_shift_summary(ui_frame)
 
+        picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
+        #put fetched frame to the window
         cv2.imshow(cv2_window_name, ui_frame)
 
         
