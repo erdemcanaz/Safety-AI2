@@ -529,7 +529,7 @@ class OzetApp():
         period = 152
         today_date = datetime.datetime.now()     
         total_days = (today_date - self.start_date_all_time).days
-        days_per_period = total_days / 9
+        days_per_period = total_days / 8
         for i in range(9):            
             color = (154,108,15) if i %2 == 0 else (229,218,194)
             cv2.putText(ui_frame, f"-{total_days-i*days_per_period:.0f} Gun", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
