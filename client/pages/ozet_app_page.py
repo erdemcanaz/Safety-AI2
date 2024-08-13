@@ -85,7 +85,6 @@ class OzetApp():
         cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_shift_data['total_hard_hat_approved'])}", (836, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
         cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_shift_data['total_hard_hat_rejected'])}", (930, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
         percentage = self.mock_shift_data['total_hard_hat_approved']/(self.mock_shift_data['total_hard_hat_rejected']+self.mock_shift_data['total_hard_hat_approved']) if self.mock_shift_data['total_hard_hat_rejected']+self.mock_shift_data['total_hard_hat_approved'] > 0 else 0
-        print(percentage)
         cv2.putText(ui_frame, f"{percentage:.1%}", (844, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
 
         cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_shift_data['total_restricted_area_approved'])}", (1119, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
