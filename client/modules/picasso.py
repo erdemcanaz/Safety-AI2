@@ -32,8 +32,8 @@ IMAGE_PATHS = {
     "updated_camera_icon": "src/icons/updated_camera_icon.png",
     "new_camera_icon": "src/icons/new_camera_icon.png",
     "eye_dark_blue": "src/icons/eye_dark_blue.png",
-    "camera_icon_selected": "src/icons/camera_icon_selected.png",
-}
+    "eye_light_blue": "src/icons/eye_light_blue.png"
+    }
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):
     global IMAGE_PATHS
