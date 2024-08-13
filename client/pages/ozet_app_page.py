@@ -27,9 +27,9 @@ class OzetApp():
             return []
         
         if self.first_camera_index_to_show >= len(self.camera_configs):
-            self.first_camera_index_to_show = max(0, len(self.camera_configs) - 11)
+            self.first_camera_index_to_show = max(0, len(self.camera_configs) - 13)
         
-        return self.camera_configs[self.first_camera_index_to_show:self.first_camera_index_to_show+11]
+        return self.camera_configs[self.first_camera_index_to_show:self.first_camera_index_to_show+ 13]
     
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
@@ -62,7 +62,7 @@ class OzetApp():
         cv2.putText(ui_frame, "| "+today_date+" | "+today_shift, (337, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)                                                                          
         
         for camera_index, camera_dict in enumerate(self.__get_cameras_to_show()):
-            x, y = 75, 207 + camera_index * 65
+            x, y = 75, 142 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
             cv2.putText(ui_frame, f"{self.first_camera_index_to_show+camera_index+1}", (x+10, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             #picasso.draw_image_on_frame(ui_frame, image_name=camera_status_image, x=x+45, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
