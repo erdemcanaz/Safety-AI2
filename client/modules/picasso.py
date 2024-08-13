@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from scipy.interpolate import splprep, splev
+from scipy.interpolate import interp1d
 
 IMAGE_PATHS = {
     "press_key_page_template": "src/templates/press_key_page_template.png",
@@ -121,16 +121,27 @@ def draw_frame_on_frame(frame:np.ndarray=None, frame_to_draw:np.ndarray=None, x:
     else:
         frame[roi_y1:roi_y2, roi_x1:roi_x2] = image_roi
 
-def plot_smooth_curve_on_frame(frame:np.ndarray=None, points_list:np.ndarray=None, color:tuple=(0, 0, 255), thickness:int=2):
-    # points_list -> [(x0, y0), (x0, y0), ...]
-
+def plot_smooth_curve_on_frame(frame: np.ndarray, points_list: np.ndarray, color: tuple = (0, 0, 255), thickness: int = 2):
+    # Convert points_list to a numpy array and sort by x values
     points = np.array(points_list, dtype=np.float32)
-    tck, u = splprep(points.T, s=0)
-    u_new = np.linspace(u.min(), u.max(), 1000)
-    x_new, y_new = splev(u_new, tck)
+    points = points[points[:, 0].argsort()]  # Sort by x values
+
+    # Remove duplicate x-values by averaging the corresponding y-values
+    unique_x, indices = np.unique(points[:, 0], return_index=True)
+    avg_y = np.array([points[points[:, 0] == x, 1].mean() for x in unique_x])
+
+    # Create a new set of points with unique x values and their corresponding averaged y values
+    unique_points = np.stack((unique_x, avg_y), axis=-1)
+
+    # Perform linear interpolation to ensure a single y-value for each x-value
+    f = interp1d(unique_x, avg_y, kind='cubic')
+
+    # Generate new x values for smooth plotting
+    x_new = np.linspace(unique_x.min(), unique_x.max(), 1000)
+    y_new = f(x_new)
 
     # Convert smoothed points to integer coordinates
     smooth_points = np.array([x_new, y_new]).T.astype(np.int32)
 
     # Draw the smooth curve on the image
-    cv2.polylines(frame, [smooth_points], isClosed=False, color=color, thickness=2)
+    cv2.polylines(frame, [smooth_points], isClosed=False, color=color, thickness=thickness)
