@@ -473,7 +473,7 @@ class OzetApp():
         #TODO: check if valid data is fetched
         if self.mock_data is None or (time.time() - self.last_time_data_fetch) > 5:
             self.last_time_data_fetch = time.time()
-
+            self.start_date_all_time = datetime.datetime.now() - datetime.timedelta(days=random.randint(1, 365))
             self.mock_data = {}
             self.mock_data["total_person_analyzed"] = random.randint(0, 1000000)
             self.mock_data["total_frame_analyzed"] = random.randint(0, 1000000)
@@ -527,13 +527,12 @@ class OzetApp():
 
         # plot timestamps
         period = 152
-        today_date = datetime.datetime.now()
-        start_date = today_date - datetime.timedelta(days=random.randint(1,365))   
-        total_days = (today_date - start_date).days
+        today_date = datetime.datetime.now()     
+        total_days = (today_date - self.start_date_all_time).days
         days_per_period = total_days // 9
         for i in range(9):            
             color = (154,108,15) if i %2 == 0 else (229,218,194)
-            cv2.putText(ui_frame, f"-{days_per_period-i*days_per_period} gün", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+            cv2.putText(ui_frame, f"-{total_days-i*days_per_period} Gun", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         # plot bars data
         hard_hat_bar_top_coordinates = []
@@ -656,7 +655,7 @@ class OzetApp():
             self.__plot_month_summary(ui_frame)
         elif self.summary_types[self.summary_type_index] == "Tum Zamanlar":
             self.__plot_all_time_data_summary(ui_frame)
-            
+
         picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         #put fetched frame to the window
         cv2.imshow(cv2_window_name, ui_frame)
