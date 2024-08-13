@@ -64,11 +64,13 @@ class OzetApp():
         first_shift_hour = hour_now - hour_now%8
         for i in range(8):
             color = (154,108,15) if i %2 == 0 else (229,218,194)
-            cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*40, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*160, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         # plot bars data
         bar_height = 362
-        bar_width = 10
+        period = 160
+        bar_width = 20
+        spacing = (160-2*bar_width)//3
         for i in range(8):
             shift_data = self.mock_shift_data[f"shift_{i}"]
             hard_hat_suces = shift_data["hard_hat_approved"]/(shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"] > 0 else 5
@@ -77,10 +79,11 @@ class OzetApp():
             top_y = 608
             hard_hat_y = top_y + int(bar_height*(1-hard_hat_suces))
             restricted_area_y = top_y + int(bar_height*(1-restricted_area_suces))
-            hard_hat_x = 554+5 + i*40
-            restricted_area_x = 554+10+i*40+bar_width
-            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_y), (hard_hat_x+bar_width,969), (0, 0, 255), -1)
-            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area_y), (restricted_area_x+bar_width,969), (0, 255, 0), -1)
+            hard_hat_x = 554+spacing + i*period
+            restricted_area_x = 554+2*spacing + bar_width + i*period
+
+            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
+            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
