@@ -94,18 +94,18 @@ class OzetApp():
             restricted_area_x = 554+2*spacing + bar_width + i*period
 
             cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_top_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
-            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (195, 184, 161), 2)
+            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (195, 184, 161), 2)
             cv2.rectangle(ui_frame, (restricted_area_x,restricted_area__top_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
-            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (206, 168, 182), 2)
+            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (206, 168, 182), 2)
             
-            cv2.circle(ui_frame, (hard_hat_x+bar_width//2, hard_hat_top_y), 5, (195, 184, 161), -1)
-            cv2.circle(ui_frame, (restricted_area_x+bar_width//2, restricted_area__top_y), 5, (206, 168, 182), -1)
+            cv2.circle(ui_frame, (hard_hat_x+bar_width//2, hard_hat_top_y), 10, (154, 108, 15), -1)
+            cv2.circle(ui_frame, (restricted_area_x+bar_width//2, restricted_area__top_y), 10, (203, 110, 145), -1)
 
-            hard_hat_bar_top_coordinates.append((hard_hat_x, hard_hat_top_y))
-            restricted_area_bar_top_coordinates.append((restricted_area_x, restricted_area__top_y))
+            hard_hat_bar_top_coordinates.append((hard_hat_x+bar_width//2, hard_hat_top_y))
+            restricted_area_bar_top_coordinates.append((restricted_area_x+bar_width//2, restricted_area__top_y))
 
-        picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(195, 184, 161), thickness=2)
-        picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(206, 168, 182), thickness=2)
+        picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
+        picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
    
         
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
