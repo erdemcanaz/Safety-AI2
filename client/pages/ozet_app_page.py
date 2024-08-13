@@ -207,8 +207,7 @@ class OzetApp():
         cv2.putText(ui_frame, f"{percentage:.1%}", (1129, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
 
         # plot timestamps
-        period = 152//3
-        first_shift_hour = 0
+        period = 152
         for i in range(9):
             color = (154,108,15) if i %2 == 0 else (229,218,194)
             cv2.putText(ui_frame, f"{3*i:02d}:00", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
@@ -219,7 +218,7 @@ class OzetApp():
 
         bar_height = 362
         bar_width = 30//3
-        spacing = (160-2*bar_width)//3
+        spacing = (period-7*bar_width)
         for i in range(24):
             shift_data = self.mock_data[f"entry_{i}"]
             hard_hat_suces = shift_data["hard_hat_approved"]/(shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"] > 0 else 5
@@ -228,8 +227,8 @@ class OzetApp():
             top_y = 608
             hard_hat_top_y = top_y + int(bar_height*(1-hard_hat_suces))
             restricted_area__top_y = top_y + int(bar_height*(1-restricted_area_suces))
-            hard_hat_x = 554+spacing + i*period
-            restricted_area_x = 554+2*spacing + bar_width + i*period
+            hard_hat_x = 554+spacing + i*period + (i%3)*(period//3)
+            restricted_area_x = 554+ 2 * spacing + bar_width + i*period + (i%3)*(period//3)
 
             cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_top_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
             cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
