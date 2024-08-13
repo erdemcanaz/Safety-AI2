@@ -11,6 +11,9 @@ class OzetApp():
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
         "camera_config_fetching_min_interval": 10, # fetch camera configs every 10 seconds
+
+        "increase_camera_index_bbox": (75, 142, 317, 60),
+        "decrease_camera_index_bbox": (75, 142 + 12*65, 317, 60),
     }
 
     def __init__(self):
@@ -64,9 +67,9 @@ class OzetApp():
             x, y = 75, 142 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
             cv2.putText(ui_frame, f"{self.first_camera_index_to_show+camera_index+1}", (x+10, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-               
-            listed_camera_icon_name = "eye_dark_blue" if not camera_dict.get("is_show_summary") else "eye_light_blue"
-            picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+45, y=y+15, width=30, height=30, maintain_aspect_ratio=True)            
+
+            listed_camera_icon_name = "eye_dark_blue" if camera_dict.get("is_show_summary") else "eye_light_blue"
+            picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+35, y=y+30, width=35, height=35, maintain_aspect_ratio=True)            
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+90, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
         
