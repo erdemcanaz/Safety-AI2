@@ -14,6 +14,7 @@ class OzetApp():
 
         "increase_camera_index_bbox": (75, 142, 317, 60),
         "decrease_camera_index_bbox": (75, 142 + 12*65, 317, 60),
+        "camera_list_bbox": (77, 147 , 391, 981)
     }
 
     def __init__(self):
@@ -43,6 +44,20 @@ class OzetApp():
                 self.camera_configs = fetched_dict
                 for camera_dict in self.camera_configs:
                     camera_dict["is_show_summary"] = False
+        
+        if mouse_input.get_last_leftclick_position() is not None:
+            x, y = mouse_input.get_last_leftclick_position()
+            mouse_input.clear_last_leftclick_position()        
+            if self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_camera_index_bbox"]):
+                self.first_camera_index_to_show = max(0, self.first_camera_index_to_show-13)
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_bbox"]):
+                self.first_camera_index_to_show = self.first_camera_index_to_show+13
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
+                if self.camera_configs is not None:
+                    clicked_camera_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
+                    camera_index = self.first_camera_index_to_show + clicked_camera_index
+                    if not camera_index >= len(self.camera_configs):
+                        self.camera_configs[camera_index]["is_show_summary"] = not self.camera_configs[camera_index]["is_show_summary"]
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
@@ -66,11 +81,11 @@ class OzetApp():
         for camera_index, camera_dict in enumerate(self.__get_cameras_to_list()):
             x, y = 75, 142 + camera_index * 65
             picasso.draw_image_on_frame(ui_frame, image_name="camera_list_bar", x=x, y=y, width=317, height=60, maintain_aspect_ratio=True)
-            cv2.putText(ui_frame, f"{self.first_camera_index_to_show+camera_index+1}", (x+10, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+            cv2.putText(ui_frame, f"{self.first_camera_index_to_show+camera_index+1}", (x+5, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
 
             listed_camera_icon_name = "eye_dark_blue" if camera_dict.get("is_show_summary") else "eye_light_blue"
-            picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+35, y=y+23, width=35, height=35, maintain_aspect_ratio=True)            
-            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+90, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
+            picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+45, y=y+23, width=35, height=35, maintain_aspect_ratio=True)            
+            cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+100, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
         
         
