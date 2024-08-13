@@ -224,7 +224,8 @@ class OzetApp():
         restricted_area_bar_top_coordinates = []
 
         bar_height = 362
-        bar_width = 30//3
+        bar_width = 10
+        plot_shift = 10 #TODO: this is a quick fix, it should not be used however curve shifts somehow
         spacing = (period-6*bar_width)//7
 
         x_cursor = 554
@@ -243,14 +244,14 @@ class OzetApp():
                 # Draw the hard hat bar
                 if self.show_hard_hat_summary:cv2.rectangle(ui_frame, (x_cursor, hard_hat_top_y), (x_cursor + bar_width, 969), (195, 184, 161), -1)
                 if self.show_hard_hat_summary:cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 5, (154, 108, 15), -1)
-                restricted_area_bar_top_coordinates.append((x_cursor + bar_width // 2, restricted_area_top_y))
+                hard_hat_bar_top_coordinates.append((x_cursor + bar_width // 2, restricted_area_top_y))
                 if self.show_hard_hat_summary:cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (x_cursor, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
                 x_cursor+=bar_width+spacing
                 
                 # Draw the restricted area bar
                 if self.show_restricted_area_summary: cv2.rectangle(ui_frame, (x_cursor, restricted_area_top_y), (x_cursor + bar_width, 969), (206, 168, 182), -1)
                 if self.show_restricted_area_summary: cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 5, (203, 110, 145), -1)
-                hard_hat_bar_top_coordinates.append((x_cursor + bar_width // 2, hard_hat_top_y))
+                restricted_area_bar_top_coordinates.append((x_cursor + bar_width // 2, hard_hat_top_y))
                 if self.show_restricted_area_summary: cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (x_cursor, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
                 x_cursor+=bar_width               
             x_cursor += spacing
