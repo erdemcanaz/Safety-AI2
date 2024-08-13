@@ -27,9 +27,13 @@ class OzetApp():
         self.last_time_data_fetch = 0
         self.fetched_data:list = None
 
+
         self.first_camera_index_to_show = 0
         self.camera_configs = None
         self.last_time_camera_configs_fetched = 0
+
+        self.currently_summarized_camera_index = None
+        self.last_time_summarized_camera_changed = 0
 
         self.summary_types = ["Vardiya", "Gun", "Hafta", "Ay", "Tum Zamanlar"]
         self.summary_type_index = 0
@@ -566,8 +570,6 @@ class OzetApp():
         if self.show_hard_hat_summary:  picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
         if self.show_restricted_area_summary: picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
 
-
-
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
         # Fetch camera configs
@@ -638,16 +640,53 @@ class OzetApp():
         cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (514 + (686-text_width)//2, 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         cv2.putText(ui_frame, f"({self.summary_types[self.summary_type_index]})", (921, 551), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         
-        if self.summary_types[self.summary_type_index] == "Vardiya":
-            self.__plot_shift_summary(ui_frame)
-        elif self.summary_types[self.summary_type_index] == "Gun":
-            self.__plot_day_summary(ui_frame)
-        elif self.summary_types[self.summary_type_index] == "Hafta":
-            self.__plot_week_summary(ui_frame)
-        elif self.summary_types[self.summary_type_index] == "Ay":
-            self.__plot_month_summary(ui_frame)
-        elif self.summary_types[self.summary_type_index] == "Tum Zamanlar":
-            self.__plot_all_time_data_summary(ui_frame)
+        if self.camera_configs is not None:
+            if (time.time() - self.last_time_summarized_camera_changed) > 5:
+                self.last_time_summarized_camera_changed = time.time()
+
+                visible_camera_indexes = []
+                for camera_index, camera_dict in enumerate(self.camera_configs):
+                    if camera_dict.get("is_show_summary"):
+                        visible_camera_indexes.append(camera_index)
+                
+                if len(visible_camera_indexes) == 0:
+                    self.currently_summarized_camera_index = (self.currently_summarized_camera_index+1) % len(self.camera_configs)
+                else:                    
+                    next_closest_camera_index = float("inf")
+                    for camera_index in visible_camera_indexes:
+                        if camera_index > self.currently_summarized_camera_index and camera_index < next_closest_camera_index:
+                            next_closest_camera_index = camera_index
+                            break
+                    if next_closest_camera_index != float("inf"):
+                        self.currently_summarized_camera_index = next_closest_camera_index
+                    
+
+                    previous_closest_camera_index = float("-inf")
+                    for camera_index in visible_camera_indexes:
+                        if camera_index < self.currently_summarized_camera_index and camera_index > previous_closest_camera_index:
+                            previous_closest_camera_index = camera_index
+                            break
+                    if previous_closest_camera_index != float("-inf"):
+                        self.currently_summarized_camera_index = previous_closest_camera_index
+
+                    if next_closest_camera_index == float("inf") and previous_closest_camera_index == float("-inf"):
+                        pass # there is no visible camera to summarize except the current one
+
+        if self.visible_camera_configs is not None:
+            camera_ip = self.visible_camera_configs[self.currently_summarized_camera_index]["camera_ip_address"]
+
+            cv2.putText(ui_frame, f"{camera_ip}", (1420, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
+
+            if self.summary_types[self.summary_type_index] == "Vardiya":
+                self.__plot_shift_summary(ui_frame)
+            elif self.summary_types[self.summary_type_index] == "Gun":
+                self.__plot_day_summary(ui_frame)
+            elif self.summary_types[self.summary_type_index] == "Hafta":
+                self.__plot_week_summary(ui_frame)
+            elif self.summary_types[self.summary_type_index] == "Ay":
+                self.__plot_month_summary(ui_frame)
+            elif self.summary_types[self.summary_type_index] == "Tum Zamanlar":
+                self.__plot_all_time_data_summary(ui_frame)
 
         picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         #put fetched frame to the window
