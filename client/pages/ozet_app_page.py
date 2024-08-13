@@ -219,27 +219,42 @@ class OzetApp():
         bar_height = 362
         bar_width = 30//3
         spacing = (period-7*bar_width)
+
+        bars_per_period = 6  # Total bars in each period
         for i in range(24):
             shift_data = self.mock_data[f"entry_{i}"]
-            hard_hat_suces = shift_data["hard_hat_approved"]/(shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"] > 0 else 5
-            restricted_area_suces = shift_data["restricted_area_approved"]/(shift_data["restricted_area_rejected"]+shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"]+shift_data["restricted_area_approved"] > 0 else 5
             
+            # Calculate success rates
+            hard_hat_suces = shift_data["hard_hat_approved"] / (shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"] > 0 else 5
+            restricted_area_suces = shift_data["restricted_area_approved"] / (shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"] > 0 else 5
+            
+            # Vertical positioning of the bars
             top_y = 608
-            hard_hat_top_y = top_y + int(bar_height*(1-hard_hat_suces))
-            restricted_area__top_y = top_y + int(bar_height*(1-restricted_area_suces))
-            hard_hat_x = 554+spacing + i*period + (i%3)*(period//3)
-            restricted_area_x = 554+ 2 * spacing + bar_width + i*period + (i%3)*(period//3)
-
-            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_top_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
-            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
-            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area__top_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
-            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
+            hard_hat_top_y = top_y + int(bar_height * (1 - hard_hat_suces))
+            restricted_area_top_y = top_y + int(bar_height * (1 - restricted_area_suces))
             
-            cv2.circle(ui_frame, (hard_hat_x+bar_width//2, hard_hat_top_y), 10, (154, 108, 15), -1)
-            cv2.circle(ui_frame, (restricted_area_x+bar_width//2, restricted_area__top_y), 10, (203, 110, 145), -1)
-
-            hard_hat_bar_top_coordinates.append((hard_hat_x+bar_width//2, hard_hat_top_y))
-            restricted_area_bar_top_coordinates.append((restricted_area_x+bar_width//2, restricted_area__top_y))
+            # Horizontal positioning of the bars
+            period_index = i // bars_per_period  # Determine which period the current bar belongs to
+            bar_index_in_period = i % bars_per_period  # Determine the index within the current period
+            
+            hard_hat_x = 554 + spacing + period_index * period + bar_index_in_period * (period // bars_per_period)
+            restricted_area_x = hard_hat_x + bar_width + spacing  # Place the restricted area bar next to the hard hat bar
+            
+            # Draw the hard hat bar
+            cv2.rectangle(ui_frame, (hard_hat_x, hard_hat_top_y), (hard_hat_x + bar_width, 969), (195, 184, 161), -1)
+            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
+            
+            # Draw the restricted area bar
+            cv2.rectangle(ui_frame, (restricted_area_x, restricted_area_top_y), (restricted_area_x + bar_width, 969), (206, 168, 182), -1)
+            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
+            
+            # Draw the circles on top of the bars
+            cv2.circle(ui_frame, (hard_hat_x + bar_width // 2, hard_hat_top_y), 10, (154, 108, 15), -1)
+            cv2.circle(ui_frame, (restricted_area_x + bar_width // 2, restricted_area_top_y), 10, (203, 110, 145), -1)
+            
+            # Save the top coordinates for further use
+            hard_hat_bar_top_coordinates.append((hard_hat_x + bar_width // 2, hard_hat_top_y))
+            restricted_area_bar_top_coordinates.append((restricted_area_x + bar_width // 2, restricted_area_top_y))
 
         picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
         picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
