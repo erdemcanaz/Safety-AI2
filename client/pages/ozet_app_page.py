@@ -259,6 +259,219 @@ class OzetApp():
         if self.show_hard_hat_summary:  picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
         if self.show_restricted_area_summary: picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
 
+    def __plot_week_summary(self, ui_frame:np.ndarray):
+        #TODO: check if valid data is fetched
+        if self.mock_data is None or (time.time() - self.last_time_data_fetch) > 5:
+            self.last_time_data_fetch = time.time()
+
+            self.mock_data = {}
+            self.mock_data["total_person_analyzed"] = random.randint(0, 1000000)
+            self.mock_data["total_frame_analyzed"] = random.randint(0, 1000000)
+            self.mock_data["total_hard_hat_approved"] = random.randint(0, 1000000)
+            self.mock_data["total_hard_hat_rejected"] = random.randint(0, 1000000)
+            self.mock_data["total_restricted_area_approved"] = random.randint(0, 1000000)
+            self.mock_data["total_restricted_area_rejected"] = random.randint(0, 1000000)
+
+            self.mock_data["shift_person_analyzed"] = random.randint(0, 100000)
+            self.mock_data["shift_frame_analyzed"] = random.randint(0, 100000)
+
+            for i in range(24):
+                self.mock_data[f"entry_{i}"] = {
+                    "hard_hat_approved": random.randint(0, 10000),
+                    "hard_hat_rejected": random.randint(0, 10000),
+                    "restricted_area_approved": random.randint(0, 10000),
+                    "restricted_area_rejected": random.randint(0, 10000),
+                }
+
+        # plot text data for total
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_person_analyzed'])}", (554, 221), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_frame_analyzed'])}", (554, 272), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_hard_hat_approved'])}", (836, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_hard_hat_rejected'])}", (930, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = self.mock_data['total_hard_hat_approved']/(self.mock_data['total_hard_hat_rejected']+self.mock_data['total_hard_hat_approved']) if self.mock_data['total_hard_hat_rejected']+self.mock_data['total_hard_hat_approved'] > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (844, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_restricted_area_approved'])}", (1119, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_restricted_area_rejected'])}", (1213, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = self.mock_data['total_restricted_area_approved']/(self.mock_data['total_restricted_area_rejected']+self.mock_data['total_restricted_area_approved']) if self.mock_data['total_restricted_area_rejected']+self.mock_data['total_restricted_area_approved'] > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (1129, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        # plot text data for shift
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['shift_person_analyzed'])}", (554, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['shift_frame_analyzed'])}", (554, 451), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        total_hard_hat_approved = sum([self.mock_data[f"entry_{i}"]["hard_hat_approved"] for i in range(24)])
+        total_hard_hat_rejected = sum([self.mock_data[f"entry_{i}"]["hard_hat_rejected"] for i in range(24)])
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_hard_hat_approved)}", (836, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_hard_hat_rejected)}", (930, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = total_hard_hat_approved/(total_hard_hat_rejected+total_hard_hat_approved) if total_hard_hat_rejected+total_hard_hat_approved > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (844, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        total_restricted_area_approved = sum([self.mock_data[f"entry_{i}"]["restricted_area_approved"] for i in range(24)])
+        total_restricted_area_rejected = sum([self.mock_data[f"entry_{i}"]["restricted_area_rejected"] for i in range(24)])
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_restricted_area_approved)}", (1119, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_restricted_area_rejected)}", (1213, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = total_restricted_area_approved/(total_restricted_area_rejected+total_restricted_area_approved) if total_restricted_area_rejected+total_restricted_area_approved > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (1129, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        # plot timestamps
+        period = 152
+        today_date = datetime.datetime.now().day
+        week_before_date = today_date - datetime.timedelta(days=7)      
+        for i in range(9):            
+            color = (154,108,15) if i %2 == 0 else (229,218,194)
+            formatted_date = week_before_date.strftime("%d.%m")
+            cv2.putText(ui_frame, f"{formatted_date}", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+            week_before_date += datetime.timedelta(days=1)
+
+        # plot bars data
+        hard_hat_bar_top_coordinates = []
+        restricted_area_bar_top_coordinates = []
+
+        bar_height = 362
+        bar_width = 10
+        plot_shift = 10 #TODO: this is a quick fix, it should not be used however curve shifts somehow
+        spacing = (period-6*bar_width)//7
+
+        x_cursor = 554
+        for i in range(8):
+            for j in range(3):
+
+                shift_data = self.mock_data[f"entry_{i*3+j}"]            
+                hard_hat_suces = shift_data["hard_hat_approved"] / (shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"] > 0 else 5
+                restricted_area_suces = shift_data["restricted_area_approved"] / (shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"] > 0 else 5
+                
+                top_y = 608
+                hard_hat_top_y = top_y + int(bar_height * (1 - hard_hat_suces))
+                restricted_area_top_y = top_y + int(bar_height * (1 - restricted_area_suces))
+                                                
+                x_cursor += spacing 
+                # Draw the hard hat bar
+                if self.show_hard_hat_summary:cv2.rectangle(ui_frame, (x_cursor, hard_hat_top_y), (x_cursor + bar_width, 969), (195, 184, 161), -1)
+                if self.show_hard_hat_summary:cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 5, (154, 108, 15), -1)
+                hard_hat_bar_top_coordinates.append((x_cursor + bar_width // 2, hard_hat_top_y))
+                if self.show_hard_hat_summary:cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (x_cursor, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
+                x_cursor+=bar_width+spacing
+                
+                # Draw the restricted area bar
+                if self.show_restricted_area_summary: cv2.rectangle(ui_frame, (x_cursor, restricted_area_top_y), (x_cursor + bar_width, 969), (206, 168, 182), -1)
+                if self.show_restricted_area_summary: cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 5, (203, 110, 145), -1)
+                restricted_area_bar_top_coordinates.append((x_cursor + bar_width // 2, restricted_area_top_y))
+                if self.show_restricted_area_summary: cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (x_cursor, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
+                x_cursor+=bar_width               
+            x_cursor += spacing
+
+        if self.show_hard_hat_summary:  picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
+        if self.show_restricted_area_summary: picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
+
+    def __plot_month_summary(self, ui_frame:np.ndarray):
+        #TODO: check if valid data is fetched
+        if self.mock_data is None or (time.time() - self.last_time_data_fetch) > 5:
+            self.last_time_data_fetch = time.time()
+
+            self.mock_data = {}
+            self.mock_data["total_person_analyzed"] = random.randint(0, 1000000)
+            self.mock_data["total_frame_analyzed"] = random.randint(0, 1000000)
+            self.mock_data["total_hard_hat_approved"] = random.randint(0, 1000000)
+            self.mock_data["total_hard_hat_rejected"] = random.randint(0, 1000000)
+            self.mock_data["total_restricted_area_approved"] = random.randint(0, 1000000)
+            self.mock_data["total_restricted_area_rejected"] = random.randint(0, 1000000)
+
+            self.mock_data["shift_person_analyzed"] = random.randint(0, 100000)
+            self.mock_data["shift_frame_analyzed"] = random.randint(0, 100000)
+
+            for i in range(24):
+                self.mock_data[f"entry_{i}"] = {
+                    "hard_hat_approved": random.randint(0, 10000),
+                    "hard_hat_rejected": random.randint(0, 10000),
+                    "restricted_area_approved": random.randint(0, 10000),
+                    "restricted_area_rejected": random.randint(0, 10000),
+                }
+
+        # plot text data for total
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_person_analyzed'])}", (554, 221), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_frame_analyzed'])}", (554, 272), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_hard_hat_approved'])}", (836, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_hard_hat_rejected'])}", (930, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = self.mock_data['total_hard_hat_approved']/(self.mock_data['total_hard_hat_rejected']+self.mock_data['total_hard_hat_approved']) if self.mock_data['total_hard_hat_rejected']+self.mock_data['total_hard_hat_approved'] > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (844, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_restricted_area_approved'])}", (1119, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['total_restricted_area_rejected'])}", (1213, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = self.mock_data['total_restricted_area_approved']/(self.mock_data['total_restricted_area_rejected']+self.mock_data['total_restricted_area_approved']) if self.mock_data['total_restricted_area_rejected']+self.mock_data['total_restricted_area_approved'] > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (1129, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        # plot text data for shift
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['shift_person_analyzed'])}", (554, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(self.mock_data['shift_frame_analyzed'])}", (554, 451), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        total_hard_hat_approved = sum([self.mock_data[f"entry_{i}"]["hard_hat_approved"] for i in range(24)])
+        total_hard_hat_rejected = sum([self.mock_data[f"entry_{i}"]["hard_hat_rejected"] for i in range(24)])
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_hard_hat_approved)}", (836, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_hard_hat_rejected)}", (930, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = total_hard_hat_approved/(total_hard_hat_rejected+total_hard_hat_approved) if total_hard_hat_rejected+total_hard_hat_approved > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (844, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        total_restricted_area_approved = sum([self.mock_data[f"entry_{i}"]["restricted_area_approved"] for i in range(24)])
+        total_restricted_area_rejected = sum([self.mock_data[f"entry_{i}"]["restricted_area_rejected"] for i in range(24)])
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_restricted_area_approved)}", (1119, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.__format_count_to_hr(total_restricted_area_rejected)}", (1213, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = total_restricted_area_approved/(total_restricted_area_rejected+total_restricted_area_approved) if total_restricted_area_rejected+total_restricted_area_approved > 0 else 0
+        cv2.putText(ui_frame, f"{percentage:.1%}", (1129, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        # plot timestamps
+        period = 152
+        today_date = datetime.datetime.now().day
+        week_before_date = today_date - datetime.timedelta(days=21)      
+        for i in range(9):            
+            color = (154,108,15) if i %2 == 0 else (229,218,194)
+            formatted_date = week_before_date.strftime("%d.%m")
+            cv2.putText(ui_frame, f"{formatted_date}", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+            week_before_date += datetime.timedelta(days=3)
+
+        # plot bars data
+        hard_hat_bar_top_coordinates = []
+        restricted_area_bar_top_coordinates = []
+
+        bar_height = 362
+        bar_width = 10
+        plot_shift = 10 #TODO: this is a quick fix, it should not be used however curve shifts somehow
+        spacing = (period-6*bar_width)//7
+
+        x_cursor = 554
+        for i in range(8):
+            for j in range(3):
+
+                shift_data = self.mock_data[f"entry_{i*3+j}"]            
+                hard_hat_suces = shift_data["hard_hat_approved"] / (shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"] > 0 else 5
+                restricted_area_suces = shift_data["restricted_area_approved"] / (shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"] > 0 else 5
+                
+                top_y = 608
+                hard_hat_top_y = top_y + int(bar_height * (1 - hard_hat_suces))
+                restricted_area_top_y = top_y + int(bar_height * (1 - restricted_area_suces))
+                                                
+                x_cursor += spacing 
+                # Draw the hard hat bar
+                if self.show_hard_hat_summary:cv2.rectangle(ui_frame, (x_cursor, hard_hat_top_y), (x_cursor + bar_width, 969), (195, 184, 161), -1)
+                if self.show_hard_hat_summary:cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 5, (154, 108, 15), -1)
+                hard_hat_bar_top_coordinates.append((x_cursor + bar_width // 2, hard_hat_top_y))
+                if self.show_hard_hat_summary:cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (x_cursor, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
+                x_cursor+=bar_width+spacing
+                
+                # Draw the restricted area bar
+                if self.show_restricted_area_summary: cv2.rectangle(ui_frame, (x_cursor, restricted_area_top_y), (x_cursor + bar_width, 969), (206, 168, 182), -1)
+                if self.show_restricted_area_summary: cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 5, (203, 110, 145), -1)
+                restricted_area_bar_top_coordinates.append((x_cursor + bar_width // 2, restricted_area_top_y))
+                if self.show_restricted_area_summary: cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (x_cursor, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
+                x_cursor+=bar_width               
+            x_cursor += spacing
+
+        if self.show_hard_hat_summary:  picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
+        if self.show_restricted_area_summary: picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
+
+
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
         # Fetch camera configs
@@ -333,7 +546,11 @@ class OzetApp():
             self.__plot_shift_summary(ui_frame)
         elif self.summary_types[self.summary_type_index] == "Gun":
             self.__plot_day_summary(ui_frame)
-
+        elif self.summary_types[self.summary_type_index] == "Hafta":
+            self.__plot_week_summary(ui_frame)
+        elif self.summary_types[self.summary_type_index] == "Ay":
+            self.__plot_month_summary(ui_frame)
+            
         picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         #put fetched frame to the window
         cv2.imshow(cv2_window_name, ui_frame)
