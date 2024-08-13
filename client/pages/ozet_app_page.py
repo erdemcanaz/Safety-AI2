@@ -4,7 +4,7 @@ import numpy as np
 
 import requests
 from typing import Dict, List
-import datetime, time
+import datetime, time, random
 
 class OzetApp():
 
@@ -29,6 +29,8 @@ class OzetApp():
 
         self.summary_types = ["Vardiya", "Gun", "Hafta", "Ay", "Tum Zamanlar"]
         self.summary_type_index = 0
+
+        self.mock_shift_data = None
         pass
 
     def __get_cameras_to_list(self) -> List[Dict]:
@@ -46,6 +48,15 @@ class OzetApp():
     
     def plot_shift_summary(self, ui_frame:np.ndarray):
         #TODO: check if valid data is fetched
+        if self.mock_shift_data is None or (time.time() - self.last_time_data_fetch) > 5:
+            self.last_time_data_fetch = time.time()
+            for i in range(8):
+                self.mock_shift_data[f"shift_{i}"] = {
+                    "hard_hat_approved": random.randint(0, 10000),
+                    "hard_hat_rejected": random.randint(0, 10000),
+                    "restricted_area_approved": random.randint(0, 10000),
+                    "restricted_area_rejected": random.randint(0, 10000),
+                }
 
         # plot timestamps
         hour_now = datetime.datetime.now().hour
@@ -54,8 +65,21 @@ class OzetApp():
             color = (154,108,15) if i %2 == 0 else (229,218,194)
             cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*40, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
-
-
+        # plot bars data
+        bar_height = 362
+        bar_width = 10
+        for i in range(8):
+            shift_data = self.mock_shift_data[f"shift_{i}"]
+            hard_hat_suces = shift_data["hard_hat_approved"]/(shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"]+shift_data["hard_hat_approved"] > 0 else 5
+            restricted_area_suces = shift_data["restricted_area_approved"]/(shift_data["restricted_area_rejected"]+shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"]+shift_data["restricted_area_approved"] > 0 else 5
+            
+            top_y = 608
+            hard_hat_y = top_y + int(bar_height*(1-hard_hat_suces))
+            restricted_area_y = top_y + int(bar_height*(1-restricted_area_suces))
+            hard_hat_x = 554+5 + i*40
+            restricted_area_x = 554+10+i*40+bar_width
+            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_y), (hard_hat_x+bar_width,969), (0, 0, 255), -1)
+            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area_y), (restricted_area_x+bar_width,969), (0, 255, 0), -1)
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -113,10 +137,14 @@ class OzetApp():
             listed_camera_icon_name = "eye_dark_blue" if camera_dict.get("is_show_summary") else "eye_light_blue"
             picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+45, y=y+23, width=35, height=35, maintain_aspect_ratio=True)            
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+100, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
-            
+        
         (text_width, text_height), baseline = cv2.getTextSize(self.summary_types[self.summary_type_index], cv2.FONT_HERSHEY_SIMPLEX, 1.2, 2)
         cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (514 + (686-text_width)//2, 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         cv2.putText(ui_frame, f"({self.summary_types[self.summary_type_index]})", (921, 551), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
+        
+        if self.summary_types[self.summary_type_index] == "Vardiya":
+            self.plot_shift_summary(ui_frame)
+
         cv2.imshow(cv2_window_name, ui_frame)
 
         
