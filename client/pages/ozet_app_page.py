@@ -33,6 +33,11 @@ class OzetApp():
             self.first_camera_index_to_show = max(0, len(self.camera_configs) - 13)        
         return self.camera_configs[self.first_camera_index_to_show:self.first_camera_index_to_show+ 13]
     
+    def __is_xy_in_bbox(self, x:int, y:int, bbox:tuple):
+        x1, y1, x2, y2 = bbox
+        if x >= x1 and x <= x2 and y >= y1 and y <= y2:
+            return True
+        return False   
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
