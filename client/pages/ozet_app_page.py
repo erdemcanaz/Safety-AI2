@@ -46,7 +46,15 @@ class OzetApp():
             return True
         return False   
     
-    def plot_shift_summary(self, ui_frame:np.ndarray):
+    def __format_count_to_hr(self, number:int):
+        if number < 1000:
+            return str(number)
+        elif number < 1000000:
+            return f"{number/1000:.1f}K"
+        else:
+            return f"{number//1000000:.1f}M"
+        
+    def __plot_shift_summary(self, ui_frame:np.ndarray):
         #TODO: check if valid data is fetched
         if self.mock_shift_data is None or (time.time() - self.last_time_data_fetch) > 5:
             self.mock_shift_data = {}
@@ -67,6 +75,9 @@ class OzetApp():
             cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*160, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         # plot bars data
+        hard_hat_bar_top_coordinates = []
+        restricted_area_bar_top_coordinates = []
+
         bar_height = 362
         period = 152
         bar_width = 30
@@ -87,13 +98,15 @@ class OzetApp():
             cv2.rectangle(ui_frame, (restricted_area_x,restricted_area__top_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
             cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (206, 168, 182), 2)
             
-    def __format_count_to_hr(self, number:int):
-        if number < 1000:
-            return str(number)
-        elif number < 1000000:
-            return f"{number/1000:.1f}K"
-        else:
-            return f"{number//1000000:.1f}M"
+            cv2.circle(ui_frame, (hard_hat_x+bar_width//2, hard_hat_top_y), 5, (195, 184, 161), -1)
+            cv2.circle(ui_frame, (restricted_area_x+bar_width//2, restricted_area__top_y), 5, (206, 168, 182), -1)
+
+            hard_hat_bar_top_coordinates.append((hard_hat_x, hard_hat_top_y))
+            restricted_area_bar_top_coordinates.append((restricted_area_x, restricted_area__top_y))
+
+        picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(195, 184, 161), thickness=2)
+        picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(206, 168, 182), thickness=2)
+   
         
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -156,7 +169,7 @@ class OzetApp():
         cv2.putText(ui_frame, f"({self.summary_types[self.summary_type_index]})", (921, 551), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         
         if self.summary_types[self.summary_type_index] == "Vardiya":
-            self.plot_shift_summary(ui_frame)
+            self.__plot_shift_summary(ui_frame)
 
         picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         #put fetched frame to the window

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from scipy.interpolate import splprep, splev
 
 IMAGE_PATHS = {
     "press_key_page_template": "src/templates/press_key_page_template.png",
@@ -119,3 +120,17 @@ def draw_frame_on_frame(frame:np.ndarray=None, frame_to_draw:np.ndarray=None, x:
             frame_roi[:, :, c] = (frame_roi[:, :, c] * (1 - image_alpha) + image_roi[:, :, c] * image_alpha).astype(np.uint8)
     else:
         frame[roi_y1:roi_y2, roi_x1:roi_x2] = image_roi
+
+def plot_smooth_curve_on_frame(frame:np.ndarray=None, points_list:np.ndarray=None, color:tuple=(0, 0, 255), thickness:int=2):
+    # points_list -> [(x0, y0), (x0, y0), ...]
+
+    points = np.array(points_list, dtype=np.float32)
+    tck, u = splprep(points.T, s=0)
+    u_new = np.linspace(u.min(), u.max(), 1000)
+    x_new, y_new = splev(u_new, tck)
+
+    # Convert smoothed points to integer coordinates
+    smooth_points = np.array([x_new, y_new]).T.astype(np.int32)
+
+    # Draw the smooth curve on the image
+    cv2.polylines(ui_frame, [smooth_points], isClosed=False, color=(0, 0, 255), thickness=2)
