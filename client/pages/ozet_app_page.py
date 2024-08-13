@@ -291,7 +291,7 @@ class OzetApp():
                 self.show_restricted_area_summary = not self.show_restricted_area_summary
                 if not self.show_hard_hat_summary and not self.show_restricted_area_summary:
                     self.show_restricted_area_summary = True
-                    self.show_hard_hat_summary
+                    self.show_hard_hat_summary = True
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
                 if self.camera_configs is not None:
                     clicked_camera_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
