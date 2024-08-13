@@ -672,8 +672,8 @@ class OzetApp():
                     if next_closest_camera_index == float("inf") and previous_closest_camera_index == float("-inf"):
                         pass # there is no visible camera to summarize except the current one
 
-        if self.visible_camera_configs is not None:
-            camera_ip = self.visible_camera_configs[self.currently_summarized_camera_index]["camera_ip_address"]
+        if self.camera_configs is not None:
+            camera_ip = self.camera_configs[self.currently_summarized_camera_index]["camera_ip_address"]
 
             cv2.putText(ui_frame, f"{camera_ip}", (1420, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
 
