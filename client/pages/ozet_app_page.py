@@ -16,6 +16,10 @@ class OzetApp():
         "increase_camera_index_bbox": (400, 967 , 429, 1002),
         "decrease_summary_type_bbox": (457, 327 , 511, 365),
         "increase_summary_type_bbox": (1200, 327 , 1253, 365),
+
+        "hard_hat_rule_show_button_bbox": (1500, 573, 1652 ,602),
+        "restricted_area_rule_show_button_bbox": (1660, 573, 1817 ,602),
+
         "camera_list_bbox": (76, 147, 390 ,982)
     }
 
@@ -29,6 +33,9 @@ class OzetApp():
 
         self.summary_types = ["Vardiya", "Gun", "Hafta", "Ay", "Tum Zamanlar"]
         self.summary_type_index = 0
+
+        self.show_hard_hat_summary = True
+        self.show_restricted_area_summary = True
 
         self.mock_data = None
         pass
@@ -136,19 +143,19 @@ class OzetApp():
             hard_hat_x = 554+spacing + i*period
             restricted_area_x = 554+2*spacing + bar_width + i*period
 
-            cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_top_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
-            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (195, 184, 161), 2)
-            cv2.rectangle(ui_frame, (restricted_area_x,restricted_area__top_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
-            cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (206, 168, 182), 2)
+            if self.show_hard_hat_summary: cv2.rectangle(ui_frame, (hard_hat_x,hard_hat_top_y), (hard_hat_x+bar_width,969), (195, 184, 161), -1)
+            if self.show_hard_hat_summary:cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (hard_hat_x, hard_hat_top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (195, 184, 161), 2)
+            if self.show_restricted_area_summary: cv2.rectangle(ui_frame, (restricted_area_x,restricted_area__top_y), (restricted_area_x+bar_width,969), (206, 168, 182), -1)
+            if self.show_restricted_area_summary: cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (restricted_area_x, restricted_area__top_y-20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (206, 168, 182), 2)
             
-            cv2.circle(ui_frame, (hard_hat_x+bar_width//2, hard_hat_top_y), 10, (154, 108, 15), -1)
-            cv2.circle(ui_frame, (restricted_area_x+bar_width//2, restricted_area__top_y), 10, (203, 110, 145), -1)
+            if self.show_hard_hat_summary: cv2.circle(ui_frame, (hard_hat_x+bar_width//2, hard_hat_top_y), 10, (154, 108, 15), -1)
+            if self.show_restricted_area_summary: cv2.circle(ui_frame, (restricted_area_x+bar_width//2, restricted_area__top_y), 10, (203, 110, 145), -1)
 
             hard_hat_bar_top_coordinates.append((hard_hat_x+bar_width//2, hard_hat_top_y))
             restricted_area_bar_top_coordinates.append((restricted_area_x+bar_width//2, restricted_area__top_y))
 
-        picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
-        picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
+        if self.show_hard_hat_summary: picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
+        if self.show_restricted_area_summary: picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
    
     def __plot_day_summary(self, ui_frame:np.ndarray):
         #TODO: check if valid data is fetched
@@ -234,22 +241,22 @@ class OzetApp():
                                                 
                 x_cursor += spacing 
                 # Draw the hard hat bar
-                cv2.rectangle(ui_frame, (x_cursor, hard_hat_top_y), (x_cursor + bar_width, 969), (195, 184, 161), -1)
-                cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 5, (154, 108, 15), -1)
+                if self.show_hard_hat_summary:cv2.rectangle(ui_frame, (x_cursor, hard_hat_top_y), (x_cursor + bar_width, 969), (195, 184, 161), -1)
+                if self.show_hard_hat_summary:cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 5, (154, 108, 15), -1)
                 restricted_area_bar_top_coordinates.append((x_cursor + bar_width // 2, restricted_area_top_y))
-                cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (x_cursor, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
+                if self.show_hard_hat_summary:cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (x_cursor, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
                 x_cursor+=bar_width+spacing
                 
                 # Draw the restricted area bar
-                cv2.rectangle(ui_frame, (x_cursor, restricted_area_top_y), (x_cursor + bar_width, 969), (206, 168, 182), -1)
-                cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 5, (203, 110, 145), -1)
+                if self.show_restricted_area_summary: cv2.rectangle(ui_frame, (x_cursor, restricted_area_top_y), (x_cursor + bar_width, 969), (206, 168, 182), -1)
+                if self.show_restricted_area_summary: cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 5, (203, 110, 145), -1)
                 hard_hat_bar_top_coordinates.append((x_cursor + bar_width // 2, hard_hat_top_y))
-                cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (x_cursor, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
+                if self.show_restricted_area_summary: cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (x_cursor, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
                 x_cursor+=bar_width               
             x_cursor += spacing
 
-        picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
-        picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
+        if self.show_hard_hat_summary:  picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
+        if self.show_restricted_area_summary: picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
@@ -275,6 +282,16 @@ class OzetApp():
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_summary_type_bbox"]):
                 self.summary_type_index = min(len(self.summary_types)-1, self.summary_type_index+1)
                 self.mock_data = None
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["hard_hat_rule_show_button_bbox"]):
+                self.show_hard_hat_summary = not self.show_hard_hat_summary
+                if not self.show_hard_hat_summary and not self.show_restricted_area_summary:
+                    self.show_restricted_area_summary = True
+                    self.show_hard_hat_summary = True
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["restricted_area_rule_show_button_bbox"]):
+                self.show_restricted_area_summary = not self.show_restricted_area_summary
+                if not self.show_hard_hat_summary and not self.show_restricted_area_summary:
+                    self.show_restricted_area_summary = True
+                    self.show_hard_hat_summary
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
                 if self.camera_configs is not None:
                     clicked_camera_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
