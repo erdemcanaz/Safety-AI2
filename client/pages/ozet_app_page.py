@@ -49,6 +49,7 @@ class OzetApp():
     def plot_shift_summary(self, ui_frame:np.ndarray):
         #TODO: check if valid data is fetched
         if self.mock_shift_data is None or (time.time() - self.last_time_data_fetch) > 5:
+            self.mock_shift_data = {}
             self.last_time_data_fetch = time.time()
             for i in range(8):
                 self.mock_shift_data[f"shift_{i}"] = {
