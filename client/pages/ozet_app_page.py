@@ -32,7 +32,7 @@ class OzetApp():
         self.camera_configs = None
         self.last_time_camera_configs_fetched = 0
 
-        self.currently_summarized_camera_index = None
+        self.currently_summarized_camera_index = 0
         self.last_time_summarized_camera_changed = 0
 
         self.summary_types = ["Vardiya", "Gun", "Hafta", "Ay", "Tum Zamanlar"]
