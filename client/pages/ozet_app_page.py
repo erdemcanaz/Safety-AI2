@@ -317,7 +317,7 @@ class OzetApp():
 
         # plot timestamps
         period = 152
-        today_date = datetime.datetime.now().day
+        today_date = datetime.datetime.now()
         week_before_date = today_date - datetime.timedelta(days=7)      
         for i in range(9):            
             color = (154,108,15) if i %2 == 0 else (229,218,194)
@@ -423,7 +423,7 @@ class OzetApp():
 
         # plot timestamps
         period = 152
-        today_date = datetime.datetime.now().day
+        today_date = datetime.datetime.now()
         week_before_date = today_date - datetime.timedelta(days=21)      
         for i in range(9):            
             color = (154,108,15) if i %2 == 0 else (229,218,194)
@@ -550,7 +550,7 @@ class OzetApp():
             self.__plot_week_summary(ui_frame)
         elif self.summary_types[self.summary_type_index] == "Ay":
             self.__plot_month_summary(ui_frame)
-            
+
         picasso.draw_image_on_frame(ui_frame, image_name="ozet_app_page_template", x=0, y=0, width=1920, height=1080, maintain_aspect_ratio=True)  
         #put fetched frame to the window
         cv2.imshow(cv2_window_name, ui_frame)
