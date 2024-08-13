@@ -10,7 +10,7 @@ class OzetApp():
 
     CONSTANTS = {
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
-        "data_fetch_period_s": 5, # fetch data every 5 seconds       
+        "camera_config_fetching_min_interval": 10, # fetch camera configs every 10 seconds
     }
 
     def __init__(self):
@@ -40,9 +40,6 @@ class OzetApp():
             if status_code == 200:
                 self.camera_configs = fetched_dict
                 
-                
-               
-            
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
