@@ -102,8 +102,8 @@ class OzetApp():
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+100, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
         (text_width, text_height), baseline = cv2.getTextSize(self.summary_types[self.summary_type_index], cv2.FONT_HERSHEY_SIMPLEX, 1.2, 2)
-        cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (514 + (686-text_width//2), 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
-        
+        cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (514 + (686-text_width)//2, 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
+        cv2.putText(ui_frame, f"({self.summary_types[self.summary_type_index]})", (921, 551), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         cv2.imshow(cv2_window_name, ui_frame)
 
         
