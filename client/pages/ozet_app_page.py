@@ -607,7 +607,11 @@ class OzetApp():
                     clicked_camera_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
                     camera_index = self.first_camera_index_to_show + clicked_camera_index
                     if not camera_index >= len(self.camera_configs):
-                        self.camera_configs[camera_index]["is_show_summary"] = not self.camera_configs[camera_index]["is_show_summary"]
+                        if x < 150: self.camera_configs[camera_index]["is_show_summary"] = not self.camera_configs[camera_index]["is_show_summary"]
+
+                        self.currently_summarized_camera_index = camera_index
+                        self.last_time_summarized_camera_changed = time.time()
+                        self.last_time_data_fetch = 0
 
         # Keyboard input
         pressed_key = cv2.waitKey(1) & 0xFF
