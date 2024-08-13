@@ -57,8 +57,19 @@ class OzetApp():
     def __plot_shift_summary(self, ui_frame:np.ndarray):
         #TODO: check if valid data is fetched
         if self.mock_shift_data is None or (time.time() - self.last_time_data_fetch) > 5:
-            self.mock_shift_data = {}
             self.last_time_data_fetch = time.time()
+
+            self.mock_shift_data = {}
+            self.mock_shift_data["total_person_analyzed"] = random.randint(0, 1000000)
+            self.mock_shift_data["total_frame_analyzed"] = random.randint(0, 1000000)
+            self.mock_shift_data["total_hard_hat_approved"] = random.randint(0, 1000000)
+            self.mock_shift_data["total_hard_hat_rejected"] = random.randint(0, 1000000)
+            self.mock_shift_data["total_restricted_area_approved"] = random.randint(0, 1000000)
+            self.mock_shift_data["total_restricted_area_rejected"] = random.randint(0, 1000000)
+
+            self.mock_shift_data["shift_person_analyzed"] = random.randint(0, 10000)
+            self.mock_shift_data["shift_frame_analyzed"] = random.randint(0, 10000)
+
             for i in range(8):
                 self.mock_shift_data[f"entry_{i}"] = {
                     "hard_hat_approved": random.randint(0, 10000),
@@ -67,19 +78,51 @@ class OzetApp():
                     "restricted_area_rejected": random.randint(0, 10000),
                 }
 
+        # plot text data for total
+        cv2.putText(ui_frame, f"{self.mock_shift_data['total_person_analyzed']}", (554, 221), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.mock_shift_data['total_frame_analyzed']}", (554, 272), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        cv2.putText(ui_frame, f"{self.mock_shift_data['total_hard_hat_approved']}", (836, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.mock_shift_data['total_hard_hat_rejected']}", (930, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = self.mock_shift_data['total_hard_hat_approved']/(self.mock_shift_data['total_hard_hat_rejected']+self.mock_shift_data['total_hard_hat_approved']) if self.mock_shift_data['total_hard_hat_rejected']+self.mock_shift_data['total_hard_hat_approved'] > 0 else 0
+        cv2.putText(ui_frame, f"{100*percentage:.1%}", (844, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        cv2.putText(ui_frame, f"{self.mock_shift_data['total_restricted_area_approved']}", (1119, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.mock_shift_data['total_restricted_area_rejected']}", (1213, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = self.mock_shift_data['total_restricted_area_approved']/(self.mock_shift_data['total_restricted_area_rejected']+self.mock_shift_data['total_restricted_area_approved']) if self.mock_shift_data['total_restricted_area_rejected']+self.mock_shift_data['total_restricted_area_approved'] > 0 else 0
+        cv2.putText(ui_frame, f"{100*percentage:.1%}", (1129, 256), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        # plot text data for shift
+        cv2.putText(ui_frame, f"{self.mock_shift_data['shift_person_analyzed']}", (554, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{self.mock_shift_data['shift_frame_analyzed']}", (554, 451), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        total_hard_hat_approved = sum([self.mock_shift_data[f"entry_{i}"]["hard_hat_approved"] for i in range(8)])
+        total_hard_hat_rejected = sum([self.mock_shift_data[f"entry_{i}"]["hard_hat_rejected"] for i in range(8)])
+        cv2.putText(ui_frame, f"{total_hard_hat_approved}", (836, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{total_hard_hat_rejected}", (930, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = total_hard_hat_approved/(total_hard_hat_rejected+total_hard_hat_approved) if total_hard_hat_rejected+total_hard_hat_approved > 0 else 0
+        cv2.putText(ui_frame, f"{100*percentage:.1%}", (844, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
+        total_restricted_area_approved = sum([self.mock_shift_data[f"entry_{i}"]["restricted_area_approved"] for i in range(8)])
+        total_restricted_area_rejected = sum([self.mock_shift_data[f"entry_{i}"]["restricted_area_rejected"] for i in range(8)])
+        cv2.putText(ui_frame, f"{total_restricted_area_approved}", (1119, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        cv2.putText(ui_frame, f"{total_restricted_area_rejected}", (1213, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (154, 108, 15), 1)
+        percentage = total_restricted_area_approved/(total_restricted_area_rejected+total_restricted_area_approved) if total_restricted_area_rejected+total_restricted_area_approved > 0 else 0
+        cv2.putText(ui_frame, f"{100*percentage:.1%}", (1129, 436), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (154, 108, 15), 1)
+
         # plot timestamps
+        period = 152
         hour_now = datetime.datetime.now().hour
         first_shift_hour = hour_now - hour_now%8
-        for i in range(8):
+        for i in range(9):
             color = (154,108,15) if i %2 == 0 else (229,218,194)
-            cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*160, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+            cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*period, 1000), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
         # plot bars data
         hard_hat_bar_top_coordinates = []
         restricted_area_bar_top_coordinates = []
 
         bar_height = 362
-        period = 152
         bar_width = 30
         spacing = (160-2*bar_width)//3
         for i in range(8):
