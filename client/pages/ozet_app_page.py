@@ -43,6 +43,19 @@ class OzetApp():
         if x >= x1 and x <= x2 and y >= y1 and y <= y2:
             return True
         return False   
+    
+    def plot_shift_summary(self, ui_frame:np.ndarray):
+        #TODO: check if valid data is fetched
+
+        # plot timestamps
+        hour_now = datetime.datetime.now().hour
+        first_shift_hour = hour_now - hour_now%8
+        for i in range(8):
+            color = (154,108,15) if i %2 == 0 else (229,218,194)
+            cv2.putText(ui_frame, f"{first_shift_hour+i:02d}:00", (554+i*40, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+
+
+
 
     def do_page(self, program_state:List[int]=None, cv2_window_name:str = None,  ui_frame:np.ndarray = None, active_user:object = None, mouse_input:object = None):
         
