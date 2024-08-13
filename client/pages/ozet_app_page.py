@@ -27,7 +27,7 @@ class OzetApp():
         self.camera_configs = None
         self.last_time_camera_configs_fetched = 0
 
-        self.summary_types = ["Vardiya", "Gün", "Hafta", "Ay", "Tüm Zamanlar"]
+        self.summary_types = ["Vardiya", "Gun", "Hafta", "Ay", "Tum Zamanlar"]
         self.summary_type_index = 0
         pass
 
@@ -101,7 +101,8 @@ class OzetApp():
             picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+45, y=y+23, width=35, height=35, maintain_aspect_ratio=True)            
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+100, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
-        cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (800, 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
+        (text_width, text_height), baseline = cv2.getTextSize(self.summary_types[self.summary_type_index], cv2.FONT_HERSHEY_SIMPLEX, 1.2, 2)
+        cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (514 + (686-text_width//2), 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         
         cv2.imshow(cv2_window_name, ui_frame)
 
