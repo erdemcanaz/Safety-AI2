@@ -163,8 +163,8 @@ class OzetApp():
             self.mock_data["total_restricted_area_approved"] = random.randint(0, 1000000)
             self.mock_data["total_restricted_area_rejected"] = random.randint(0, 1000000)
 
-            self.mock_data["day_person_analyzed"] = random.randint(0, 10000)
-            self.mock_data["day_frame_analyzed"] = random.randint(0, 10000)
+            self.mock_data["shift_person_analyzed"] = random.randint(0, 10000)
+            self.mock_data["shift_frame_analyzed"] = random.randint(0, 10000)
 
             for i in range(24):
                 self.mock_data[f"entry_{i}"] = {
