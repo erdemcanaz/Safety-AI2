@@ -12,9 +12,9 @@ class OzetApp():
         "allowed_keys": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?`~ ",
         "camera_config_fetching_min_interval": 10, # fetch camera configs every 10 seconds
 
+        "decrease_camera_index_bbox": (400, 142 , 429, 176),
         "increase_camera_index_bbox": (75, 142, 317, 60),
-        "decrease_camera_index_bbox": (75, 142 + 12*65, 317, 60),
-        "camera_list_bbox": (77, 147 , 391, 981)
+        "camera_list_bbox": (400, 967 , 429, 1002)
     }
 
     def __init__(self):
