@@ -654,28 +654,23 @@ class OzetApp():
                 else:                    
                     next_closest_camera_index = float("inf")
                     for camera_index in visible_camera_indexes:
-                        if camera_index > self.currently_summarized_camera_index and camera_index < next_closest_camera_index:
+                        if self.currently_summarized_camera_index < camera_index and camera_index < next_closest_camera_index:
                             next_closest_camera_index = camera_index
-                            break
+
                     if next_closest_camera_index != float("inf"):
                         self.currently_summarized_camera_index = next_closest_camera_index
+                    else:                   
+                        previous_first_camera_index = self.currently_summarized_camera_index
+                        for camera_index in visible_camera_indexes:
+                            if camera_index < self.currently_summarized_camera_index and camera_index < previous_first_camera_index:
+                                previous_first_camera_index = camera_index                            
                     
+                        self.currently_summarized_camera_index = previous_first_camera_index
 
-                    previous_closest_camera_index = float("-inf")
-                    for camera_index in visible_camera_indexes:
-                        if camera_index < self.currently_summarized_camera_index and camera_index > previous_closest_camera_index:
-                            previous_closest_camera_index = camera_index
-                            break
-                    if previous_closest_camera_index != float("-inf"):
-                        self.currently_summarized_camera_index = previous_closest_camera_index
-
-                    if next_closest_camera_index == float("inf") and previous_closest_camera_index == float("-inf"):
-                        pass # there is no visible camera to summarize except the current one
 
         if self.camera_configs is not None:
             camera_ip = self.camera_configs[self.currently_summarized_camera_index]["camera_ip_address"]
-
-            cv2.putText(ui_frame, f"{camera_ip}", (1420, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
+            cv2.putText(ui_frame, f"{camera_ip}", (1430, 180), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
 
             if self.summary_types[self.summary_type_index] == "Vardiya":
                 self.__plot_shift_summary(ui_frame)
