@@ -266,8 +266,10 @@ class OzetApp():
                 self.first_camera_index_to_show = self.first_camera_index_to_show+13
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_summary_type_bbox"]):
                 self.summary_type_index = max(0, self.summary_type_index-1)
+                self.mock_data = None
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_summary_type_bbox"]):
                 self.summary_type_index = min(len(self.summary_types)-1, self.summary_type_index+1)
+                self.mock_data = None
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
                 if self.camera_configs is not None:
                     clicked_camera_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
