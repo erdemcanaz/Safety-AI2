@@ -13,8 +13,8 @@ class OzetApp():
         "camera_config_fetching_min_interval": 10, # fetch camera configs every 10 seconds
 
         "decrease_camera_index_bbox": (400, 142 , 429, 176),
-        "increase_camera_index_bbox": (75, 142, 317, 60),
-        "camera_list_bbox": (400, 967 , 429, 1002)
+        "increase_camera_index_bbox": (400, 967 , 429, 1002),
+        "camera_list_bbox": (76, 147, 390 ,982)
     }
 
     def __init__(self):
