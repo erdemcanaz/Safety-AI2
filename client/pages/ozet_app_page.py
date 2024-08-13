@@ -224,7 +224,7 @@ class OzetApp():
         for i in range(8):
             for j in range(3):
                 shift_data = self.mock_data[f"entry_{i*3+j}"]            
-                x_cursor += spacing
+                x_cursor += spacing 
                 # Calculate success rates
                 hard_hat_suces = shift_data["hard_hat_approved"] / (shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"]) if shift_data["hard_hat_rejected"] + shift_data["hard_hat_approved"] > 0 else 5
                 restricted_area_suces = shift_data["restricted_area_approved"] / (shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"]) if shift_data["restricted_area_rejected"] + shift_data["restricted_area_approved"] > 0 else 5
@@ -234,7 +234,8 @@ class OzetApp():
                 restricted_area_top_y = top_y + int(bar_height * (1 - restricted_area_suces))
                                 
                 hard_hat_x = x_cursor
-                restricted_area_x = hard_hat_x + bar_width + spacing  # Place the restricted area bar next to the hard hat bar
+                x_cursor += bar_width + spacing
+                restricted_area_x = x_cursor  # Place the restricted area bar next to the hard hat bar
                 
                 # Draw the hard hat bar
                 cv2.rectangle(ui_frame, (hard_hat_x, hard_hat_top_y), (hard_hat_x + bar_width, 969), (195, 184, 161), -1)
@@ -251,6 +252,7 @@ class OzetApp():
                 # Save the top coordinates for further use
                 hard_hat_bar_top_coordinates.append((hard_hat_x + bar_width // 2, hard_hat_top_y))
                 restricted_area_bar_top_coordinates.append((restricted_area_x + bar_width // 2, restricted_area_top_y))
+                
             x_cursor += spacing
 
         picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
