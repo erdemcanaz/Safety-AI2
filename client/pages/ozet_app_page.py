@@ -253,7 +253,7 @@ class OzetApp():
                 hard_hat_bar_top_coordinates.append((hard_hat_x + bar_width // 2, hard_hat_top_y))
                 restricted_area_bar_top_coordinates.append((restricted_area_x + bar_width // 2, restricted_area_top_y))
                 
-            x_cursor += spacing
+            x_cursor += spacing +100
 
         picasso.plot_smooth_curve_on_frame(ui_frame, hard_hat_bar_top_coordinates, color=(154, 108, 15), thickness=3)
         picasso.plot_smooth_curve_on_frame(ui_frame, restricted_area_bar_top_coordinates, color=(203, 110, 145), thickness=3)
