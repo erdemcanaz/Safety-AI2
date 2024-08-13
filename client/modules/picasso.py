@@ -133,4 +133,4 @@ def plot_smooth_curve_on_frame(frame:np.ndarray=None, points_list:np.ndarray=Non
     smooth_points = np.array([x_new, y_new]).T.astype(np.int32)
 
     # Draw the smooth curve on the image
-    cv2.polylines(frame, [smooth_points], isClosed=False, color=(0, 0, 255), thickness=2)
+    cv2.polylines(frame, [smooth_points], isClosed=False, color=color, thickness=2)
