@@ -235,14 +235,14 @@ class OzetApp():
                 x_cursor += spacing 
                 # Draw the hard hat bar
                 cv2.rectangle(ui_frame, (x_cursor, hard_hat_top_y), (x_cursor + bar_width, 969), (195, 184, 161), -1)
-                cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 10, (154, 108, 15), -1)
+                cv2.circle(ui_frame, (x_cursor + bar_width // 2, hard_hat_top_y), 5, (154, 108, 15), -1)
                 restricted_area_bar_top_coordinates.append((x_cursor + bar_width // 2, restricted_area_top_y))
                 cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["hard_hat_approved"]), (x_cursor, hard_hat_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (195, 184, 161), 1)
                 x_cursor+=bar_width+spacing
                 
                 # Draw the restricted area bar
                 cv2.rectangle(ui_frame, (x_cursor, restricted_area_top_y), (x_cursor + bar_width, 969), (206, 168, 182), -1)
-                cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 10, (203, 110, 145), -1)
+                cv2.circle(ui_frame, (x_cursor + bar_width // 2, restricted_area_top_y), 5, (203, 110, 145), -1)
                 hard_hat_bar_top_coordinates.append((x_cursor + bar_width // 2, hard_hat_top_y))
                 cv2.putText(ui_frame, self.__format_count_to_hr(shift_data["restricted_area_approved"]), (x_cursor, restricted_area_top_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (206, 168, 182), 1)
                 x_cursor+=bar_width               
