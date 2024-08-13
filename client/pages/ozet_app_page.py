@@ -14,6 +14,8 @@ class OzetApp():
 
         "decrease_camera_index_bbox": (400, 142 , 429, 176),
         "increase_camera_index_bbox": (400, 967 , 429, 1002),
+        "decrease_summary_type_bbox": (457, 327 , 511, 365),
+        "increase_summary_type_bbox": (1200, 327 , 1253, 365),
         "camera_list_bbox": (76, 147, 390 ,982)
     }
 
@@ -24,6 +26,9 @@ class OzetApp():
         self.first_camera_index_to_show = 0
         self.camera_configs = None
         self.last_time_camera_configs_fetched = 0
+
+        self.summary_types = ["Vardiya", "Gün", "Hafta", "Ay", "Tüm Zamanlar"]
+        self.summary_type_index = 0
         pass
 
     def __get_cameras_to_list(self) -> List[Dict]:
@@ -57,6 +62,10 @@ class OzetApp():
                 self.first_camera_index_to_show = max(0, self.first_camera_index_to_show-13)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_camera_index_bbox"]):
                 self.first_camera_index_to_show = self.first_camera_index_to_show+13
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["decrease_summary_type_bbox"]):
+                self.summary_type_index = max(0, self.summary_type_index-1)
+            elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["increase_summary_type_bbox"]):
+                self.summary_type_index = min(len(self.summary_types)-1, self.summary_type_index+1)
             elif self.__is_xy_in_bbox(x, y, self.CONSTANTS["camera_list_bbox"]):
                 if self.camera_configs is not None:
                     clicked_camera_index = (y - self.CONSTANTS["camera_list_bbox"][1])//65
@@ -92,7 +101,7 @@ class OzetApp():
             picasso.draw_image_on_frame(ui_frame, image_name=listed_camera_icon_name, x=x+45, y=y+23, width=35, height=35, maintain_aspect_ratio=True)            
             cv2.putText(ui_frame, f"{camera_dict.get('camera_ip_address')}", (x+100, y+40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (169,69,0), 2)
             
-        
+        cv2.putText(ui_frame, f"{self.summary_types[self.summary_type_index]}", (800, 357), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (228, 173, 0), 2, cv2.LINE_AA)
         
         cv2.imshow(cv2_window_name, ui_frame)
 
