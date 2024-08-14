@@ -12,6 +12,7 @@ def fetch_single_frame_ten_times(username:str = None, password:str = None, camer
         ret, frame = cap.read()
         if ret:
             print(f"Frame {i:<2} read in {time.time() - start_time:.3f} seconds")
+            cv2.imshow('frame', frame)
         time.sleep(5)
 
     cap.release()
