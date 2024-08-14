@@ -13,7 +13,7 @@ def fetch_single_frame(username:str = None, password:str = None, camera_ip_addre
         else:
             print("Failed to fetch frame from the stream.")
         
-        time.sleep(1)
+        # time.sleep(1)
 
 username = input("Enter username: ")
 password = input("Enter password: ")
