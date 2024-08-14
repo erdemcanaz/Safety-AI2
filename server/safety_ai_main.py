@@ -12,12 +12,14 @@ import evaluation_module
 stream_manager = camera_module.StreamManager()
 stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
 
-#evaluation_manager = evaluation_module.EvaluationManager(yolo_models_to_be_used = stream_manager.return_yolo_models_to_use())
-evaluation_manager = evaluation_module.EvaluationManager(yolo_models_to_be_used = ["yolov8n-pose"])
+evaluator_objects = []
+evaluation_manager = evaluation_module.EvaluationManager()
 
 while True:
-    stream_manager.optimize_camera_fetching_delays()        
-    stream_manager.test_show_all_frames(window_size=(1280, 720))
+
+    all_frame_infos = stream_manager.return_all_frame_info_as_list()
+    print(stream_manager.get_camera_objects_ram_usage_MB())
+
 
     # evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
     # stream_manager.update_frame_evaluations(evaluated_frame_uuids = evaluated_uuids)

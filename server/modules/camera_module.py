@@ -6,7 +6,7 @@ import numpy as np
 import server_preferences
 
 class CameraStreamFetcher:
-    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 25
+    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 10
     CLASS_PARAM_CAMERA_CONFIG_KEYS = [                            # Will be added to the object as attributes
             'camera_uuid',
             'camera_region',
@@ -191,7 +191,7 @@ class StreamManager:
 
         self.__optimize_camera_decoding_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
 
-    def return_all_not_evaluated_frames_info(self) -> List[Dict]:
+    def return_all_frame_info_as_list(self) -> List[Dict]:
         not_evaluated_frames_info = []
         for camera in self.cameras:
             if camera.get_last_frame_info() is not None and not camera.get_last_frame_info()["is_evaluated"]:
@@ -204,7 +204,21 @@ class StreamManager:
         for camera in self.cameras:
             camera.set_last_frame_as_evaluated_if_frame_uuid_matches(evaluated_frame_uuids)
     
-    def test_show_all_frames(self, window_size=(1280, 720)):
+    def return_yolo_models_to_use(self)->List[str]:
+        yolo_model_to_use = []
+        for camera in self.cameras:
+            for rule in camera.active_rules:
+                if rule["yolo_model_to_use"] not in yolo_model_to_use:
+                    yolo_model_to_use.append(rule["yolo_model_to_use"])
+
+        return yolo_model_to_use
+    
+    def get_camera_objects_ram_usage_MB(self)->float:
+        # Get the RAM usage of the camera objects in MB
+        camera_objects_ram_usage_bytes = sum(camera.__sizeof__() for camera in self.cameras)
+        return camera_objects_ram_usage_bytes / 1024 / 1024
+
+    def ____test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     
         for camera in self.cameras:
@@ -238,15 +252,6 @@ class StreamManager:
 
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
-
-    def return_yolo_models_to_use(self)->List[str]:
-        yolo_model_to_use = []
-        for camera in self.cameras:
-            for rule in camera.active_rules:
-                if rule["yolo_model_to_use"] not in yolo_model_to_use:
-                    yolo_model_to_use.append(rule["yolo_model_to_use"])
-
-        return yolo_model_to_use
 
 if __name__ == "__main__":
 
@@ -287,7 +292,7 @@ if __name__ == "__main__":
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
     while time.time() - start_time < 20:
-        stream_manager.test_show_all_frames(window_size=(1280, 720))
+        stream_manager.____test_show_all_frames(window_size=(1280, 720))
         
     print("\nStopping all cameras and waiting for 20 seconds")
     stream_manager.stop_cameras_by_uuid([])
@@ -299,7 +304,7 @@ if __name__ == "__main__":
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
     while time.time() - start_time < 20:
-        stream_manager.test_show_all_frames(window_size=(1280, 720))
+        stream_manager.____test_show_all_frames(window_size=(1280, 720))
     
     print("\nStopping all cameras and waiting for the threads to join")
     stream_manager.stop_cameras_by_uuid([])
