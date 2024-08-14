@@ -261,7 +261,7 @@ if __name__ == "__main__":
 
     for camera_index, camera in enumerate(cameras):
         is_fetched_properly, resolution = camera.test_try_fetching_single_frame_and_show("Test Frame")
-        print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+"x"+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
+        print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
 
     
 
