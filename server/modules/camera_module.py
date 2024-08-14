@@ -191,14 +191,12 @@ class StreamManager:
 
         self.__optimize_camera_decoding_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
 
-    def return_all_frame_info_as_list(self) -> List[Dict]:
-        not_evaluated_frames_info = []
+    def return_all_recent_frames_info_as_list(self) -> List[Dict]:
+        recent_frames_info: List[Dict] = [] 
         for camera in self.cameras:
             if camera.get_last_frame_info() is not None:
-                not_evaluated_frames_info.append(camera.get_last_frame_info())
-                camera.set_last_frame_as_evaluated_if_frame_uuid_matches()
-
-        return not_evaluated_frames_info
+                recent_frames_info.append(camera.get_last_frame_info())
+        return recent_frames_info
 
     def update_frame_evaluations(self, evaluated_frame_uuids:List[str]):
         for camera in self.cameras:
