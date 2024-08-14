@@ -1,16 +1,30 @@
-# Camera Class Preferences:
-CAMERA_VERBOSE = True
-CAMERA_CONFIG_KEYS = ['camera_uuid', 'camera_region', 'camera_description', 'is_alive', 'NVR_ip', 'camera_ip_address', 'username', 'password', 'stream_path', 'active_rules']
-CAMERA_DEFAULT_FETCHING_DURATION_SECONDS = 0.1 # Used to calculate randomization range for fetching delay
-CAMERA_FETCH_DELAY_SAFETY_MARGIN = 2 # Used to increase the fetching delay to prevent bottlenecking. Basically the max delay is calculated by multiplying the default fetching duration by the number of cameras and this safety margin
+import platform
+from pathlib import Path
 
-CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0,10] # When a frame is fetched from a camera, the camera waits for a random time between 0 and 10 seconds before fetching the next frame. This is to prevent bottlenecking when multiple cameras are fetching frames at the same time. The range can be changed by the user using the set_camera_fetching_delay_randomization_range function
+is_linux = platform.system() == "Linux"
+if is_linux:
+    PATH_CAMERA_CONFIGS_JSON = Path(__file__).resolve().parent.parent.parent.parent / "safety_AI_volume" / "camera_configs.json" # Container volume path
+else:
+    PATH_CAMERA_CONFIGS_JSON= Path(__file__).resolve().parent.parent / "configs" / "camera_configs.json" # Local path
+
+# Camera Module Preferences =============================================================================================
+PARAM_CAMERA_VERBOSE = True
+PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = None            # Randomize the fetching delay between 0 and max_duration_before_encoding seconds            
+
+PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS = 0.033 # Approximate time it takes to decode a frame. This value is used to calculate the camera's fetching delay randomization range 
+PARAM_CAMERA_DECODE_FREQUENCY_FACTOR = 2                          # 1 is the no effect value. 2 means that the camera will be decoded half of the time and 0.5 means that the camera will be decoded twice as much as the normal time.
 def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:int):
-    global CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE
-    global CAMERA_FETCH_DELAY_SAFETY_MARGIN
+    global PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS
+    global PARAM_CAMERA_DECODE_FREQUENCY_FACTOR
+    global PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE
+    max_duration_before_encoding = (PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS * number_of_cameras) * PARAM_CAMERA_DECODE_FREQUENCY_FACTOR
+    
+    PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0, max(max_duration_before_encoding, PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS)]
+    
 
-    max_delay = CAMERA_FETCH_DELAY_SAFETY_MARGIN*CAMERA_DEFAULT_FETCHING_DURATION_SECONDS * number_of_cameras
-    CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0, max_delay]
+
+
+
 
 #Detector Module Preferences:
 POSE_DETECTION_VERBOSE = False
