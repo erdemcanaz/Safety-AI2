@@ -35,6 +35,8 @@ class CameraStreamFetcher:
         self.recent_frames= []                                  # The last 'CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP' frames fetched from the camera
         self.number_of_frames_fetched = 0                       # The number of frames fetched from the camera    
 
+        self.__print_wrapper(condition = server_preferences.PARAM_CAMERA_VERBOSE, message = f'CameraStreamFetcher object created for {self.camera_ip_address}')
+
     def __repr__(self) -> str:
         return f'CameraStreamFetcher({self.camera_ip_address}, is_alive={self.is_alive}, is_fetching_frames={self.is_fetching_frames})'
     
@@ -251,7 +253,7 @@ if __name__ == "__main__":
     server_preferences.PARAM_CAMERA_VERBOSE = False
 
     # Fetch and show a single frame from the camera for all cameras
-    print("Testing fetching a single frame from the camera")
+    print("Testing the CameraStreamFetcher class")
     cameras = []
     with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
                 camera_configs = json.load(f)["cameras"]       
@@ -263,5 +265,49 @@ if __name__ == "__main__":
         is_fetched_properly, resolution = camera.test_try_fetching_single_frame_and_show("Test Frame")
         print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
 
+    print("Test is completed")
+    time.sleep(5)
+    # Test the StreamManager class
+    print("\nTesting the StreamManager class")
+    server_preferences.PARAM_CAMERA_VERBOSE = True
+    print("Creating the StreamManager object, which will create the CameraStreamFetcher objects")
+    time.sleep(1)
+    stream_manager = StreamManager()
+
+    print(f"\n Decoding delay before starting the cameras : {server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE}")
+    print(server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE)
+    time.sleep(1)   
+
+    print("\nStarting all cameras")
+    stream_manager.start_cameras_by_uuid()
+    print(f"\n Decoding delay before aftar starting the cameras : {server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE}")
+
+
+    print("\nShowing the frames fetched from the cameras for 20 seconds")
+    start_time = time.time()
+    while time.time() - start_time < 20:
+        stream_manager.test_show_all_frames(window_size=(1280, 720))
+        
+    print("\nStopping all cameras and waiting for the threads to join")
+    stream_manager.stop_cameras_by_uuid([])
+
+    print("\nStarting all cameras again")
+    stream_manager.start_cameras_by_uuid()
+
+    print("\nShowing the frames fetched from the cameras for 20 seconds")
+    start_time = time.time()
+    while time.time() - start_time < 20:
+        stream_manager.test_show_all_frames(window_size=(1280, 720))
     
+    print("\nStopping all cameras and waiting for the threads to join")
+    stream_manager.stop_cameras_by_uuid([])
+    print("Test is completed")
+    exit()
+
+
+
+
+
+
+
 
