@@ -1,11 +1,11 @@
 import pprint, random
 from typing import List, Dict, Tuple #for python3.8 compatibility
-import detectors_module
+import models_module
 import server_preferences
 
 
 class EvaluationManager():
-  
+
     def __init__(self, yolo_models_to_be_used:List[str] = None) -> None:
         AVAILABLE_MODELS = ["yolov8n-pose", "yolov8l-pose", "yolov8x-pose"] # add model names defined in predictors_module.py classes here
         for model_name in yolo_models_to_be_used:
@@ -20,6 +20,8 @@ class EvaluationManager():
                 self.DETECTORS[model_name] = detectors_module.PoseDetector(model_name=model_name)
             else:
                 raise ValueError(f"Invalid model name. Available models are: {AVAILABLE_MODELS}")
+            
+        
             
         # Keep track of the camera 'usefulness' allocation of the computation resources
         self.camera_usefulness = {}

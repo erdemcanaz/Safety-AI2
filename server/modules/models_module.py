@@ -12,9 +12,11 @@ class PoseDetector():
     #keypoints detected by the model in the detection order
     KEYPOINT_NAMES = ["nose", "right_eye", "left_eye", "left_ear", "right_ear", "left_shoulder", "right_shoulder", "left_elbow" ,"right_elbow","left_wrist", "right_wrist", "left_hip", "right_hip", "left_knee", "right_knee", "left_ankle", "right_ankle"]
     POSE_MODEL_PATHS = {
-        "yolov8n-pose":"modules/trained_yolo_models/yolov8n-pose.pt",
-        "yolov8l-pose":"modules/trained_yolo_models/yolov8l-pose.pt",
-        "yolov8x-pose":"modules/trained_yolo_models/yolov8x-pose.pt"
+        "yolov8n-pose":"trained_yolo_models/yolov8n-pose.pt",
+        "yolov8s-pose":"trained_yolo_models/yolov8s-pose.pt",
+        "yolov8m-pose":"trained_yolo_models/yolov8m-pose.pt",
+        "yolov8l-pose":"trained_yolo_models/yolov8l-pose.pt",
+        "yolov8x-pose":"trained_yolo_models/yolov8x-pose.pt"
     }
 
     def __init__(self, model_name: str = None ) -> None:   
@@ -22,7 +24,7 @@ class PoseDetector():
             raise ValueError(f"Invalid model name. Available models are: {PoseDetector.POSE_MODEL_PATHS.keys()}")
         self.MODEL_PATH = PoseDetector.POSE_MODEL_PATHS[model_name]        
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.POSE_DETECTION_VERBOSE)        
-        self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
+        #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
     def __get_empty_prediction_dict_template(self) -> dict:
         empty_prediction_dict = {   
@@ -115,48 +117,52 @@ class PoseDetector():
 
         return self.recent_prediction_results
 
-
 # Test
 
 if __name__ == "__main__":
+    yolo_1 = PoseDetector("yolov8n-pose")
+    yolo_2 = PoseDetector("yolov8s-pose")
+    yolo_3 = PoseDetector("yolov8m-pose")
+    yolo_4 = PoseDetector("yolov8l-pose")
+    yolo_5 = PoseDetector("yolov8x-pose")
 
-   
-    detectors = []
-    pose_detector = PoseDetector("yolov8n")
+    pass
+    # detectors = []
+    # pose_detector = PoseDetector("yolov8n")
 
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    # cap = cv2.VideoCapture(0)
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
+    # while True:
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         continue
 
-        # Release the capture
-        frame_info = {
-            "frame":frame,
-            "camera_uuid":str(uuid.uuid4()),
-            "frame_uuid":str(uuid.uuid4()),
-            "frame_timestamp":time.time()
-        }        
-        detections = pose_detector.predict_frame_and_return_detections(frame_info, bbox_confidence=0.75)
+    #     # Release the capture
+    #     frame_info = {
+    #         "frame":frame,
+    #         "camera_uuid":str(uuid.uuid4()),
+    #         "frame_uuid":str(uuid.uuid4()),
+    #         "frame_timestamp":time.time()
+    #     }        
+    #     detections = pose_detector.predict_frame_and_return_detections(frame_info, bbox_confidence=0.75)
 
-        for detection in detections:
-            frame = copy.deepcopy(frame_info["frame"])
-            bbox = detection["common_keys"]["bbox_xyxy_px"]
-            cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
-            for keypoint_name in PoseDetector.KEYPOINT_NAMES:
-                keypoint = detection["unique_keys"]["keypoints"][keypoint_name]
-                if keypoint[0] < 0 or keypoint[1] < 0:
-                    continue
-                cv2.circle(frame, (int(keypoint[0]), int(keypoint[1])), 5, (0, 0, 255), -1)
-            cv2.imshow("Detection", frame)
-            cv2.waitKey(0)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+    #     for detection in detections:
+    #         frame = copy.deepcopy(frame_info["frame"])
+    #         bbox = detection["common_keys"]["bbox_xyxy_px"]
+    #         cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
+    #         for keypoint_name in PoseDetector.KEYPOINT_NAMES:
+    #             keypoint = detection["unique_keys"]["keypoints"][keypoint_name]
+    #             if keypoint[0] < 0 or keypoint[1] < 0:
+    #                 continue
+    #             cv2.circle(frame, (int(keypoint[0]), int(keypoint[1])), 5, (0, 0, 255), -1)
+    #         cv2.imshow("Detection", frame)
+    #         cv2.waitKey(0)
+    #         if cv2.waitKey(1) & 0xFF == ord('q'):
+    #             break
     
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
     
             
 
