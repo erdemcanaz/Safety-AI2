@@ -6,7 +6,7 @@ import numpy as np
 import server_preferences
 
 class CameraStreamFetcher:
-    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 10
+    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 1
     CLASS_PARAM_CAMERA_CONFIG_KEYS = [                            # Will be added to the object as attributes
             'camera_uuid',
             'camera_region',
