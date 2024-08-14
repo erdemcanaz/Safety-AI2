@@ -213,25 +213,29 @@ class StreamManager:
     
     def get_camera_objects_ram_usage_MB(self)->float:
         # Calculate the RAM usage of the camera objects in MB
-        def get_deep_size(obj, seen=None):
-            size = sys.getsizeof(obj)
-            if seen is None:
-                seen = set()
-            obj_id = id(obj)
-            if obj_id in seen:
-                return 0
-            seen.add(obj_id)
-            if isinstance(obj, dict):
-                size += sum(get_deep_size(v, seen) for v in obj.values())
-                size += sum(get_deep_size(k, seen) for k in obj.keys())
-            elif hasattr(obj, '__dict__'):
-                size += get_deep_size(obj.__dict__, seen)
-            elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
-                size += sum(get_deep_size(i, seen) for i in obj)
-            return size
+        try:
+            def get_deep_size(obj, seen=None):
+                size = sys.getsizeof(obj)
+                if seen is None:
+                    seen = set()
+                obj_id = id(obj)
+                if obj_id in seen:
+                    return 0
+                seen.add(obj_id)
+                if isinstance(obj, dict):
+                    size += sum(get_deep_size(v, seen) for v in obj.values())
+                    size += sum(get_deep_size(k, seen) for k in obj.keys())
+                elif hasattr(obj, '__dict__'):
+                    size += get_deep_size(obj.__dict__, seen)
+                elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+                    size += sum(get_deep_size(i, seen) for i in obj)
+                return size
 
-        camera_objects_ram_usage_bytes = sum(get_deep_size(camera) for camera in self.cameras)
-        return camera_objects_ram_usage_bytes / 1024 / 1024
+            camera_objects_ram_usage_bytes = sum(get_deep_size(camera) for camera in self.cameras)
+            return camera_objects_ram_usage_bytes / 1024 / 1024
+        except Exception as e:
+            print(f"Error in calculating the RAM usage of the camera objects: {e}")
+            return 0
 
     def ____test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
