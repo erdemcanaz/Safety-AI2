@@ -280,6 +280,7 @@ class StreamManager:
         for frame in frames:
             cv2.imshow('Frame', frame)
             cv2.waitKey(1000)
+            print("Frame shown")
            
 
 if __name__ == "__main__":
