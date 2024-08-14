@@ -1,4 +1,4 @@
-import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys
+import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys, copy
 from pathlib import Path
 from typing import Dict, List
 import cv2
@@ -6,7 +6,7 @@ import numpy as np
 import server_preferences
 
 class CameraStreamFetcher:
-    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 1
+    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 10
     CLASS_PARAM_CAMERA_CONFIG_KEYS = [                            # Will be added to the object as attributes
             'camera_uuid',
             'camera_region',
@@ -272,6 +272,15 @@ class StreamManager:
 
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
+
+    def ____test_show_last_frames_as_slides_show(self):
+        # Show the last frames fetched from the cameras as a slide show
+        camera = self.cameras[0]
+        frames = copy.deepcopy(camera.recent_frames)
+        for frame in frames:
+            cv2.imshow('Frame', frame)
+            cv2.waitKey(1000)
+           
 
 if __name__ == "__main__":
 

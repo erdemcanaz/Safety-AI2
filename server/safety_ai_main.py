@@ -15,7 +15,7 @@ while True:
 
     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()
     print(stream_manager.get_camera_objects_ram_usage_MB())
-    time.sleep(1)
+    stream_manager.____test_show_last_frames_as_slides_show()
 
 
     # evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
