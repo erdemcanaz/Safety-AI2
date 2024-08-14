@@ -273,7 +273,7 @@ class StreamManager:
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
 
-    def ____test_show_last_frames_as_slides_show(self):
+    def test_show_last_frames_as_slides_show(self):
         # Show the last frames fetched from the cameras as a slide show
         camera = self.cameras[0]
         frames = copy.deepcopy(camera.recent_frames)
