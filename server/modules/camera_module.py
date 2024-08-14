@@ -56,7 +56,6 @@ class CameraStreamFetcher:
             while self.is_fetching_frames:   
                 if not cap.grab():# Use grab() to capture the frame but not decode it yet for better performance
                     continue                 
-
                 if self.last_frame_info == None or (time.time() - self.last_frame_info["frame_timestamp"] > self.camera_fetching_delay): #NOTE: If frame is none,  
                     ret, frame = cap.retrieve()
                     if ret:
