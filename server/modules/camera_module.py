@@ -55,8 +55,7 @@ class CameraStreamFetcher:
 
             while self.is_fetching_frames:   
                 if not cap.grab():# Use grab() to capture the frame but not decode it yet for better performance
-                    continue 
-                
+                    continue                 
 
                 if self.last_frame_info == None or (time.time() - self.last_frame_info["frame_timestamp"] > self.camera_fetching_delay): #NOTE: If frame is none,  
                     ret, frame = cap.retrieve()
@@ -88,9 +87,9 @@ class CameraStreamFetcher:
             buffer_size_in_frames = 1
             cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
             while self.is_fetching_frames: 
+
                 for _ in range(buffer_size_in_frames):
-                    cap.grab()  # Skip frames to get the most recent one
-  
+                    cap.grab()  # Skip frames to get the most recent one  
                 ret, frame = cap.read()
                 if ret:
                     self.last_frame_info = {}
@@ -106,9 +105,8 @@ class CameraStreamFetcher:
                 else:
                     if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
                     break # Break the loop if the frame could not be retrieved
-                self.camera_fetching_delay = random.uniform(0,1) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck CPU
-                #print(f'    Camera {self.camera_ip_address} delay: {self.camera_fetching_delay:.2f}')
-                #time.sleep( self.camera_fetching_delay) # Sleep so that CPU is not bottlenecked
+                self.camera_fetching_delay = random.uniform(0,10) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck CPU
+                time.sleep( self.camera_fetching_delay) # Sleep so that CPU is not bottlenecked
             cap.release()          
         except Exception as e:
             if server_preferences.CAMERA_VERBOSE: print(f'Error in fetching frames from {self.camera_ip_address}: {e}')
