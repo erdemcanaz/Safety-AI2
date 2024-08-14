@@ -11,7 +11,7 @@ def fetch_single_frame_ten_times(username:str = None, password:str = None, camer
         start_time = time.time()
         ret, frame = cap.read()
         if ret:
-            print(f"Frame {i:<2} read in {time.time() - start_time:6s} seconds")
+            print(f"Frame {i:<2} read in {time.time() - start_time:.3f} seconds")
         time.sleep(5)
 
     cap.release()
