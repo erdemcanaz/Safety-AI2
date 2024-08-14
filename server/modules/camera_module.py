@@ -315,9 +315,9 @@ if __name__ == "__main__":
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
     while time.time() - start_time < 20:
-        stream_manager.__test_show_all_frames(window_size=(1280, 720))
+        stream_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
 
-    memory_usage = stream_manager.__test_get_camera_objects_ram_usage_MB()
+    memory_usage = stream_manager._StreamManager__test_get_camera_objects_ram_usage_MB()
         
     print("\nStopping all cameras and waiting for 20 seconds")
     stream_manager.stop_cameras_by_uuid([])
