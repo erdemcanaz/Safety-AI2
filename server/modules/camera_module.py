@@ -6,8 +6,9 @@ import numpy as np
 import server_preferences
 
 class CameraStreamFetcher:
-    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 10
-    CLASS_PARAM_CAMERA_CONFIG_KEYS = [                            # Will be added to the object as attributes
+    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 10                         # The number of frames to keep in the recent_frames list. If the list grows larger than this number, the oldest frames are removed
+    CLASS_PARAM_MINIMUM_DURATION_BETWEEN_RECENT_FRAME_APPENDING = 1.5 # The minimum duration between appending frames to the recent_frames list in seconds. This is to prevent the list from growing too large too quickly. If a frame is fetched before this duration has passed, it is not appended to the list
+    CLASS_PARAM_CAMERA_CONFIG_KEYS = [                                # Will be added to the object as attributes
             'camera_uuid',
             'camera_region',
             'camera_description',
@@ -28,13 +29,12 @@ class CameraStreamFetcher:
         for key, value in kwargs.items():                       # Assing the arguments to the object
             setattr(self, key, value)
 
+        self.number_of_frames_fetched = 0                       # The number of frames fetched from the camera    
         self.RTSP_thread = None                                 # The thread that fetches frames from the camera
         self.camera_retrieving_delay_uniform_range = [0, 10]    # The range of uniform distribution for the delay between frame retrievals. Otherwise grab is used where no decoding happens. The delay is calculated as a random number between the range
         self.is_fetching_frames = False                         # A flag to indicate whether the camera is fetching frames or not. If true, the camera is fetching frames. If false, the camera is not fetching frames
         self.last_frame_info = None                             # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, active_rules, is_evaluated
         self.recent_frames= []                                  # The last 'CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP' frames fetched from the camera
-        self.number_of_frames_fetched = 0                       # The number of frames fetched from the camera    
-
         self.__print_wrapper(condition = server_preferences.PARAM_CAMERA_VERBOSE, message = f'CameraStreamFetcher object created for {self.camera_ip_address}')
 
     def __repr__(self) -> str:
@@ -47,10 +47,11 @@ class CameraStreamFetcher:
         return self.last_frame_info
     
     def append_frame_to_recent_frames(self, frame:np.ndarray):
-        self.recent_frames.append(frame)
-        if len(self.recent_frames) > self.CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP:
-            popped_frame = self.recent_frames.pop(0)
-            del popped_frame  # Explicitly delete the popped frame immediately to free up memory
+        if self.last_frame_info is None or time.time() - self.last_frame_info["frame_timestamp"] > self.CLASS_PARAM_MINIMUM_DURATION_BETWEEN_RECENT_FRAME_APPENDING:
+            self.recent_frames.append(frame)
+            if len(self.recent_frames) > self.CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP:
+                popped_frame = self.recent_frames.pop(0)
+                del popped_frame  # Explicitly delete the popped frame immediately to free up memory
     
     def start_fetching_frames(self):
         if self.RTSP_thread is not None: self.stop_fetching_frames(wait_for_thread_to_join = True)  # Stop the thread if it is already running
@@ -212,7 +213,7 @@ class StreamManager:
 
         return yolo_model_to_use
     
-    def get_camera_objects_ram_usage_MB(self)->float:
+    def __test_get_camera_objects_ram_usage_MB(self)->float:
         # Calculate the RAM usage of the camera objects in MB
         try:
             def get_deep_size(obj, seen=None):
@@ -238,7 +239,7 @@ class StreamManager:
             print(f"Error in calculating the RAM usage of the camera objects: {e}")
             return 0
 
-    def ____test_show_all_frames(self, window_size=(1280, 720)):
+    def __test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     
         for camera in self.cameras:
@@ -273,15 +274,6 @@ class StreamManager:
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
 
-    def test_show_last_frames_as_slides_show(self):
-        # Show the last frames fetched from the cameras as a slide show
-        camera = self.cameras[0]
-        frames = copy.deepcopy(camera.recent_frames)
-        for frame in frames:
-            cv2.imshow('Frame', frame)
-            cv2.waitKey(1000)
-        cv2.destroyAllWindows()
-           
 
 if __name__ == "__main__":
 
@@ -301,6 +293,7 @@ if __name__ == "__main__":
         print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
 
     print("Test is completed")
+    cv2.destroyAllWindows()
     time.sleep(5)
 
     # Test the StreamManager class
@@ -317,16 +310,23 @@ if __name__ == "__main__":
     print("\nStarting all cameras")
     stream_manager.start_cameras_by_uuid()
     print(f"\n Decoding delay before aftar starting the cameras : {server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE}")
-
-
+    
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
     while time.time() - start_time < 20:
-        stream_manager.____test_show_all_frames(window_size=(1280, 720))
+        stream_manager.__test_show_all_frames(window_size=(1280, 720))
+
+    memory_usage = stream_manager.__test_get_camera_objects_ram_usage_MB()
         
     print("\nStopping all cameras and waiting for 20 seconds")
     stream_manager.stop_cameras_by_uuid([])
     time.sleep(20)
+    
+    print("\n"+"="*50)
+    print(f"\nMemory usage of the camera objects: {memory_usage:.2f} MB")
+    print("="*50)
+
+    time.sleep(10)
 
     print("\nStarting all cameras again")
     stream_manager.start_cameras_by_uuid()
@@ -334,12 +334,11 @@ if __name__ == "__main__":
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
     while time.time() - start_time < 20:
-        stream_manager.____test_show_all_frames(window_size=(1280, 720))
+        stream_manager.__test_show_all_frames(window_size=(1280, 720))
     
     print("\nStopping all cameras and waiting for the threads to join")
     stream_manager.stop_cameras_by_uuid([])
-
-    stream_manager.____test_show_last_frames_as_slides_show()
+    
     print("Test is completed")
 
     exit()
