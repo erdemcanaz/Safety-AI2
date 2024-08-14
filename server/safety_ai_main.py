@@ -19,8 +19,8 @@ while True:
     stream_manager.optimize_camera_fetching_delays()        
     stream_manager.test_show_all_frames(window_size=(1280, 720))
 
-    evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
-    stream_manager.update_frame_evaluations(evaluated_frame_uuids = evaluated_uuids)
+    # evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
+    # stream_manager.update_frame_evaluations(evaluated_frame_uuids = evaluated_uuids)
 
     
     
