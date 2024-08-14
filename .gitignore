@@ -1,7 +1,9 @@
+!server/modules/trained_yolo_models/.gitkeep
 server/modules/trained_yolo_models/yolov8n-pose.pt
+server/modules/trained_yolo_models/yolov8s-pose.pt
+server/modules/trained_yolo_models/yolov8m-pose.pt
 server/modules/trained_yolo_models/yolov8l-pose.pt
 server/modules/trained_yolo_models/yolov8x-pose.pt
-!server/modules/trained_yolo_models/.gitkeep
 
 local/*
 !local/.gitkeep
