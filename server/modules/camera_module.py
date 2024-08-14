@@ -338,7 +338,10 @@ if __name__ == "__main__":
     
     print("\nStopping all cameras and waiting for the threads to join")
     stream_manager.stop_cameras_by_uuid([])
+
+    stream_manager.____test_show_last_frames_as_slides_show()
     print("Test is completed")
+
     exit()
 
 
