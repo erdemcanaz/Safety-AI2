@@ -16,7 +16,6 @@ while True:
     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()
     stream_manager.test_show_last_frames_as_slides_show()   
 
-    cv2.destroyAllWindows()
     time.sleep(5)
 
 

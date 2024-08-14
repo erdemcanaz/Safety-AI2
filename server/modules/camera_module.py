@@ -280,7 +280,7 @@ class StreamManager:
         for frame in frames:
             cv2.imshow('Frame', frame)
             cv2.waitKey(1000)
-            print("Frame shown")
+        cv2.destroyAllWindows()
            
 
 if __name__ == "__main__":
