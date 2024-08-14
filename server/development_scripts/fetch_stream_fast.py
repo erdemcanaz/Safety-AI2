@@ -16,7 +16,7 @@ def fetch_single_frame_hundred_times(username:str = None, password:str = None, c
         if ret:
             cv2.imshow('frame', frame)
             print(f"Frame fetched in {time.time() - start_time} seconds")
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(20) & 0xFF == ord('q'):
             break
 
     cap.release()
