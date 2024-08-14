@@ -1,5 +1,5 @@
 # Built-in imports
-import pprint, time, sys, os
+import pprint, time, sys, os, cv2
 
 # Local imports
 project_directory = os.path.dirname(os.path.abspath(__file__))
@@ -15,6 +15,9 @@ while True:
 
     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()
     stream_manager.test_show_last_frames_as_slides_show()   
+
+    cv2.destroyAllWindows()
+    time.sleep(5)
 
 
     # evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
