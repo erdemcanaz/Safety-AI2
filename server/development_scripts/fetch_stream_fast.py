@@ -7,7 +7,7 @@ def fetch_single_frame(username:str = None, password:str = None, camera_ip_addre
         while True:
             start_time = time.time()
             url = f'rtsp://{username}:{password}@{camera_ip_address}/{"profile2/media.smp"}'
-            cap = cv2.VideoCapture(url, cv2.CAP_GSTREAMER)
+            cap = cv2.VideoCapture(url, cv2.CAP_V4L2)
             buffer_size_in_frames = 1
             cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
             init_time = time.time()
