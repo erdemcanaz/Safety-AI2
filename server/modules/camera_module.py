@@ -83,12 +83,11 @@ class CameraStreamFetcher:
     def __IP_camera_frame_fetching_thread_single_frame(self):
         try:
             url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
-          
-            cap = None
-            while self.is_fetching_frames:  
-                cap = cv2.VideoCapture(url)
-                buffer_size_in_frames = 1
-                cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)             
+            cap = cv2.VideoCapture(url)
+            buffer_size_in_frames = 0
+
+            while self.is_fetching_frames:      
+                cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)         
                 ret, frame = cap.read()
                 if ret:
                     self.last_frame_info = {}
@@ -104,9 +103,10 @@ class CameraStreamFetcher:
                 else:
                     if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
                     break # Break the loop if the frame could not be retrieved
-                self.camera_fetching_delay = random.uniform(0,10) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck CPU
+                self.camera_fetching_delay = random.uniform(0,2) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck CPU
                 time.sleep( self.camera_fetching_delay) # Sleep so that CPU is not bottlenecked
-            if cap is not None: cap.release()          
+
+            cap.release()          
         except Exception as e:
             if server_preferences.CAMERA_VERBOSE: print(f'Error in fetching frames from {self.camera_ip_address}: {e}')
 
