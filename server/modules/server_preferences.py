@@ -1,8 +1,8 @@
 # Camera Class Preferences:
 CAMERA_VERBOSE = False
 CAMERA_CONFIG_KEYS = ['camera_uuid', 'camera_region', 'camera_description', 'is_alive', 'NVR_ip', 'camera_ip_address', 'username', 'password', 'stream_path', 'active_rules']
-CAMERA_DEFAULT_FETCHING_DURATION_SECONDS = 5 # Used to calculate randomization range for fetching delay
-CAMERA_FETCH_DELAY_SAFETY_MARGIN = 2 # Used to increase the fetching delay to prevent bottlenecking. Basically the max delay is calculated by multiplying the default fetching duration by the number of cameras and this safety margin
+CAMERA_DEFAULT_FETCHING_DURATION_SECONDS = 10 # Used to calculate randomization range for fetching delay
+CAMERA_FETCH_DELAY_SAFETY_MARGIN = 3 # Used to increase the fetching delay to prevent bottlenecking. Basically the max delay is calculated by multiplying the default fetching duration by the number of cameras and this safety margin
 
 CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0,10] # When a frame is fetched from a camera, the camera waits for a random time between 0 and 10 seconds before fetching the next frame. This is to prevent bottlenecking when multiple cameras are fetching frames at the same time. The range can be changed by the user using the set_camera_fetching_delay_randomization_range function
 def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:int):
