@@ -26,7 +26,7 @@ class CameraStreamFetcher:
     
     def start_fetching_frames(self):
         self.is_fetching_frames = True
-        self.thread = threading.Thread(target=self.__IP_camera_frame_fetching_thread)
+        self.thread = threading.Thread(target=self.__IP_camera_frame_fetching_thread_single_frame)
         self.thread.daemon = True # Set the thread as a daemon means that it will stop when the main program stops
         self.thread.start()   
         if server_preferences.CAMERA_VERBOSE: print(f'Started fetching frames from {self.camera_ip_address} at {time.time()}')     
@@ -76,6 +76,36 @@ class CameraStreamFetcher:
                         continue
 
             cap.release()           
+        except Exception as e:
+            if server_preferences.CAMERA_VERBOSE: print(f'Error in fetching frames from {self.camera_ip_address}: {e}')
+
+        self.is_fetching_frames = False
+
+    def __IP_camera_frame_fetching_thread_single_frame(self):
+        try:
+            url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
+            cap = cv2.VideoCapture(url)
+            buffer_size_in_frames = 1
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
+            while self.is_fetching_frames:   
+                if self.last_frame_info == None:
+                    ret, frame = cap.read()
+                    if ret:
+                        self.last_frame_info = {}
+                        self.last_frame_info["frame"] = frame
+                        self.last_frame_info["camera_uuid"] = self.camera_uuid
+                        self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
+                        self.last_frame_info["frame_timestamp"] = time.time()
+                        self.last_frame_info["active_rules"] = self.active_rules
+                        self.last_frame_info["is_evaluated"] = False
+                        self.number_of_frames_fetched += 1           
+                        self.camera_fetching_delay = random.uniform(server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
+                        if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} at {time.time()}')                      
+                    else:
+                        if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
+                        break # Break the loop if the frame could not be retrieved
+                time.sleep(self.camera_fetching_delay) # Sleep for a while to prevent the thread from consuming too much CPU
+            cap.release()          
         except Exception as e:
             if server_preferences.CAMERA_VERBOSE: print(f'Error in fetching frames from {self.camera_ip_address}: {e}')
 
