@@ -105,13 +105,16 @@ class CameraStreamFetcher:
         try:
             cap = cv2.VideoCapture(f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}')
             ret, frame = cap.read()
+            resoulution = (None,None)
             if ret:
                 cv2.imshow(window_name_to_show, frame)
-                cv2.waitKey(2500)
+                resoulution = (frame.shape[1], frame.shape[0])
+                cv2.waitKey(1000)
+
             cap.release()
-            return ret
+            return ret, resoulution
         except Exception as e:
-            return False
+            return False, (None,None)
     
 class StreamManager:
     def __init__(self) -> None:        
@@ -257,8 +260,8 @@ if __name__ == "__main__":
         cameras.append(CameraStreamFetcher(**camera_config)) 
 
     for camera_index, camera in enumerate(cameras):
-        is_fetched_properly = camera.test_try_fetching_single_frame_and_show("Test Frame")
-        print(f"    {camera_index:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {'Success' if is_fetched_properly else 'An error occurred'}")
+        is_fetched_properly, resolution = camera.test_try_fetching_single_frame_and_show("Test Frame")
+        print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {resolution:<12} {'Success' if is_fetched_properly else 'An error occurred'}")
 
     
 
