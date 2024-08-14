@@ -1,5 +1,5 @@
 # Camera Class Preferences:
-CAMERA_VERBOSE = False
+CAMERA_VERBOSE = True
 CAMERA_CONFIG_KEYS = ['camera_uuid', 'camera_region', 'camera_description', 'is_alive', 'NVR_ip', 'camera_ip_address', 'username', 'password', 'stream_path', 'active_rules']
 CAMERA_DEFAULT_FETCHING_DURATION_SECONDS = 10 # Used to calculate randomization range for fetching delay
 CAMERA_FETCH_DELAY_SAFETY_MARGIN = 3 # Used to increase the fetching delay to prevent bottlenecking. Basically the max delay is calculated by multiplying the default fetching duration by the number of cameras and this safety margin
