@@ -103,6 +103,7 @@ class CameraStreamFetcher:
                 else:
                     if server_preferences.CAMERA_VERBOSE: print(f'{self.number_of_frames_fetched:8d} |: Could not retrieve frame from {self.camera_ip_address} at {time.time()}')
                     break # Break the loop if the frame could not be retrieved
+                print(f"Camera {self.camera_ip_address} delay is {self.camera_fetching_delay}")
                 time.sleep(self.camera_fetching_delay) # Sleep for a while to prevent the thread from consuming too much CPU
             cap.release()          
         except Exception as e:
