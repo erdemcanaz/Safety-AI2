@@ -41,7 +41,7 @@ class CameraStreamFetcher:
         return f'CameraStreamFetcher({self.camera_ip_address}, is_alive={self.is_alive}, is_fetching_frames={self.is_fetching_frames})'
     
     def __print_wrapper(self, condition:False, message:str = ""):
-        if condition: print(f'{datetime.strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
+        if condition: print(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
         
     def get_last_frame_info(self)->Dict:
         return self.last_frame_info
@@ -267,7 +267,7 @@ if __name__ == "__main__":
 
     # print("Test is completed")
     # time.sleep(5)
-    
+
     # Test the StreamManager class
     print("\nTesting the StreamManager class")
     server_preferences.PARAM_CAMERA_VERBOSE = True
