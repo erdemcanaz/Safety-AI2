@@ -6,7 +6,8 @@ from ultralytics import YOLO
 import numpy as np
 import cv2
 #Local imports
-import modules.server_preferences as server_preferences
+#import modules.server_preferences as server_preferences
+import server_preferences
 
 class PoseDetector(): 
     #keypoints detected by the model in the detection order
