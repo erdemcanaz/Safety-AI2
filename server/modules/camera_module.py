@@ -26,7 +26,7 @@ class CameraStreamFetcher:
     
     def start_fetching_frames(self):
         self.is_fetching_frames = True
-        self.thread = threading.Thread(target=self.__IP_camera_frame_fetching_thread_single_frame)
+        self.thread = threading.Thread(target=self.__IP_camera_frame_fetching_thread)
         self.thread.daemon = True # Set the thread as a daemon means that it will stop when the main program stops
         self.thread.start()   
         if server_preferences.CAMERA_VERBOSE: print(f'Started fetching frames from {self.camera_ip_address} at {time.time()}')     
