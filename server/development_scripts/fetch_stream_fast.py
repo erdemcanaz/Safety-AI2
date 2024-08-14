@@ -13,7 +13,7 @@ def fetch_single_frame_ten_times(username:str = None, password:str = None, camer
         if ret:
             print(f"Frame {i:<2} read in {time.time() - start_time:.3f} seconds")
             cv2.imshow('frame', frame)
-        time.sleep(5)
+            wait_key = cv2.waitKey(0)
 
     cap.release()
 
