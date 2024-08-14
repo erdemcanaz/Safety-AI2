@@ -253,20 +253,20 @@ if __name__ == "__main__":
     server_preferences.PARAM_CAMERA_VERBOSE = False
 
     # Fetch and show a single frame from the camera for all cameras
-    # print("Testing the CameraStreamFetcher class")
-    # cameras = []
-    # with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
-    #             camera_configs = json.load(f)["cameras"]       
+    print("Testing the CameraStreamFetcher class")
+    cameras = []
+    with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
+                camera_configs = json.load(f)["cameras"]       
   
-    # for camera_config in camera_configs:         
-    #     cameras.append(CameraStreamFetcher(**camera_config)) 
+    for camera_config in camera_configs:         
+        cameras.append(CameraStreamFetcher(**camera_config)) 
 
-    # for camera_index, camera in enumerate(cameras):
-    #     is_fetched_properly, resolution = camera.test_try_fetching_single_frame_and_show("Test Frame")
-    #     print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
+    for camera_index, camera in enumerate(cameras):
+        is_fetched_properly, resolution = camera.test_try_fetching_single_frame_and_show("Test Frame")
+        print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
 
-    # print("Test is completed")
-    # time.sleep(5)
+    print("Test is completed")
+    time.sleep(5)
 
     # Test the StreamManager class
     print("\nTesting the StreamManager class")
@@ -289,8 +289,9 @@ if __name__ == "__main__":
     while time.time() - start_time < 20:
         stream_manager.test_show_all_frames(window_size=(1280, 720))
         
-    print("\nStopping all cameras and waiting for the threads to join")
+    print("\nStopping all cameras and waiting for 20 seconds")
     stream_manager.stop_cameras_by_uuid([])
+    time.sleep(20)
 
     print("\nStarting all cameras again")
     stream_manager.start_cameras_by_uuid()
