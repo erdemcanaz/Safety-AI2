@@ -335,7 +335,7 @@ if __name__ == "__main__":
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
     while time.time() - start_time < 20:
-        stream_manager.__test_show_all_frames(window_size=(1280, 720))
+        stream_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
     
     print("\nStopping all cameras and waiting for the threads to join")
     stream_manager.stop_cameras_by_uuid([])

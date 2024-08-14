@@ -12,10 +12,7 @@ stream_manager = camera_module.StreamManager()
 stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
 
 while True:
-
     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()
-
-    
 
 
     # evaluated_uuids, evaluation_results = evaluation_manager.evaluate_frames_info(frames_info = stream_manager.return_all_not_evaluated_frames_info())
