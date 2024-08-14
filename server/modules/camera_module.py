@@ -274,8 +274,6 @@ class StreamManager:
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
 
-    pass
-
 if __name__ == "__main__":
 
     server_preferences.PARAM_CAMERA_VERBOSE = False
