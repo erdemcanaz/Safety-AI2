@@ -194,7 +194,7 @@ class StreamManager:
     def return_all_frame_info_as_list(self) -> List[Dict]:
         not_evaluated_frames_info = []
         for camera in self.cameras:
-            if camera.get_last_frame_info() is not None and not camera.get_last_frame_info()["is_evaluated"]:
+            if camera.get_last_frame_info() is not None:
                 not_evaluated_frames_info.append(camera.get_last_frame_info())
                 camera.set_last_frame_as_evaluated_if_frame_uuid_matches()
 
