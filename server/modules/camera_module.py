@@ -49,7 +49,8 @@ class CameraStreamFetcher:
     def append_frame_to_recent_frames(self, frame:np.ndarray):
         self.recent_frames.append(frame)
         if len(self.recent_frames) > self.CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP:
-            self.recent_frames.pop(0)
+            popped_frame = self.recent_frames.pop(0)
+            del popped_frame  # Explicitly delete the popped frame immediately to free up memory
     
     def start_fetching_frames(self):
         if self.RTSP_thread is not None: self.stop_fetching_frames(wait_for_thread_to_join = True)  # Stop the thread if it is already running
