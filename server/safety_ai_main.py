@@ -7,13 +7,9 @@ modules_directory = os.path.join(project_directory, 'modules')
 sys.path.append(modules_directory) # Add the modules directory to the system path so that imports work
 
 import camera_module
-import evaluation_module
 
 stream_manager = camera_module.StreamManager()
 stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
-
-evaluator_objects = []
-evaluation_manager = evaluation_module.EvaluationManager()
 
 while True:
 
