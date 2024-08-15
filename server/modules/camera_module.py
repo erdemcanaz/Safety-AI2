@@ -125,7 +125,7 @@ class CameraStreamFetcher:
                 cv2.waitKey(1000)
 
             cap.release()
-            return ret, resoulution
+            return ret, resoulution, frame
         except Exception as e:
             return False, (None,None)
     
@@ -322,7 +322,9 @@ if __name__ == "__main__":
         cameras.append(CameraStreamFetcher(**camera_config)) 
 
     for camera_index, camera in enumerate(cameras):
-        is_fetched_properly, resolution = camera.test_try_fetching_single_frame_and_show("Test Frame")
+        is_fetched_properly, resolution, frame = camera.test_try_fetching_single_frame_and_show("Test Frame")
+        save_path = f"{server_preferences.PATH_VOLUME}/camera_{camera.camera_ip_address}.jpg"
+        cv2.imwrite(save_path, frame)
         print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
 
     print("Test is completed")

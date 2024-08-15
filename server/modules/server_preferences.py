@@ -9,9 +9,13 @@ PARAM_EVALUATION_TIME_UPDATE_FACTOR = 0.05  # New evaluation time = old evaluati
 
 is_linux = platform.system() == "Linux"
 if is_linux:
+    PATH_VOLUME = Path(__file__).resolve().parent.parent.parent.parent / "safety_AI_volume" # Container volume path
     PATH_CAMERA_CONFIGS_JSON = Path(__file__).resolve().parent.parent.parent.parent / "safety_AI_volume" / "camera_configs.json" # Container volume path
 else:
+    PATH_VOLUME = None
     PATH_CAMERA_CONFIGS_JSON= Path(__file__).resolve().parent.parent / "configs" / "camera_configs.json" # Local path
+
+
 
 # Camera Module Preferences =============================================================================================
 PARAM_CAMERA_VERBOSE = False
