@@ -46,9 +46,7 @@ class EvaluationManager():
             models_to_call = self.__get_models_to_call(active_rules)
             for model in models_to_call:
                 model.detect_frame(frame_info = frame_info)
-                if model == self.pose_detector:
-                   pprint.pprint(model.get_recent_detection_results())
-
+                    
             continue     
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":

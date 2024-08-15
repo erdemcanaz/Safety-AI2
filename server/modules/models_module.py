@@ -82,11 +82,35 @@ class HardhatDetector():
             raise ValueError(f"Invalid model name. Available models are: {HardhatDetector.HARD_HAT_MODEL_PATHS.keys()}")
         self.MODEL_PATH = HardhatDetector.HARD_HAT_MODEL_PATHS[model_name]
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)
-        #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
+        self.recent_detection_results:Dict = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
+    
     def __repr__(self) -> str:
         return f"HardhatDetector(model_name={self.MODEL_PATH})"
     
+    def __clear_recent_detection_results(self):
+        self.recent_detection_results = {
+            "frame_uuid": None,
+            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+        }
+
+    def detect_frame(self, frame_info:np.ndarray = None):
+        self.__clear_recent_detection_results()
+        self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"]
+
+        detections = self.yolo_object(frame_info["frame"], task = "hardhat", verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)[0]
+        for detection in detections:
+            boxes = detection.boxes
+            box_cls_no = int(boxes.cls.cpu().numpy()[0])
+            box_cls_name = self.yolo_object.names[box_cls_no]
+            print(self.yolo_object.names)
+            if box_cls_name not in ["helmet"]:
+                continue
+
+            box_conf = boxes.conf.cpu().numpy()[0]
+            box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
+            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
+
 class ForkliftDetector():
     FORKLIFT_MODEL_PATHS = {
         "forklift_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'forklift_detector.pt'}",
@@ -97,10 +121,33 @@ class ForkliftDetector():
             raise ValueError(f"Invalid model name. Available models are: {ForkliftDetector.FORKLIFT_MODEL_PATHS.keys()}")
         self.MODEL_PATH = ForkliftDetector.FORKLIFT_MODEL_PATHS[model_name]
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.FORKLIFT_DETECTION_VERBOSE)
-        #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
+        self.recent_detection_results:Dict = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
     def __repr__(self) -> str:
         return f"ForkliftDetector(model_name={self.MODEL_PATH})"
+    
+    def __clear_recent_detection_results(self):
+        self.recent_detection_results = {
+            "frame_uuid": None,
+            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+        }
+
+    def detect_frame(self, frame_info:np.ndarray = None):
+        self.__clear_recent_detection_results()
+        self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"]
+
+        detections = self.yolo_object(frame_info["frame"], task = "forklift", verbose= server_preferences.FORKLIFT_DETECTION_VERBOSE)[0]
+        for detection in detections:
+            boxes = detection.boxes
+            box_cls_no = int(boxes.cls.cpu().numpy()[0])
+            box_cls_name = self.yolo_object.names[box_cls_no]
+            print(self.yolo_object.names)
+            if box_cls_name not in ["forklift"]:
+                continue
+
+            box_conf = boxes.conf.cpu().numpy()[0]
+            box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
+            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
     
 if __name__ == "__main__":
     last_time_detection = time.time()
