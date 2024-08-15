@@ -148,7 +148,7 @@ class ForkliftDetector():
 
 if __name__ == "__main__":
     last_time_detection = time.time()
-    pose_detector = PoseDetector("yolov8x-pose")
+    pose_detector = PoseDetector("yolov8n-pose")
     hard_hat_detector = HardHatDetector("hard_hat_detector")
     forklift_detector = ForkliftDetector("forklift_detector")
 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         while True:   
             ret, frame = cap.read()
             if ret:
-              if time.time() - last_time_detection > 5:
+              if time.time() - last_time_detection > 3:
                 last_time_detection = time.time()
                 pose_detector.yolo_object(frame, show = True)   
                 hard_hat_detector.yolo_object(frame, show = True)
