@@ -56,7 +56,7 @@ class EvaluationManager():
             active_rules = frame_info["active_rules"]
             for model in self.__get_models_to_call(active_rules): # For active rules of the camera, the models to call will be-> self.pose_detector, self.hardhat_detector, self.forklift_detector
                 model.detect_frame(frame_info = frame_info)
-                pprint.pprint(frame_info["detection_results"])
+                pprint.pprint(frame_info)
                 frame_info["detection_results"].append(model.get_recent_detection_results())
 
             for active_rule in active_rules:
