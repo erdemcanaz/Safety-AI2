@@ -17,7 +17,7 @@ class EvaluationManager():
             print(f"Camera UUID: {camera_uuid:<10}, Usefulness Score: {usefulness['usefulness_score']:<6.2f}, Evaluation Probability: {self.camera_evaluation_probabilities[camera_uuid]:<2}")
 
     def __init__(self) -> None:   
-        self.pose_detector = models_module.PoseDetector(model_name="yolov8n-pose")
+        self.pose_detector = models_module.PoseDetector(model_name="yolov8x-pose")
         self.hardhat_detector = models_module.HardhatDetector(model_name="hardhat_detector")
         self.forklift_detector = models_module.ForkliftDetector(model_name="forklift_detector")     
         
@@ -62,11 +62,9 @@ class EvaluationManager():
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
                     was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
-                    pprint.pprint(self.camera_usefulness[frame_info['camera_uuid']])
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
-                    print(f"was_usefull_to_evaluate: {was_usefull_to_evaluate}")
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Hardhat Detection Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
 
