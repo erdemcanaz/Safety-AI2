@@ -44,7 +44,7 @@ class CameraStreamFetcher:
         if condition: print(f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
         
     def get_last_frame_info(self)->Dict:
-        return self.last_frame_info
+        return copy.deepcopy(self.last_frame_info) # To prevent race conditions. Since the self.last_frame_info is continuously updated by the RTSP thread, it is better to return a deep copy of it
     
     def append_frame_to_recent_frames(self, frame:np.ndarray):
         if self.last_frame_info is None or time.time() - self.last_frame_info["frame_timestamp"] > self.CLASS_PARAM_MINIMUM_DURATION_BETWEEN_RECENT_FRAME_APPENDING:
