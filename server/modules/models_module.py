@@ -166,7 +166,7 @@ if __name__ == "__main__":
         while True:   
             ret, frame = cap.read()
             if ret:
-              if time.time() - last_time_detection > 3:
+              if time.time() - last_time_detection > 0.5:
                 last_time_detection = time.time()
                 forklift_detector.yolo_object(frame, show = True )   
     
