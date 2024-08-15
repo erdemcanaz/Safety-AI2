@@ -1,6 +1,8 @@
 import platform
 from pathlib import Path
 
+PARAM_COOLDOWN_DURATION = 5 # The duration of the cooldown period in seconds. During the cooldown period, the server will not evaluate the frames
+
 is_linux = platform.system() == "Linux"
 if is_linux:
     PATH_CAMERA_CONFIGS_JSON = Path(__file__).resolve().parent.parent.parent.parent / "safety_AI_volume" / "camera_configs.json" # Container volume path
