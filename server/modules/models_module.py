@@ -118,11 +118,40 @@ class PoseDetector():
 
         return self.recent_prediction_results
 
+class HardHatDetector():
+    HARD_HAT_MODEL_PATHS = {
+        "hard_hat_detector":"trained_yolo_models/hard_hat_detector.pt",
+    }
+
+    def __init__(self, model_name):
+        if model_name not in HardHatDetector.HARD_HAT_MODEL_PATHS.keys():
+            raise ValueError(f"Invalid model name. Available models are: {HardHatDetector.HARD_HAT_MODEL_PATHS.keys()}")
+        self.MODEL_PATH = HardHatDetector.HARD_HAT_MODEL_PATHS[model_name]
+        self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.HARD_HAT_DETECTION_VERBOSE)
+        #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
+
+class ForkliftDetector():
+    FORKLIFT_MODEL_PATHS = {
+        "forklift_detector":"trained_yolo_models/forklift_detector.pt",
+    }
+
+    def __init__(self, model_name):
+        if model_name not in ForkliftDetector.FORKLIFT_MODEL_PATHS.keys():
+            raise ValueError(f"Invalid model name. Available models are: {ForkliftDetector.FORKLIFT_MODEL_PATHS.keys()}")
+        self.MODEL_PATH = ForkliftDetector.FORKLIFT_MODEL_PATHS[model_name]
+        self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.FORKLIFT_DETECTION_VERBOSE)
+        #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 # Test
 
-if __name__ == "__main__":
 
+
+
+if __name__ == "__main__":
+    last_time_detection = time.time()
     pose_detector = PoseDetector("yolov8x-pose")
+    hard_hat_detector = HardHatDetector("hard_hat_detector")
+    forklift_detector = ForkliftDetector("forklift_detector")
+
     username = input("Enter the username: ")
     password = input("Enter the password: ")
     camera_ip_address = input("Enter the camera ip address: ")
@@ -137,8 +166,12 @@ if __name__ == "__main__":
         while True:   
             ret, frame = cap.read()
             if ret:
-              results = pose_detector.yolo_object(frame, show = True)
-              result = results[0]
+              if time.time() - last_time_detection > 5:
+                last_time_detection = time.time()
+                pose_detector.yolo_object(frame, show = True)   
+                hard_hat_detector.yolo_object(frame, show = True)
+                forklift_detector.yolo_object(frame, show = True)   
+    
     except Exception as e:
         print(e)
 
