@@ -8,7 +8,7 @@ else:
     PATH_CAMERA_CONFIGS_JSON= Path(__file__).resolve().parent.parent / "configs" / "camera_configs.json" # Local path
 
 # Camera Module Preferences =============================================================================================
-PARAM_CAMERA_VERBOSE = True
+PARAM_CAMERA_VERBOSE = False
 
 PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = None            # Randomize the fetching delay between 0 and max_duration_before_encoding seconds            
 PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS = 0.033 # Approximate time it takes to decode a frame. This value is used to calculate the camera's fetching delay randomization range 

@@ -26,94 +26,52 @@ class PoseDetector():
             raise ValueError(f"Invalid model name. Available models are: {PoseDetector.POSE_MODEL_PATHS.keys()}")
         self.MODEL_PATH = PoseDetector.POSE_MODEL_PATHS[model_name]        
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.POSE_DETECTION_VERBOSE)        
-        self.recent_detection_results = None
+        self.recent_detection_results: Dict = None
 
     def __repr__(self):
         return f"PoseDetector(model_name={self.MODEL_PATH})"
     
-    def __get_empty_prediction_dict_template(self) -> dict:
-        empty_prediction_dict = {   
-                    "common_keys":{
-                        "DETECTOR_TYPE":"PoseDetector",                             # which detector made this prediction
-                        "frame": None,                                              # frame in which the detection was made
-                        "camera_uuid":"",                                           # unique id for the camera
-                        "frame_uuid":"",                                            # unique id for the frame
-                        "detection_uuid":str(uuid.uuid4()),                         # unique id for the detection
-                        "frame_timestamp":0,                                        # timestamp of the detection
-                        "frame_shape": [0,0],                                       # [0,0], [height , width] in pixels
-                        "class_name":"",                                            # hard_hat, no_hard_hat
-                        "bbox_confidence":0,                                        # 0.0 to 1.0
-                        "bbox_xyxy_px":[0,0,0,0],                                   # [x1,y1,x2,y2] in pixels
-                        "bbox_center_px": [0,0],                                    # [x,y] in pixels
-                    },
-                    #------------------pose specific fields------------------
-                    "unique_keys":{ # Any other information that is not covered by the fields above
-                        "keypoints": { # Keypoints are in the format [x,y,confidence]
-                            "left_eye": [0,0,0,0,0],
-                            "right_eye": [0,0,0,0,0],
-                            "nose": [0,0,0,0,0],
-                      
-                            "left_shoulder": [0,0,0,0,0],
-                            "right_shoulder": [0,0,0,0,0],
-                            "left_elbow": [0,0,0,0,0],
-                            "right_elbow": [0,0,0,0,0],
-                            "left_wrist": [0,0,0,0,0],
-                            "right_wrist": [0,0,0,0,0],
-                            "left_hip": [0,0,0,0,0],
-                            "right_hip": [0,0,0,0,0],
-                            "left_knee": [0,0,0,0,0],
-                            "right_knee": [0,0,0,0,0],
-                            "left_ankle": [0,0,0,0,0],
-                            "right_ankle": [0,0,0,0,0],
-                        }
-                    },                                            
-                   
+    def __clear_recent_detection_results(self):
+        self.recent_detection_results = {
+            "frame_uuid": None,
+            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence, normalized_keypoints_dict]
         }
-        return empty_prediction_dict
     
-    def detect_frame(self, frame_info:np.ndarray = None) -> List[Dict]:
-        self.recent_prediction_results = []
-        detections = self.yolo_object(frame_info["frame"], task = "pose", verbose= server_preferences.POSE_DETECTION_VERBOSE)[0]
-        
+    def detect_frame(self, frame_info:np.ndarray = None):
+        self.__clear_recent_detection_results()
+        self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"]
+
+        detections = self.yolo_object(frame_info["frame"], task = "pose", verbose= server_preferences.POSE_DETECTION_VERBOSE)[0]        
         for detection in detections:
+
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
             box_cls_name = self.yolo_object.names[box_cls_no]
             if box_cls_name not in ["person"]:
                 continue
+
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
 
-            # prediction_dict_template = self.__get_empty_prediction_dict_template()
-            # prediction_dict_template["common_keys"]["frame"] = frame
-            # prediction_dict_template["common_keys"]["camera_uuid"] = camera_uuid
-            # prediction_dict_template["common_keys"]["frame_uuid"] = frame_uuid
-            # prediction_dict_template["common_keys"]["detection_uuid"] = str(uuid.uuid4()) #unique id for the detection
-            # prediction_dict_template["common_keys"]["frame_timestamp"] = frame_timestamp
-            # prediction_dict_template["common_keys"]["frame_shape"] = list(results.orig_shape)
-            # prediction_dict_template["common_keys"]["class_name"] = box_cls_name
-            # prediction_dict_template["common_keys"]["bbox_confidence"] = box_conf
-            # prediction_dict_template["common_keys"]["bbox_xyxy_px"] = box_xyxy # Bounding box in the format [x1,y1,x2,y2]
-            # prediction_dict_template["common_keys"]["bbox_center_px"] = [ (box_xyxy[0]+box_xyxy[2])/2, (box_xyxy[1]+box_xyxy[3])/2]
-            
             key_points = detection.keypoints  # Keypoints object for pose outputs
             keypoint_confs = key_points.conf.cpu().numpy()[0]
-            keypoints_xy = key_points.xyn.cpu().numpy()[0]
-                       
+            keypoints_xyn = key_points.xyn.cpu().numpy()[0]
+
+            normalized_keypoints_dict = {}  
             for keypoint_index, keypoint_name in enumerate(PoseDetector.KEYPOINT_NAMES):
+                keypoint_xn = keypoints_xyn[keypoint_index][0]
+                keypoint_yn = keypoints_xyn[keypoint_index][1]
                 keypoint_conf = keypoint_confs[keypoint_index] 
-                keypoint_x = keypoints_xy[keypoint_index][0]
-                keypoint_y = keypoints_xy[keypoint_index][1]
-                if keypoint_x == 0 and keypoint_y == 0: #if the keypoint is not detected
+                if keypoint_xn == 0 and keypoint_yn == 0: #if the keypoint is not detected
                     #But this is also a prediction. Thus the confidence should not be set to zero. negative values are used to indicate that the keypoint is not detected
                     keypoint_conf = -keypoint_conf
+                normalized_keypoints_dict[keypoint_name] = [keypoint_xn, keypoint_yn, keypoint_conf]
 
-                prediction_dict_template["unique_keys"]["keypoints"][keypoint_name] = [keypoint_x, keypoint_y , keypoint_conf]
+            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf, normalized_keypoints_dict])
 
-            self.recent_prediction_results.append(prediction_dict_template)
-
-        return self.recent_prediction_results
-
+    def get_recent_detection_results(self) -> Dict:
+        return self.recent_detection_results
+    
 class HardhatDetector():
     HARD_HAT_MODEL_PATHS = {
         "hardhat_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'hardhat_detector.pt'}",
