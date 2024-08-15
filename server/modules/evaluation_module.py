@@ -157,7 +157,7 @@ class EvaluationManager():
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.5: continue # If the confidence of the pose detection is less than 0.5, skip this person
-
+                return True
                 left_ankle =  pose_bbox[5]["left_ankle"]
                 right_ankle =  pose_bbox[5]["right_ankle"]
 
