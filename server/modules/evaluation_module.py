@@ -147,7 +147,6 @@ class EvaluationManager():
 
     def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
         # Which method to use for the evaluation
-        detection_results = frame_info["detection_results"]
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 left_ankle =  pose_bbox[5]["left_ankle"]
@@ -163,7 +162,9 @@ class EvaluationManager():
                     forklift_bbox = forklift_bbox[:4]
                 
                 #TODO: Implement the intersection percentage calculation
-                return True
+                return True            
+        else:
+            raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")            
                               
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
         return random.choices([True, False], weights=[0.1, 0.9])
