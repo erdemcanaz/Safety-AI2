@@ -102,18 +102,25 @@ class EvaluationManager():
                 return True
         return False
     
-    def find_rectangle_intersection_percentage(self, rect1:List[int], rect2:List[int]) -> float:
-        # Find the intersection percentage of the rectangle 1 to rectangle 2
-        x1, y1, x2, y2 = rect1
-        x2, y2, x2, y2 = rect2
-        w1, h1, w2, h2 = (x2-x1), (y2-y1), (x2-x2), (y2-y2)
+    def find_rectangle_intersection_percentage(self, rect1: List[int], rect2: List[int]) -> float:
+        # Find the intersection percentage of rectangle 1 to rectangle 2
+        x1, y1, x3, y3 = rect1  # Coordinates for rect1
+        x2, y2, x4, y4 = rect2  # Coordinates for rect2
 
-        x_overlap = max(0, min(x1+w1, x2+w2) - max(x1, x2))
-        y_overlap = max(0, min(y1+h1, y2+h2) - max(y1, y2))
+        # Calculate the intersection rectangle
+        x_overlap = max(0, min(x3, x4) - max(x1, x2))
+        y_overlap = max(0, min(y3, y4) - max(y1, y2))
+        
         intersection = x_overlap * y_overlap
-        area1 = w1*h1
-        overlap_percentage = intersection / (area1)
+        
+        # Calculate the area of rect1
+        area1 = (x3 - x1) * (y3 - y1)
+        
+        # Calculate the overlap percentage
+        overlap_percentage = intersection / area1 if area1 > 0 else 0
+        
         print(f"intersection: {intersection}\narea1: {area1}\noverlap_percentage: {overlap_percentage}\nrect1: {rect1}\nrect2: {rect2}")
+        
         return overlap_percentage
     
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
