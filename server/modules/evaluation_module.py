@@ -149,8 +149,8 @@ class EvaluationManager():
         detection_results = frame_info["detection_results"]
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
-                left_ankle =  pose_bbox["normalized_bboxes"][5]["left_ankle"]
-                right_ankle =  pose_bbox["normalized_bboxes"][5]["right_ankle"]
+                left_ankle =  pose_bbox[5]["left_ankle"]
+                right_ankle =  pose_bbox[5]["right_ankle"]
 
                 # Check if the left or right ankle is inside the polygon, if not return False
                 is_left_ankle_inside = left_ankle[2]>0 and self.__is_inside_polygon( (left_ankle[0], left_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
