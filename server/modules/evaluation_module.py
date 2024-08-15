@@ -171,6 +171,7 @@ class EvaluationManager():
 
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, return False, otherwise return True
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
+                    if forklift_bbox[4] < 0.5: continue # If the confidence of the forklift detection is less than 0.5, skip this forklift
                     forklift_bbox = forklift_bbox[:4]
                     if self.find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.8:
                         print(" Forklift is intersecting with the person")
