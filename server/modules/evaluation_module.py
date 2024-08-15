@@ -71,6 +71,7 @@ class EvaluationManager():
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
     
     def __is_inside_polygon(self, point:Tuple, polygon:List[Tuple]) -> bool:
+        # Ray casting algorithm to check if a point is inside a polygon. Basically, it checks if the point is inside the polygon by drawing a line from the point to infinity and counting the number of intersections with the polygon. If the number of intersections is odd, the point is inside the polygon.
         x, y = point
         n = len(polygon)
         inside = False
@@ -154,8 +155,8 @@ class EvaluationManager():
                 right_ankle =  pose_detection["normalized_bboxes"][5]["right_ankle"]
 
                 # Check if the left or right ankle is inside the polygon, if not return False
-                is_left_ankle_inside = left_ankle[2]>0 and self.__is_inside_polygon( (left_ankle[0], left_ankle[1]), active_rule["polygon"])
-                is_right_ankle_inside = right_ankle[2]>0 and self.__is_inside_polygon((right_ankle[0], right_ankle[1]), active_rule["polygon"])
+                is_left_ankle_inside = left_ankle[2]>0 and self.__is_inside_polygon( (left_ankle[0], left_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
+                is_right_ankle_inside = right_ankle[2]>0 and self.__is_inside_polygon((right_ankle[0], right_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
                 if not is_left_ankle_inside and not is_right_ankle_inside: return False
 
                 # calculate intersection percentage with person bounding box and if it is greater than a threshold, return False, otherwise return True
