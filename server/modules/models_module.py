@@ -99,11 +99,11 @@ class HardhatDetector():
         self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"]
 
         detections = self.yolo_object(frame_info["frame"], task = "hardhat", verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)[0]
+        print(self.yolo_object.names)
         for detection in detections:
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
             box_cls_name = self.yolo_object.names[box_cls_no]
-            print(self.yolo_object.names)
             if box_cls_name not in ["helmet"]:
                 continue
 

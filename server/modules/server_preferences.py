@@ -22,9 +22,9 @@ def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:in
     PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0, max(max_duration_before_encoding, PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS)]
     
 #Detector Module Preferences:
-POSE_DETECTION_VERBOSE = True
-HARDHAT_DETECTION_VERBOSE = True
-FORKLIFT_DETECTION_VERBOSE = True
+POSE_DETECTION_VERBOSE = False
+HARDHAT_DETECTION_VERBOSE = False
+FORKLIFT_DETECTION_VERBOSE = False
 
 #Evaluation Module Preferences:
 NOT_USEFULL_DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.95 # Slowly decrease the camera's usefulness score if the frame is evaluated as not useful
