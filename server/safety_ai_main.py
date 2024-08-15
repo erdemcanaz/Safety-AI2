@@ -17,20 +17,20 @@ evaluation_manager = evaluation_module.EvaluationManager()
 
 average_evaluation_time = 0
 while True:
-
     evaluations_started_time = time.time()
 
+    # ================== EVALUATION ==================
     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()    # Get all frames from the cameras
     evaluation_manager.evaluate_frames_info(all_frame_infos)                    # Evaluate the frames
+    # ================================================
 
     average_evaluation_time = (1 - server_preferences.PARAM_EVALUATION_TIME_UPDATE_FACTOR) * average_evaluation_time + server_preferences.PARAM_EVALUATION_TIME_UPDATE_FACTOR*( time.time() - evaluations_started_time )
     total_duration = average_evaluation_time / (1-server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE)
     sleep_duration = min(total_duration * server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE, server_preferences.PARAM_MAX_SLEEP_DURATION)
-    server_preferences.PARAM_MINIMUM_DECODING_DELAY = sleep_duration
-
-    print(f"average_evaluation_time: {average_evaluation_time:.2f}, sleep_duration: {sleep_duration:.2f}")
+    server_preferences.PARAM_MINIMUM_DECODING_DELAY = sleep_duration # The minimum decoding delay is set to the sleep duration since the server will sleep for this duration and it will not be able to evaluate frames more frequently than this duration
     if sleep_duration > 0:
-           time.sleep(sleep_duration)
+        print(f"average_evaluation_time: {average_evaluation_time:.2f}, sleep_duration: {sleep_duration:.2f}")
+        time.sleep(sleep_duration)
 
 
 

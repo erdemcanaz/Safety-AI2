@@ -4,6 +4,8 @@ from typing import List, Dict, Tuple #for python3.8 compatibility
 import server_preferences
 import models_module
 
+import cv2
+
 
 class EvaluationManager():
     def test_print_camera_usefulness_and_evaluation_probability(self):
@@ -61,7 +63,9 @@ class EvaluationManager():
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
                     was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
-                    self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
+                    self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)                    
+                    if was_usefull_to_evaluate:
+                        cv2.imshow("frame", frame_info["frame"])                        
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
@@ -155,11 +159,25 @@ class EvaluationManager():
                 is_right_ankle_inside = right_ankle[2]>0 and self.__is_inside_polygon((right_ankle[0], right_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
                 if not is_left_ankle_inside and not is_right_ankle_inside: return False
 
-                # calculate intersection percentage with person bounding box and if it is greater than a threshold, return False, otherwise return True
+                # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, return False, otherwise return True
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
                     forklift_bbox = forklift_bbox[:4]
+                    if self.find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.8:
+                        return False
                 
-                #TODO: Implement the intersection percentage calculation
+                pose_confidence = pose_bbox[4]
+                mean_ankle_confidence = (left_ankle[2]*is_left_ankle_inside + right_ankle[2]*is_right_ankle_inside) / (is_left_ankle_inside + is_right_ankle_inside) # Booleans are treated as 1 or 0. At this step, atleast one of the ankles is inside the polygon
+                violation_score = pose_confidence * mean_ankle_confidence
+
+                frame_info["rule_violations"].setdefault("RESTRICTED_AREA", []) # If there is a restricted area record, add it to the frame_info
+                frame_info["rule_violations"]["RESTRICTED_AREA"].append(
+                    {
+                     "evaluation_method":active_rule["evaluation_method"],                     
+                     "violated_rule_area_polygon_corners":active_rule["normalized_rule_area_polygon_corners"],
+                     "violated_person_bbox":pose_bbox[:4],
+                     "violation_score":violation_score
+                    }
+                )              
                 return True    
             return False # If no person is detected, return False        
         else:
