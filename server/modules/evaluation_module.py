@@ -148,12 +148,9 @@ class EvaluationManager():
         # Which method to use for the evaluation
         detection_results = frame_info["detection_results"]
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
-            pose_detections = [detection_result for detection_result in detection_results if detection_result["detection_class"] == "pose"]
-            forklift_detections = [detection_result for detection_result in detection_results if detection_result["detection_class"] == "forklift"]
-
-            for pose_detection in pose_detections:
-                left_ankle =  pose_detection["normalized_bboxes"][5]["left_ankle"]
-                right_ankle =  pose_detection["normalized_bboxes"][5]["right_ankle"]
+            for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
+                left_ankle =  pose_bbox["normalized_bboxes"][5]["left_ankle"]
+                right_ankle =  pose_bbox["normalized_bboxes"][5]["right_ankle"]
 
                 # Check if the left or right ankle is inside the polygon, if not return False
                 is_left_ankle_inside = left_ankle[2]>0 and self.__is_inside_polygon( (left_ankle[0], left_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
@@ -161,12 +158,12 @@ class EvaluationManager():
                 if not is_left_ankle_inside and not is_right_ankle_inside: return False
 
                 # calculate intersection percentage with person bounding box and if it is greater than a threshold, return False, otherwise return True
-                for forklift_detection in forklift_detections:
-                    forklift_bbox = forklift_detection["normalized_bboxes"][:4]
-                    print(forklift_bbox)
-                    #TODO: 
-                    return False
+                for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
+                    forklift_bbox = forklift_bbox[:4]
                     
+                print(pose_bbox)
+                return random.choices([True, False], weights=[0.1, 0.9])  
+                              
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
         return random.choices([True, False], weights=[0.1, 0.9])
 
