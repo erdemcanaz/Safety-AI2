@@ -27,6 +27,7 @@ class EvaluationManager():
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
             
     def evaluate_frames_info(self, frames_info:List[Dict]):
+        
         for frame_info in frames_info:
             # if random number is less than the camera's evaluation probability, the frame will be evaluated  
             random_number = random.random()
@@ -45,8 +46,7 @@ class EvaluationManager():
             active_rules = frame_info["active_rules"]            
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
-                    # evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
-                    # if len(evaluation_result) > 0: evaluation_results.append(evaluation_result)
+                    evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     was_usefull_to_evaluate =  random.choices([True, False], weights=[0.1, 0.9])[0]
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.EVALUATION_VERBOSE: print(f"Restricted Area Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")

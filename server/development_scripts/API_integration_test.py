@@ -1,14 +1,11 @@
-import requests
-
+import requests, json
 
 url = input("Enter the URL: ")
 token = input("Enter the token: ")
-enter_data = input("Enter the data: ")
 
 body = {
 
     "SafetyData": [
-
         {
 
             "RelatedShiftDate": "08.07.2024 11:11",
@@ -19,7 +16,7 @@ body = {
 
             "Image": "",
 
-            "RegionName": "DENEME",
+            "RegionName": "gg",
 
             "ViolationType": "restricted_area_rule_statistics",
 
@@ -27,14 +24,10 @@ body = {
 
             "ViolationUID": "DENEME",
 
-            "CameraUID": "DENEME"
-
- 
+            "CameraUID": "DENEME" 
 
         }
-
     ]
-
 }
 
 headers = {
@@ -42,6 +35,6 @@ headers = {
     "token": f"{token}"
 }
 
-response = requests.post(url, headers = headers, data=body)
+response = requests.post(url, headers = headers, data=json.dumps(body))
 print(response.status_code)
 print(response.text)
