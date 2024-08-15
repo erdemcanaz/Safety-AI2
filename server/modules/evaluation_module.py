@@ -18,8 +18,8 @@ class EvaluationManager():
 
     def __init__(self) -> None:   
         self.pose_detector = models_module.PoseDetector(model_name="yolov8n-pose")
-        self.hardhat_detector = models_module.HardhatDetector(model_name="yolov5s-hardhat")
-        self.forklift_detector = models_module.ForkliftDetector(model_name="yolov5s-forklift")     
+        self.hardhat_detector = models_module.HardhatDetector(model_name="hardhat_detector")
+        self.forklift_detector = models_module.ForkliftDetector(model_name="forklift_detector")     
         
         # Keep track of the camera 'usefulness' allocation of the computation resources
         self.camera_usefulness = {}

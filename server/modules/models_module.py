@@ -1,5 +1,6 @@
 #Built-in imports
 import time,pprint,copy, uuid, pprint, math, time, os
+from pathlib import Path
 from typing import List, Dict, Tuple #for python3.8 compatibility
 #3rd party imports
 from ultralytics import YOLO
@@ -13,11 +14,11 @@ class PoseDetector():
     #keypoints detected by the model in the detection order
     KEYPOINT_NAMES = ["nose", "right_eye", "left_eye", "left_ear", "right_ear", "left_shoulder", "right_shoulder", "left_elbow" ,"right_elbow","left_wrist", "right_wrist", "left_hip", "right_hip", "left_knee", "right_knee", "left_ankle", "right_ankle"]
     POSE_MODEL_PATHS = {
-        "yolov8n-pose":"modules/trained_yolo_models/yolov8n-pose.pt",
-        "yolov8s-pose":"modules/trained_yolo_models/yolov8s-pose.pt",
-        "yolov8m-pose":"modules/trained_yolo_models/yolov8m-pose.pt",
-        "yolov8l-pose":"modules/trained_yolo_models/yolov8l-pose.pt",
-        "yolov8x-pose":"modules/trained_yolo_models/yolov8x-pose.pt"
+        "yolov8n-pose":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "yolov8n-pose.pt.pt"}",
+        "yolov8s-pose":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "yolov8s-pose.pt.pt"}",
+        "yolov8m-pose":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "yolov8m-pose.pt.pt"}",
+        "yolov8l-pose":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "yolov8l-pose.pt.pt"}",
+        "yolov8x-pose":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "yolov8x-pose.pt.pt"}",
     }
 
     def __init__(self, model_name: str = None ) -> None:   
@@ -120,7 +121,7 @@ class PoseDetector():
 
 class HardhatDetector():
     HARD_HAT_MODEL_PATHS = {
-        "hard_hat_detector":"modules/trained_yolo_models/hard_hat_detector.pt",
+        "hardhat_detector":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "hardhat_detector.pt"}",
     }
 
     def __init__(self, model_name):
@@ -132,7 +133,7 @@ class HardhatDetector():
 
 class ForkliftDetector():
     FORKLIFT_MODEL_PATHS = {
-        "forklift_detector":"modules/trained_yolo_models/forklift_detector.pt",
+        "forklift_detector":f"{Path(__file__).resolve().parent / "trained_yolo_models" / "forklift_detector.pt"}",
     }
 
     def __init__(self, model_name):
