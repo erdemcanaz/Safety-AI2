@@ -88,16 +88,17 @@ class CameraStreamFetcher:
                 if self.last_frame_info == None or (time.time() - self.last_frame_info["frame_timestamp"] > self.camera_fetching_delay):
                     ret, frame = cap.retrieve() # Use retrieve() to decode the frame 
                     if ret:
-                        self.last_frame_info = {}
-                        self.last_frame_info["frame"] = frame
-                        self.last_frame_info["camera_uuid"] = self.camera_uuid
-                        self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
-                        self.last_frame_info["frame_timestamp"] = time.time()
-                        self.last_frame_info["active_rules"] = self.active_rules
-                        self.number_of_frames_fetched += 1
-                        self.camera_fetching_delay = random.uniform(server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
-                        self.__print_wrapper(condition=server_preferences.PARAM_CAMERA_VERBOSE, message = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} | Delay: {self.camera_fetching_delay:.2f} seconds') 
-                        self.append_frame_to_recent_frames(frame)
+                        with self.lock:
+                            self.last_frame_info = {}
+                            self.last_frame_info["frame"] = frame
+                            self.last_frame_info["camera_uuid"] = self.camera_uuid
+                            self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
+                            self.last_frame_info["frame_timestamp"] = time.time()
+                            self.last_frame_info["active_rules"] = self.active_rules
+                            self.number_of_frames_fetched += 1
+                            self.camera_fetching_delay = random.uniform(server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
+                            self.__print_wrapper(condition=server_preferences.PARAM_CAMERA_VERBOSE, message = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} | Delay: {self.camera_fetching_delay:.2f} seconds') 
+                            self.append_frame_to_recent_frames(frame)
                     else:
                         self.__print_wrapper(condition=server_preferences.PARAM_CAMERA_VERBOSE, message = f'Error in decoding frame from {self.camera_ip_address}')
                         continue          
