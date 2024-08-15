@@ -137,7 +137,6 @@ if __name__ == "__main__":
         while True:   
             ret, frame = cap.read()
             if ret:
-              cv2.imshow("frame", frame)
               results = pose_detector.yolo_object(frame, show = True)
               result = results[0]
     except Exception as e:
