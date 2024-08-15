@@ -122,7 +122,7 @@ class PoseDetector():
 
 if __name__ == "__main__":
 
-    pose_detector = PoseDetector("trained_yolo_models/yolov8x-pose.pt")
+    pose_detector = PoseDetector("yolov8x-pose.pt")
     username = input("Enter the username: ")
     password = input("Enter the password: ")
     camera_ip_address = input("Enter the camera ip address: ")
