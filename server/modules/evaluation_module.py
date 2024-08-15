@@ -195,7 +195,7 @@ class EvaluationManager():
         if active_rule["evaluation_method"] == "INTERSECTION_WITH_PERSON":
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.5: continue # If the confidence of the pose detection is less than 0.5, skip this person
-                  
+                
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
                 is_inside_forklift = False
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
@@ -210,6 +210,10 @@ class EvaluationManager():
                 best_hardhat_detection_candidate = None
                 for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
                     if hardhat_bbox[4] < 0.5: continue
+                    hardhat_bbox_center = ((hardhat_bbox[0]+hardhat_bbox[2])/2, (hardhat_bbox[1]+hardhat_bbox[3])/2)
+                    # Check if the hardhat detection is inside the polygon, if not continue to the next hardhat detection
+                    if not self.__is_inside_polygon(hardhat_bbox_center, active_rule["normalized_rule_area_polygon_corners"]): continue
+
                     if self.__find_rectangle_intersection_percentage(pose_bbox[:4], hardhat_bbox[:4]) < 0.75: continue
 
                     if best_hardhat_detection_candidate is None:
