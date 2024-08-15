@@ -26,7 +26,8 @@ while True:
 
     total_duration = average_evaluation_time / (1-server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE)
     sleep_duration = min(total_duration * server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE, server_preferences.PARAM_MAX_SLEEP_DURATION)
-
+    server_preferences.PARAM_MINIMUM_DECODING_DELAY = sleep_duration
+    
     print(f"average_evaluation_time: {average_evaluation_time:.2f}, sleep_duration: {sleep_duration:.2f}")
     if sleep_duration > 0:
            time.sleep(sleep_duration)

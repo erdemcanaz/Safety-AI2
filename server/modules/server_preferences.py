@@ -1,7 +1,7 @@
 import platform
 from pathlib import Path
 
-PARAM_MAX_SLEEP_DURATION = 2 # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
+PARAM_MAX_SLEEP_DURATION = 2.5 # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
 PARAM_SLEEP_DURATION_PERCENTAGE = 0.75 # The percentage of the total duration that the server will sleep. The server will sleep for this percentage of the total duration and work for the rest of the time. The total duration is calculated as the average evaluation time divided by (1 - PARAM_SLEEP_DURATION_PERCENTAGE)
 if PARAM_SLEEP_DURATION_PERCENTAGE < 0 or PARAM_SLEEP_DURATION_PERCENTAGE >= 1:
     raise ValueError("PARAM_SLEEP_DURATION_PERCENTAGE must be between 0 and 1")
@@ -19,13 +19,18 @@ PARAM_CAMERA_VERBOSE = False
 PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = None            # Randomize the fetching delay between 0 and max_duration_before_encoding seconds            
 PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS = 0.033 # Approximate time it takes to decode a frame. This value is used to calculate the camera's fetching delay randomization range 
 PARAM_CAMERA_DECODE_FREQUENCY_FACTOR = 2                          # 1 is the no effect value. 2 means that the camera will be decoded half of the time and 0.5 means that the camera will be decoded twice as much as the normal time.
+PARAM_MINIMUM_DECODING_DELAY = 0.1                               # The minimum fetching delay in seconds. The camera will not be fetched more frequently than this value
 def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:int):
     global PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS
     global PARAM_CAMERA_DECODE_FREQUENCY_FACTOR
     global PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE
+    global PARAM_MINIMUM_DECODING_DELAY
+    
     max_duration_before_encoding = (PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS * number_of_cameras) * PARAM_CAMERA_DECODE_FREQUENCY_FACTOR
     
-    PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0, max(max_duration_before_encoding, PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS)]
+    upper_bound = max(max_duration_before_encoding, PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS, PARAM_MINIMUM_DECODING_DELAY)
+    lower_bound = PARAM_MINIMUM_DECODING_DELAY
+    PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [lower_bound, upper_bound]
     
 #Detector Module Preferences:
 POSE_DETECTION_VERBOSE = False
