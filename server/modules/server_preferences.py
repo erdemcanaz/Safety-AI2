@@ -27,7 +27,9 @@ def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:in
 
 
 #Detector Module Preferences:
-POSE_DETECTION_VERBOSE = False
+POSE_DETECTION_VERBOSE = True
+HARDHAT_DETECTION_VERBOSE = True
+FORKLIFT_DETECTION_VERBOSE = True
 
 #Evaluation Module Preferences:
 NOT_USEFULL_DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.95 # Slowly decrease the camera's usefulness score if the frame is evaluated as not useful

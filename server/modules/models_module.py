@@ -127,7 +127,7 @@ class HardHatDetector():
         if model_name not in HardHatDetector.HARD_HAT_MODEL_PATHS.keys():
             raise ValueError(f"Invalid model name. Available models are: {HardHatDetector.HARD_HAT_MODEL_PATHS.keys()}")
         self.MODEL_PATH = HardHatDetector.HARD_HAT_MODEL_PATHS[model_name]
-        self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.HARD_HAT_DETECTION_VERBOSE)
+        self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)
         #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
 class ForkliftDetector():
