@@ -48,6 +48,10 @@ class CameraStreamFetcher:
         with self.lock:
             return copy.deepcopy(self.last_frame_info) # To prevent race conditions. Since the self.last_frame_info is continuously updated by the RTSP thread, it is better to return a deep copy of it
     
+    def get_recent_frames_infos(self)->List[np.ndarray]:
+        with self.lock:            
+            return copy.deepcopy(self.recent_frames)   # To prevent race conditions. Since the self.recent_frames is continuously updated by the RTSP thread, it is better to return a deep copy of it
+        
     def append_frame_to_recent_frames(self, frame:np.ndarray):
         if self.last_frame_info is None or time.time() - self.last_frame_info["frame_timestamp"] > self.CLASS_PARAM_MINIMUM_DURATION_BETWEEN_RECENT_FRAME_APPENDING:
             self.recent_frames.append(frame)
