@@ -105,7 +105,7 @@ class EvaluationManager():
 
     def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
         # Which method to use for the evaluation
-        return None, random.choice([True, False], weights=[0.1, 0.9])
+        return None, random.choices([True, False], weights=[0.1, 0.9])
         was_usefull_to_evaluate = False
         evaluation_result = self.DETECTORS[yolo_model_to_use].predict_frame_and_return_detections(frame_info = frame_info, bbox_confidence=0.75)
         if len(evaluation_result) > 0: was_usefull_to_evaluate = True
@@ -113,7 +113,7 @@ class EvaluationManager():
         return evaluation_result, was_usefull_to_evaluate
     
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
-        return None, random.choice([True, False], weights=[0.1, 0.9])
+        return None, random.choices([True, False], weights=[0.1, 0.9])
 
     
 
