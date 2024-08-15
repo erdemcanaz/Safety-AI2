@@ -66,7 +66,6 @@ class EvaluationManager():
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)                    
                     if was_usefull_to_evaluate:
                         cv2.imshow("frame", frame_info["frame"])       
-                        print("zaaa")
                         cv2.waitKey(2500)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
@@ -170,7 +169,7 @@ class EvaluationManager():
                 pose_confidence = pose_bbox[4]
                 mean_ankle_confidence = (left_ankle[2]*is_left_ankle_inside + right_ankle[2]*is_right_ankle_inside) / (is_left_ankle_inside + is_right_ankle_inside) # Booleans are treated as 1 or 0. At this step, atleast one of the ankles is inside the polygon
                 violation_score = pose_confidence * mean_ankle_confidence
-                if active_rule["trigger_score"] > violation_score: return False # If the violation score is less than the trigger score, return False
+                if violation_score < float(active_rule["trigger_score"]): return False # If the violation score is less than the trigger score, return False
                 frame_info["rule_violations"].setdefault("RESTRICTED_AREA", []) # If there is a restricted area record, add it to the frame_info
                 
                 frame_info["rule_violations"]["RESTRICTED_AREA"].append(
