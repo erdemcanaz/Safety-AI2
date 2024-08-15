@@ -13,11 +13,11 @@ class PoseDetector():
     #keypoints detected by the model in the detection order
     KEYPOINT_NAMES = ["nose", "right_eye", "left_eye", "left_ear", "right_ear", "left_shoulder", "right_shoulder", "left_elbow" ,"right_elbow","left_wrist", "right_wrist", "left_hip", "right_hip", "left_knee", "right_knee", "left_ankle", "right_ankle"]
     POSE_MODEL_PATHS = {
-        "yolov8n-pose":"trained_yolo_models/yolov8n-pose.pt",
-        "yolov8s-pose":"trained_yolo_models/yolov8s-pose.pt",
-        "yolov8m-pose":"trained_yolo_models/yolov8m-pose.pt",
-        "yolov8l-pose":"trained_yolo_models/yolov8l-pose.pt",
-        "yolov8x-pose":"trained_yolo_models/yolov8x-pose.pt"
+        "yolov8n-pose":"modules/trained_yolo_models/yolov8n-pose.pt",
+        "yolov8s-pose":"modules/trained_yolo_models/yolov8s-pose.pt",
+        "yolov8m-pose":"modules/trained_yolo_models/yolov8m-pose.pt",
+        "yolov8l-pose":"modules/trained_yolo_models/yolov8l-pose.pt",
+        "yolov8x-pose":"modules/trained_yolo_models/yolov8x-pose.pt"
     }
 
     def __init__(self, model_name: str = None ) -> None:   
@@ -118,21 +118,21 @@ class PoseDetector():
 
         return self.recent_prediction_results
 
-class HardHatDetector():
+class HardhatDetector():
     HARD_HAT_MODEL_PATHS = {
-        "hard_hat_detector":"trained_yolo_models/hard_hat_detector.pt",
+        "hard_hat_detector":"modules/trained_yolo_models/hard_hat_detector.pt",
     }
 
     def __init__(self, model_name):
-        if model_name not in HardHatDetector.HARD_HAT_MODEL_PATHS.keys():
-            raise ValueError(f"Invalid model name. Available models are: {HardHatDetector.HARD_HAT_MODEL_PATHS.keys()}")
-        self.MODEL_PATH = HardHatDetector.HARD_HAT_MODEL_PATHS[model_name]
+        if model_name not in HardhatDetector.HARD_HAT_MODEL_PATHS.keys():
+            raise ValueError(f"Invalid model name. Available models are: {HardhatDetector.HARD_HAT_MODEL_PATHS.keys()}")
+        self.MODEL_PATH = HardhatDetector.HARD_HAT_MODEL_PATHS[model_name]
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)
         #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
 class ForkliftDetector():
     FORKLIFT_MODEL_PATHS = {
-        "forklift_detector":"trained_yolo_models/forklift_detector.pt",
+        "forklift_detector":"modules/trained_yolo_models/forklift_detector.pt",
     }
 
     def __init__(self, model_name):
@@ -141,17 +141,9 @@ class ForkliftDetector():
         self.MODEL_PATH = ForkliftDetector.FORKLIFT_MODEL_PATHS[model_name]
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.FORKLIFT_DETECTION_VERBOSE)
         #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
-# Test
-
-
-
 
 if __name__ == "__main__":
     last_time_detection = time.time()
-    pose_detector = PoseDetector("yolov8n-pose")
-    hard_hat_detector = HardHatDetector("hard_hat_detector")
-    forklift_detector = ForkliftDetector("forklift_detector")
-
     username = input("Enter the username: ")
     password = input("Enter the password: ")
     camera_ip_address = input("Enter the camera ip address: ")
@@ -168,7 +160,7 @@ if __name__ == "__main__":
             if ret:
               if time.time() - last_time_detection > 0.5:
                 last_time_detection = time.time()
-                forklift_detector.yolo_object(frame, show = True )   
+                cv2.imshow("frame", frame)
     
     except Exception as e:
         print(e)

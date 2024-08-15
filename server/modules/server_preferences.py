@@ -9,8 +9,8 @@ else:
 
 # Camera Module Preferences =============================================================================================
 PARAM_CAMERA_VERBOSE = True
-PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = None            # Randomize the fetching delay between 0 and max_duration_before_encoding seconds            
 
+PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = None            # Randomize the fetching delay between 0 and max_duration_before_encoding seconds            
 PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS = 0.033 # Approximate time it takes to decode a frame. This value is used to calculate the camera's fetching delay randomization range 
 PARAM_CAMERA_DECODE_FREQUENCY_FACTOR = 2                          # 1 is the no effect value. 2 means that the camera will be decoded half of the time and 0.5 means that the camera will be decoded twice as much as the normal time.
 def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:int):
@@ -21,11 +21,6 @@ def PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras:in
     
     PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE = [0, max(max_duration_before_encoding, PARAM_CAMERA_APPROXIMATED_FRAME_DECODING_DURATION_SECONDS)]
     
-
-
-
-
-
 #Detector Module Preferences:
 POSE_DETECTION_VERBOSE = True
 HARDHAT_DETECTION_VERBOSE = True

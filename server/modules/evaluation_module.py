@@ -1,57 +1,11 @@
 import pprint, random
 from typing import List, Dict, Tuple #for python3.8 compatibility
-import models_module
+
 import server_preferences
+import models_module
 
 
 class EvaluationManager():
-
-    def __init__(self, yolo_models_to_be_used:List[str] = None) -> None:
-        AVAILABLE_MODELS = ["yolov8n-pose", "yolov8l-pose", "yolov8x-pose"] # add model names defined in predictors_module.py classes here
-        for model_name in yolo_models_to_be_used:
-            print(model_name, AVAILABLE_MODELS)
-            if model_name not in AVAILABLE_MODELS:
-                raise ValueError(f"Invalid model name. Available models are: {AVAILABLE_MODELS}")
-            
-        # Create YOLO objects
-        self.DETECTORS = {}
-        for model_name in yolo_models_to_be_used:
-            if model_name in ["yolov8n-pose", "yolov8l-pose", "yolov8x-pose"]:
-                self.DETECTORS[model_name] = detectors_module.PoseDetector(model_name=model_name)
-            else:
-                raise ValueError(f"Invalid model name. Available models are: {AVAILABLE_MODELS}")
-            
-        
-            
-        # Keep track of the camera 'usefulness' allocation of the computation resources
-        self.camera_usefulness = {}
-        self.camera_evaluation_probabilities = {}
-            
-    def evaluate_frames_info(self, frames_info:List[Dict]) -> Tuple[List[str], List[Dict]]:
-        evaluated_uuids:List[str] = []
-        evaluation_results:List[Dict] = []
-
-        self.test_print_camera_usefulness_and_evaluation_probability()
-
-        for frame_info in frames_info:
-            # if random number is less than the camera's evaluation probability, the frame will be evaluated  
-            random_number = random.random()
-            if random_number > self.camera_evaluation_probabilities.setdefault(frame_info["camera_uuid"], server_preferences.MINIMUM_EVALUATION_PROBABILITY):
-                continue
-            
-            evaluated_uuids.append(frame_info["frame_uuid"])
-            
-            active_rules = frame_info["active_rules"]            
-            for active_rule in active_rules:
-                if active_rule["rule_name"] == "RESTRICTED_AREA":
-                    evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
-                    if len(evaluation_result) > 0: evaluation_results.append(evaluation_result)
-                    self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
-                    if server_preferences.EVALUATION_VERBOSE: print(f"Restricted Area Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
-
-        self.__update_camera_evaluation_probabilities()
-        return evaluated_uuids, evaluation_results      
-
     def test_print_camera_usefulness_and_evaluation_probability(self):
         print("")
         sorted_cameras = sorted(
@@ -61,6 +15,42 @@ class EvaluationManager():
         )
         for camera_uuid, usefulness in sorted_cameras:
             print(f"Camera UUID: {camera_uuid:<10}, Usefulness Score: {usefulness['usefulness_score']:<6.2f}, Evaluation Probability: {self.camera_evaluation_probabilities[camera_uuid]:<2}")
+
+    def __init__(self) -> None:   
+        self.pose_detector = models_module.PoseDetector(model_name="yolov8n-pose")
+        self.hardhat_detector = models_module.HardhatDetector(model_name="yolov5s-hardhat")
+        self.forklift_detector = models_module.ForkliftDetector(model_name="yolov5s-forklift")     
+        
+        # Keep track of the camera 'usefulness' allocation of the computation resources
+        self.camera_usefulness = {}
+        self.camera_evaluation_probabilities = {} 
+        self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
+            
+    def evaluate_frames_info(self, frames_info:List[Dict]):
+        for frame_info in frames_info:
+            # if random number is less than the camera's evaluation probability, the frame will be evaluated  
+            random_number = random.random()
+            if random_number > self.camera_evaluation_probabilities.setdefault(frame_info["camera_uuid"], server_preferences.MINIMUM_EVALUATION_PROBABILITY):
+                continue
+            
+            # Ensure that same frame is not evaluated twice
+            if frame_info["camera_uuid"] not in self.recenty_evaluated_frame_uuids_wrt_camera.keys():
+                self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = {}
+            elif frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]:
+                continue 
+            self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
+
+            # Evaluate the frame based on the active rules
+            active_rules = frame_info["active_rules"]            
+            for active_rule in active_rules:
+                if active_rule["rule_name"] == "RESTRICTED_AREA":
+                    # evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
+                    # if len(evaluation_result) > 0: evaluation_results.append(evaluation_result)
+                    was_usefull_to_evaluate =  random.choices([True, False], weights=[0.1, 0.9])[0]
+                    self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
+                    if server_preferences.EVALUATION_VERBOSE: print(f"Restricted Area Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
+
+        self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
 
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
         #Update the camera's usefulness score
@@ -75,7 +65,7 @@ class EvaluationManager():
         if self.camera_usefulness[camera_uuid]["usefulness_score"] < server_preferences.MINIMUM_USEFULNESS_SCORE_TO_CONSIDER:
             self.camera_usefulness[camera_uuid]["usefulness_score"] = 0
 
-    def __update_camera_evaluation_probabilities(self) -> None:
+    def __update_camera_evaluation_probabilities_considering_camera_usefulnesses(self) -> None:
         #Update the camera's evaluation probability
         different_usefulness = []
         for _, usefulness in self.camera_usefulness.items():
