@@ -13,11 +13,11 @@ class PoseDetector():
     #keypoints detected by the model in the detection order
     KEYPOINT_NAMES = ["nose", "right_eye", "left_eye", "left_ear", "right_ear", "left_shoulder", "right_shoulder", "left_elbow" ,"right_elbow","left_wrist", "right_wrist", "left_hip", "right_hip", "left_knee", "right_knee", "left_ankle", "right_ankle"]
     POSE_MODEL_PATHS = {
-        "yolov8n-pose":"trained_yolo_models/yolov8n-pose.pt",
-        "yolov8s-pose":"trained_yolo_models/yolov8s-pose.pt",
-        "yolov8m-pose":"trained_yolo_models/yolov8m-pose.pt",
-        "yolov8l-pose":"trained_yolo_models/yolov8l-pose.pt",
-        "yolov8x-pose":"trained_yolo_models/yolov8x-pose.pt"
+        "yolov8n-pose":"modules/trained_yolo_models/yolov8n-pose.pt",
+        "yolov8s-pose":"modules/trained_yolo_models/yolov8s-pose.pt",
+        "yolov8m-pose":"modules/trained_yolo_models/yolov8m-pose.pt",
+        "yolov8l-pose":"modules/trained_yolo_models/yolov8l-pose.pt",
+        "yolov8x-pose":"modules/trained_yolo_models/yolov8x-pose.pt"
     }
 
     def __init__(self, model_name: str = None ) -> None:   
@@ -121,49 +121,28 @@ class PoseDetector():
 # Test
 
 if __name__ == "__main__":
-    yolo_1 = PoseDetector("yolov8n-pose")
-    yolo_2 = PoseDetector("yolov8s-pose")
-    yolo_3 = PoseDetector("yolov8m-pose")
-    yolo_4 = PoseDetector("yolov8l-pose")
-    yolo_5 = PoseDetector("yolov8x-pose")
 
-    pass
-    # detectors = []
-    # pose_detector = PoseDetector("yolov8n")
+    pose_detector = PoseDetector("trained_yolo_models/yolov8x-pose.pt")
+    username = input("Enter the username: ")
+    password = input("Enter the password: ")
+    camera_ip_address = input("Enter the camera ip address: ")
 
-    # cap = cv2.VideoCapture(0)
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    
-    # while True:
-    #     ret, frame = cap.read()
-    #     if not ret:
-    #         continue
+    try:
+        print("Connecting to the camera...")
+        url = f'rtsp://{username}:{password}@{camera_ip_address}/{"profile2/media.smp"}'
+        cap = cv2.VideoCapture(url)
+        buffer_size_in_frames = 1
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
 
-    #     # Release the capture
-    #     frame_info = {
-    #         "frame":frame,
-    #         "camera_uuid":str(uuid.uuid4()),
-    #         "frame_uuid":str(uuid.uuid4()),
-    #         "frame_timestamp":time.time()
-    #     }        
-    #     detections = pose_detector.predict_frame_and_return_detections(frame_info, bbox_confidence=0.75)
+        while True:   
+            ret, frame = cap.read()
+            if ret:
+              cv2.imshow("frame", frame)
+              results = pose_detector(frame)
+              result = results[0]
+              result.show()     
+    except Exception as e:
+        print(e)
 
-    #     for detection in detections:
-    #         frame = copy.deepcopy(frame_info["frame"])
-    #         bbox = detection["common_keys"]["bbox_xyxy_px"]
-    #         cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
-    #         for keypoint_name in PoseDetector.KEYPOINT_NAMES:
-    #             keypoint = detection["unique_keys"]["keypoints"][keypoint_name]
-    #             if keypoint[0] < 0 or keypoint[1] < 0:
-    #                 continue
-    #             cv2.circle(frame, (int(keypoint[0]), int(keypoint[1])), 5, (0, 0, 255), -1)
-    #         cv2.imshow("Detection", frame)
-    #         cv2.waitKey(0)
-    #         if cv2.waitKey(1) & 0xFF == ord('q'):
-    #             break
-    
-    # cv2.destroyAllWindows()
-    
             
 
