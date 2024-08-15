@@ -134,7 +134,7 @@ class ForkliftDetector():
         self.recent_detection_results = {
             "detection_class": "forklift", # The class that the detector is detecting
             "frame_uuid": None,
-            "normalized_bboxes": None, # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
         }
 
     def detect_frame(self, frame_info:np.ndarray = None):
