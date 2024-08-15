@@ -1,5 +1,5 @@
 # Built-in imports
-import pprint, time, sys, os, cv2, 
+import pprint, time, sys, os, cv2
 from jtop import jtop
 
 # Local imports
