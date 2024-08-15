@@ -1,8 +1,8 @@
 import platform
 from pathlib import Path
 
-PARAM_MAX_SLEEP_DURATION = 1 # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
-PARAM_SLEEP_DURATION_PERCENTAGE = 0.0 # The percentage of the total duration that the server will sleep. The server will sleep for this percentage of the total duration and work for the rest of the time. The total duration is calculated as the average evaluation time divided by (1 - PARAM_SLEEP_DURATION_PERCENTAGE)
+PARAM_MAX_SLEEP_DURATION = 2 # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
+PARAM_SLEEP_DURATION_PERCENTAGE = 0.75 # The percentage of the total duration that the server will sleep. The server will sleep for this percentage of the total duration and work for the rest of the time. The total duration is calculated as the average evaluation time divided by (1 - PARAM_SLEEP_DURATION_PERCENTAGE)
 if PARAM_SLEEP_DURATION_PERCENTAGE < 0 or PARAM_SLEEP_DURATION_PERCENTAGE >= 1:
     raise ValueError("PARAM_SLEEP_DURATION_PERCENTAGE must be between 0 and 1")
 PARAM_EVALUATION_TIME_UPDATE_FACTOR = 0.05 # New evaluation time = old evaluation time * (1 - PARAM_EVALUATION_TIME_UPDATE_FACTOR) + new evaluation time * PARAM_EVALUATION_TIME_UPDATE_FACTOR
@@ -37,7 +37,7 @@ NOT_USEFULL_DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.95 # Slowly decrease the ca
 USEFUL_DISCOUNT_FACTOR_FOR_EVALUATION_SCORE = 0.90 # If a frame is evaluated as useful, the camera's score is 1. If it is evaluated as not useful, the camera's usefulness score is 0. The usefulness score is updated by -> usefulness_score = usefulness_score * DISCOUNT_FACTOR_FOR_EVALUATION_SCORE + evaluation_score
 
 MINIMUM_USEFULNESS_SCORE_TO_CONSIDER = 0.1 # The minimum usefulness score that a camera can have. If the camera's usefulness score is less than this value, it is set to this value
-MINIMUM_EVALUATION_PROBABILITY = 0.025 # The minimum probability that a camera will be evaluated. If the camera's calculated evaluation probability is less than this value, it is set to this value
+MINIMUM_EVALUATION_PROBABILITY = 0.1 # The minimum probability that a camera will be evaluated. If the camera's calculated evaluation probability is less than this value, it is set to this value
 GEOMETRIC_R = 0.75 # The evaluation probability of a camera is calculated as a geometric series. The first term is 1, and the common ratio is this value. The probability is calculated as 1 + 1*EVALUATION_PROBABILITY_GEOMETRIC_SERIES_MULTIPLIER + 1*EVALUATION_PROBABILITY_GEOMETRIC_SERIES_MULTIPLIER^2 + ...
 PARAM_EVALUATION_VERBOSE = True
 
