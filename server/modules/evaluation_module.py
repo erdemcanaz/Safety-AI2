@@ -45,7 +45,7 @@ class EvaluationManager():
             active_rules = frame_info["active_rules"]
             models_to_call = self.__get_models_to_call(active_rules)
             for model in models_to_call:
-                model.predict_frame(frame_info = frame_info)
+                model.detect_frame(frame_info = frame_info)
                 if model == self.pose_detector:
                    pprint.pprint(model.get_recent_detection_results())
 
