@@ -39,7 +39,7 @@ body = {
 
 headers = {
     "Content-Type": "application/json",
-    "token": f"Bearer {token}"
+    "token": f"{token}"
 }
 
 response = requests.post(url, headers = headers, data=body)
