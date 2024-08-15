@@ -34,11 +34,11 @@ class EvaluationManager():
                 continue
             
             # Ensure that same frame is not evaluated twice
+            pprint.pprint(frame_info)
             if frame_info["camera_uuid"] not in self.recenty_evaluated_frame_uuids_wrt_camera.keys():
                 self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = {}
             elif frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]:
                 continue 
-            pprint.pprint(frame_info)
             print(f"Frame is evaluated: {frame_info['camera_uuid']}, {frame_info['frame_uuid']}")
             self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
 
