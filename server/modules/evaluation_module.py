@@ -27,7 +27,6 @@ class EvaluationManager():
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
             
     def evaluate_frames_info(self, frames_info:List[Dict]):
-
         for frame_info in frames_info:
             # if random number is less than the camera's evaluation probability, the frame will be evaluated  
             random_number = random.random()
@@ -43,17 +42,18 @@ class EvaluationManager():
 
             # Evaluate the frame based on the active rules
             active_rules = frame_info["active_rules"]
-            models_to_call = self.__get_models_to_call(active_rules)
-            for model in models_to_call:
+            for model in self.__get_models_to_call(active_rules): # For active rules of the camera, the models to call will be-> self.pose_detector, self.hardhat_detector, self.forklift_detector
                 model.detect_frame(frame_info = frame_info)
                     
-            continue     
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
                     evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
-                    was_usefull_to_evaluate =  random.choices([True, False], weights=[0.1, 0.9])[0]
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.EVALUATION_VERBOSE: print(f"Restricted Area Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
+                elif active_rule["rule_name"] == "HARDHAT_DETECTION":
+                    evaluation_result, was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
+                    self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
+                    if server_preferences.EVALUATION_VERBOSE: print(f"Hardhat Detection Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
 
@@ -66,9 +66,7 @@ class EvaluationManager():
             elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                 if self.hardhat_detector not in models_to_call: models_to_call.append(self.hardhat_detector)
                 if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
-                
-
-
+    
         return models_to_call
     
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
@@ -106,15 +104,17 @@ class EvaluationManager():
             self.camera_evaluation_probabilities[camera_uuid] = max(probability, server_preferences.MINIMUM_EVALUATION_PROBABILITY)     
 
     def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
-        yolo_model_to_use = active_rule["yolo_model_to_use"]
-
+        # Which method to use for the evaluation
+        return None, random.choice([True, False], weights=[0.1, 0.9])
         was_usefull_to_evaluate = False
         evaluation_result = self.DETECTORS[yolo_model_to_use].predict_frame_and_return_detections(frame_info = frame_info, bbox_confidence=0.75)
         if len(evaluation_result) > 0: was_usefull_to_evaluate = True
 
         return evaluation_result, was_usefull_to_evaluate
     
-    
+    def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
+        return None, random.choice([True, False], weights=[0.1, 0.9])
+
     
 
 

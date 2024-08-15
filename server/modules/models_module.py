@@ -74,7 +74,7 @@ class PoseDetector():
     
 class HardhatDetector():
     HARD_HAT_MODEL_PATHS = {
-        "hardhat_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'hardhat_detector.pt'}",
+        "hardhat_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'hardhat_detector.pt'}", #{0: 'human', 1: 'hard_hat', 2: 'no_hard_hat', 3: 'safety_vest', 4: 'forklift', 5: 'transpalet'} -> class 1 and 2 is in use
     }
 
     def __init__(self, model_name):
@@ -99,7 +99,6 @@ class HardhatDetector():
         self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"]
 
         detections = self.yolo_object(frame_info["frame"], task = "hardhat", verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)[0]
-        print(self.yolo_object.names)
         for detection in detections:
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
@@ -113,7 +112,7 @@ class HardhatDetector():
 
 class ForkliftDetector():
     FORKLIFT_MODEL_PATHS = {
-        "forklift_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'forklift_detector.pt'}",
+        "forklift_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'forklift_detector.pt'}", # {0: 'forklift'} -> class 0 is in use
     }
 
     def __init__(self, model_name):
@@ -141,7 +140,6 @@ class ForkliftDetector():
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
             box_cls_name = self.yolo_object.names[box_cls_no]
-            print(self.yolo_object.names)
             if box_cls_name not in ["forklift"]:
                 continue
 
