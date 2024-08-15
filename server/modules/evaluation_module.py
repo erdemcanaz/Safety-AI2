@@ -112,7 +112,9 @@ class EvaluationManager():
         y_overlap = max(0, min(y1+h1, y2+h2) - max(y1, y2))
         intersection = x_overlap * y_overlap
         area1 = w1*h1
-        return intersection / (area1)
+        overlap_percentage = intersection / (area1)
+        print(f"intersection: {overlap_percentage}")
+        return overlap_percentage
     
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
         #Update the camera's usefulness score
