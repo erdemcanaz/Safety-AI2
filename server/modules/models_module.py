@@ -28,6 +28,9 @@ class PoseDetector():
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.POSE_DETECTION_VERBOSE)        
         #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
+    def __repr__(self):
+        return f"PoseDetector(model_name={self.MODEL_PATH})"
+    
     def __get_empty_prediction_dict_template(self) -> dict:
         empty_prediction_dict = {   
                     "common_keys":{
@@ -131,6 +134,9 @@ class HardhatDetector():
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)
         #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
+    def __repr__(self) -> str:
+        return f"HardhatDetector(model_name={self.MODEL_PATH})"
+    
 class ForkliftDetector():
     FORKLIFT_MODEL_PATHS = {
         "forklift_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'forklift_detector.pt'}",
@@ -143,6 +149,9 @@ class ForkliftDetector():
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.FORKLIFT_DETECTION_VERBOSE)
         #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
 
+    def __repr__(self) -> str:
+        return f"ForkliftDetector(model_name={self.MODEL_PATH})"
+    
 if __name__ == "__main__":
     last_time_detection = time.time()
     username = input("Enter the username: ")

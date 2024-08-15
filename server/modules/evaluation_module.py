@@ -27,7 +27,7 @@ class EvaluationManager():
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
             
     def evaluate_frames_info(self, frames_info:List[Dict]):
-        
+
         for frame_info in frames_info:
             # if random number is less than the camera's evaluation probability, the frame will be evaluated  
             random_number = random.random()
@@ -43,7 +43,10 @@ class EvaluationManager():
             self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
 
             # Evaluate the frame based on the active rules
-            active_rules = frame_info["active_rules"]            
+            active_rules = frame_info["active_rules"]
+            models_to_call = self.__get_models_to_call(active_rules)
+            print(f"Models to call: {models_to_call}")   
+            continue     
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
                     evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
@@ -53,6 +56,20 @@ class EvaluationManager():
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
 
+    def __get_models_to_call(self, active_rules:List[Dict]) -> List[str]:
+        models_to_call = []        
+        for active_rule in active_rules:
+            if active_rule["rule_name"] == "RESTRICTED_AREA":
+                if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
+                if self.forklift_detector not in models_to_call: models_to_call.append(self.forklift_detector)
+            elif active_rule["rule_name"] == "HARDHAT_DETECTION":
+                if self.hardhat_detector not in models_to_call: models_to_call.append(self.hardhat_detector)
+                if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
+                
+
+
+        return models_to_call
+    
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
         #Update the camera's usefulness score
         if camera_uuid not in self.camera_usefulness:

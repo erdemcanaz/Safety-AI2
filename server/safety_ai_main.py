@@ -17,5 +17,6 @@ evaluation_manager = evaluation_module.EvaluationManager()
 while True:
     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()
     evaluation_manager.evaluate_frames_info(all_frame_infos)
+    #LOG the results
 
     
