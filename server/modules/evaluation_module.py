@@ -38,6 +38,7 @@ class EvaluationManager():
                 self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = {}
             elif frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]:
                 continue 
+            print(f"Frame is evaluated: {frame_info['camera_uuid']}, {frame_info['frame_uuid']}")
             self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
 
             # Evaluate the frame based on the active rules
