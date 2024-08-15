@@ -1,8 +1,8 @@
 import platform
 from pathlib import Path
 
-PARAM_MAX_SLEEP_DURATION = 5 # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
-PARAM_SLEEP_DURATION_PERCENTAGE = 0.1  # The percentage of the total duration that the server will sleep. The server will sleep for this percentage of the total duration and work for the rest of the time. The total duration is calculated as the average evaluation time divided by (1 - PARAM_SLEEP_DURATION_PERCENTAGE)
+PARAM_MAX_SLEEP_DURATION = 10 # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
+PARAM_SLEEP_DURATION_PERCENTAGE = 0.95  # The percentage of the total duration that the server will sleep. The server will sleep for this percentage of the total duration and work for the rest of the time. The total duration is calculated as the average evaluation time divided by (1 - PARAM_SLEEP_DURATION_PERCENTAGE)
 if PARAM_SLEEP_DURATION_PERCENTAGE < 0 or PARAM_SLEEP_DURATION_PERCENTAGE >= 1:
     raise ValueError("PARAM_SLEEP_DURATION_PERCENTAGE must be between 0 and 1")
 PARAM_EVALUATION_TIME_UPDATE_FACTOR = 0.05 # New evaluation time = old evaluation time * (1 - PARAM_EVALUATION_TIME_UPDATE_FACTOR) + new evaluation time * PARAM_EVALUATION_TIME_UPDATE_FACTOR
