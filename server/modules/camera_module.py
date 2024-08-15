@@ -314,7 +314,7 @@ if __name__ == "__main__":
     with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
             camera_configs = json.load(f)["cameras"]    
     pprint.pprint(camera_configs)
-    time.sleep(15)   
+    time.sleep(10)   
 
     print("Testing the CameraStreamFetcher class")
     cameras = []   
@@ -323,9 +323,10 @@ if __name__ == "__main__":
 
     for camera_index, camera in enumerate(cameras):
         is_fetched_properly, resolution, frame = camera.test_try_fetching_single_frame_and_show("Test Frame")
-        save_path = f"{server_preferences.PATH_VOLUME}/camera_{camera.camera_ip_address}.jpg"
+        save_path = f"{server_preferences.PATH_VOLUME}/camera_{str(camera.camera_ip_address).replace(".", "_")}.jpg"
         cv2.imwrite(save_path, frame)
         print(f"    {camera_index+1:<3}/{len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
+        print(f"        Saving sample frame to {save_path}")
 
     print("Test is completed")
     cv2.destroyAllWindows()
@@ -348,7 +349,7 @@ if __name__ == "__main__":
     
     print("\nShowing the frames fetched from the cameras for 20 seconds")
     start_time = time.time()
-    while time.time() - start_time < 20:
+    while time.time() - start_time < 35:
         stream_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
 
     memory_usage = stream_manager._StreamManager__test_get_camera_objects_ram_usage_MB()
