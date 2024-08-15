@@ -39,13 +39,14 @@ class EvaluationManager():
                 self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = {}
             elif frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]:
                 continue 
-            print(f"Frame is evaluated: {frame_info['camera_uuid']}, {frame_info['frame_uuid']}")
             self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
 
             # Evaluate the frame based on the active rules
             active_rules = frame_info["active_rules"]
             models_to_call = self.__get_models_to_call(active_rules)
-            print(f"Models to call: {models_to_call}")   
+            for model in models_to_call:
+                self.DETECTORS[model].predict_frame(frame_info = frame_info)
+
             continue     
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":

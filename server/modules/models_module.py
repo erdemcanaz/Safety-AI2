@@ -26,7 +26,7 @@ class PoseDetector():
             raise ValueError(f"Invalid model name. Available models are: {PoseDetector.POSE_MODEL_PATHS.keys()}")
         self.MODEL_PATH = PoseDetector.POSE_MODEL_PATHS[model_name]        
         self.yolo_object = YOLO( self.MODEL_PATH, verbose= server_preferences.POSE_DETECTION_VERBOSE)        
-        #self.recent_prediction_results:List[Dict] = None # This will be a list of dictionaries, each dictionary will contain the prediction results for a single detection
+        self.recent_detection_results = None
 
     def __repr__(self):
         return f"PoseDetector(model_name={self.MODEL_PATH})"
@@ -71,42 +71,34 @@ class PoseDetector():
         }
         return empty_prediction_dict
     
-    def predict_frame_and_return_detections(self, frame_info:np.ndarray = None, bbox_confidence:float=0.75) -> List[Dict]:
+    def detect_frame(self, frame_info:np.ndarray = None) -> List[Dict]:
         self.recent_prediction_results = []
+        detections = self.yolo_object(frame_info["frame"], task = "pose", verbose= server_preferences.POSE_DETECTION_VERBOSE)[0]
         
-        #frame_info is a dictionary containing the frame, camera_uuid, frame_uuid, frame_timestamp and is_checked_for_active_rules
-        frame = frame_info["frame"]
-        camera_uuid = frame_info["camera_uuid"]
-        frame_uuid = frame_info["frame_uuid"]
-        frame_timestamp = frame_info["frame_timestamp"]
-
-        results = self.yolo_object(frame, task = "pose", verbose= server_preferences.POSE_DETECTION_VERBOSE)[0]
-        for i, result in enumerate(results):
-            boxes = result.boxes
+        for detection in detections:
+            boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
             box_cls_name = self.yolo_object.names[box_cls_no]
             if box_cls_name not in ["person"]:
                 continue
             box_conf = boxes.conf.cpu().numpy()[0]
-            if box_conf < bbox_confidence:
-                continue
-            box_xyxy = boxes.xyxy.cpu().numpy()[0]
+            box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
 
-            prediction_dict_template = self.__get_empty_prediction_dict_template()
-            prediction_dict_template["common_keys"]["frame"] = frame
-            prediction_dict_template["common_keys"]["camera_uuid"] = camera_uuid
-            prediction_dict_template["common_keys"]["frame_uuid"] = frame_uuid
-            prediction_dict_template["common_keys"]["detection_uuid"] = str(uuid.uuid4()) #unique id for the detection
-            prediction_dict_template["common_keys"]["frame_timestamp"] = frame_timestamp
-            prediction_dict_template["common_keys"]["frame_shape"] = list(results.orig_shape)
-            prediction_dict_template["common_keys"]["class_name"] = box_cls_name
-            prediction_dict_template["common_keys"]["bbox_confidence"] = box_conf
-            prediction_dict_template["common_keys"]["bbox_xyxy_px"] = box_xyxy # Bounding box in the format [x1,y1,x2,y2]
-            prediction_dict_template["common_keys"]["bbox_center_px"] = [ (box_xyxy[0]+box_xyxy[2])/2, (box_xyxy[1]+box_xyxy[3])/2]
+            # prediction_dict_template = self.__get_empty_prediction_dict_template()
+            # prediction_dict_template["common_keys"]["frame"] = frame
+            # prediction_dict_template["common_keys"]["camera_uuid"] = camera_uuid
+            # prediction_dict_template["common_keys"]["frame_uuid"] = frame_uuid
+            # prediction_dict_template["common_keys"]["detection_uuid"] = str(uuid.uuid4()) #unique id for the detection
+            # prediction_dict_template["common_keys"]["frame_timestamp"] = frame_timestamp
+            # prediction_dict_template["common_keys"]["frame_shape"] = list(results.orig_shape)
+            # prediction_dict_template["common_keys"]["class_name"] = box_cls_name
+            # prediction_dict_template["common_keys"]["bbox_confidence"] = box_conf
+            # prediction_dict_template["common_keys"]["bbox_xyxy_px"] = box_xyxy # Bounding box in the format [x1,y1,x2,y2]
+            # prediction_dict_template["common_keys"]["bbox_center_px"] = [ (box_xyxy[0]+box_xyxy[2])/2, (box_xyxy[1]+box_xyxy[3])/2]
             
-            key_points = result.keypoints  # Keypoints object for pose outputs
+            key_points = detection.keypoints  # Keypoints object for pose outputs
             keypoint_confs = key_points.conf.cpu().numpy()[0]
-            keypoints_xy = key_points.xy.cpu().numpy()[0]
+            keypoints_xy = key_points.xyn.cpu().numpy()[0]
                        
             for keypoint_index, keypoint_name in enumerate(PoseDetector.KEYPOINT_NAMES):
                 keypoint_conf = keypoint_confs[keypoint_index] 
