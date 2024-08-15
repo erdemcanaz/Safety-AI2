@@ -63,7 +63,6 @@ class EvaluationManager():
                     was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     pprint.pprint(self.camera_usefulness[frame_info['camera_uuid']])
-                    print("Was useful to evaluate: ", was_usefull_to_evaluate)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
@@ -162,7 +161,8 @@ class EvaluationManager():
                     forklift_bbox = forklift_bbox[:4]
                 
                 #TODO: Implement the intersection percentage calculation
-                return True            
+                return True    
+            return False # If no person is detected, return False        
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")            
                               
