@@ -8,15 +8,15 @@ body = {
     "SafetyData": [
         {
 
-            "RelatedShiftDate": "08.07.2024 11:11",
+            "RelatedShiftDate": "15.08.2024 11:11",
 
-            "RelatedShiftNo": "1",
+            "RelatedShiftNo": "2",
 
-            "DeviceTimestamp": "08.07.2024 11:11",
+            "DeviceTimestamp": "15.08.2024 11:11",
 
             "Image": "",
 
-            "RegionName": "gg",
+            "RegionName": "erdem",
 
             "ViolationType": "restricted_area_rule_statistics",
 
