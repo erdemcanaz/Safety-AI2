@@ -93,7 +93,7 @@ class HardhatDetector():
         self.recent_detection_results = {
             "detection_class": "hardhat", # The class that the detector is detecting
             "frame_uuid": None,
-            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence, class_name]
         }
 
     def detect_frame(self, frame_info:np.ndarray = None):
@@ -105,12 +105,12 @@ class HardhatDetector():
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
             box_cls_name = self.yolo_object.names[box_cls_no]
-            if box_cls_name not in ["helmet"]:
+            if box_cls_name not in ["hard_hat", "no_hard_hat"]:
                 continue
 
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
-            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
+            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf, box_cls_name])
 
     def get_recent_detection_results(self) -> Dict:
         return self.recent_detection_results
@@ -134,7 +134,7 @@ class ForkliftDetector():
         self.recent_detection_results = {
             "detection_class": "forklift", # The class that the detector is detecting
             "frame_uuid": None,
-            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence, class_name]
         }
 
     def detect_frame(self, frame_info:np.ndarray = None):
@@ -151,7 +151,7 @@ class ForkliftDetector():
 
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
-            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
+            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf, box_cls_name])
     
     def get_recent_detection_results(self) -> Dict:
         return self.recent_detection_results

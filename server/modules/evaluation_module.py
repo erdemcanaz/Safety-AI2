@@ -37,6 +37,7 @@ class EvaluationManager():
             elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                 if self.hardhat_detector not in models_to_call: models_to_call.append(self.hardhat_detector)
                 if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
+                if self.forklift_detector not in models_to_call: models_to_call.append(self.forklift_detector)
     
         return models_to_call
     
@@ -70,6 +71,9 @@ class EvaluationManager():
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
+                    if was_usefull_to_evaluate:
+                        cv2.imshow("frame", frame_info["frame"])       
+                        cv2.waitKey(2500)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Hardhat Detection Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
 
@@ -102,25 +106,17 @@ class EvaluationManager():
                 return True
         return False
     
-    def find_rectangle_intersection_percentage(self, rect1: List[int], rect2: List[int]) -> float:
+    def __find_rectangle_intersection_percentage(self, rect1: List[int], rect2: List[int]) -> float:
         # Find the intersection percentage of rectangle 1 to rectangle 2
         x1, y1, x3, y3 = rect1  # Coordinates for rect1
         x2, y2, x4, y4 = rect2  # Coordinates for rect2
 
-        # Calculate the intersection rectangle
         x_overlap = max(0, min(x3, x4) - max(x1, x2))
         y_overlap = max(0, min(y3, y4) - max(y1, y2))
         
-        intersection = x_overlap * y_overlap
-        
-        # Calculate the area of rect1
+        intersection = x_overlap * y_overlap        
         area1 = (x3 - x1) * (y3 - y1)
-        
-        # Calculate the overlap percentage
-        overlap_percentage = intersection / area1 if area1 > 0 else 0
-        
-        print(f"intersection: {intersection}\narea1: {area1}\noverlap_percentage: {overlap_percentage}\nrect1: {rect1}\nrect2: {rect2}")
-        
+        overlap_percentage = intersection / area1 if area1 > 0 else 0      
         return overlap_percentage
     
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
@@ -158,9 +154,10 @@ class EvaluationManager():
             self.camera_evaluation_probabilities[camera_uuid] = max(probability, server_preferences.MINIMUM_EVALUATION_PROBABILITY)     
 
     def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
-        # Which method to use for the evaluation
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
+                if pose_bbox[4] < 0.5: continue # If the confidence of the pose detection is less than 0.5, skip this person
+
                 left_ankle =  pose_bbox[5]["left_ankle"]
                 right_ankle =  pose_bbox[5]["right_ankle"]
 
@@ -173,8 +170,7 @@ class EvaluationManager():
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
                     if forklift_bbox[4] < 0.5: continue # If the confidence of the forklift detection is less than 0.5, skip this forklift
                     forklift_bbox = forklift_bbox[:4]
-                    if self.find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.8:
-                        print(" Forklift is intersecting with the person")
+                    if self.__find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.8:
                         return False
                 
                 pose_confidence = pose_bbox[4]
@@ -197,7 +193,63 @@ class EvaluationManager():
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")            
                               
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
-        return random.choices([True, False], weights=[0.1, 0.9], k=1)[0]
+        if active_rule["evaluation_method"] == "INTERSECTION_WITH_PERSON":
+            for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
+                if pose_bbox[4] < 0.5: continue # If the confidence of the pose detection is less than 0.5, skip this person
+                  
+                # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
+                is_inside_forklift = False
+                for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
+                    if forklift_bbox[4] < 0.5: continue # If the confidence of the forklift detection is less than 0.5, skip this forklift
+                    forklift_bbox = forklift_bbox[:4]
+                    if self.__find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.75:
+                        is_inside_forklift = True
+                        break
+                if is_inside_forklift: continue
+
+                # Find the best hardhat detection candidate for the person
+                best_hardhat_detection_candidate = None
+                for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
+                    if hardhat_bbox[4] < 0.5: continue
+                    if self.__find_rectangle_intersection_percentage(pose_bbox[:4], hardhat_bbox[:4]) < 0.75: continue
+
+                    if best_hardhat_detection_candidate is None:
+                        best_hardhat_detection_candidate = hardhat_bbox
+                    elif hardhat_bbox[4] > best_hardhat_detection_candidate[4]: # If the confidence of the new detection is higher, update the best detection
+                        best_hardhat_detection_candidate = hardhat_bbox
+                if best_hardhat_detection_candidate is None: continue
+                
+                #At this point, a person with hardhat detection is found
+                pose_confidence = pose_bbox[4]
+                hardhat_violation_confidence = (1-best_hardhat_detection_candidate[4]) if best_hardhat_detection_candidate[5] == "hard_hat" else best_hardhat_detection_candidate[4]
+                violation_score = pose_confidence * hardhat_violation_confidence
+                
+                if violation_score < float(active_rule["trigger_score"]): continue # If the violation score is less than the trigger score, continue to the next person
+
+                frame_info["rule_violations"].setdefault("HARDHAT_DETECTION", [])
+                frame_info["rule_violations"]["HARDHAT_DETECTION"].append(
+                    {
+                     "evaluation_method":active_rule["evaluation_method"],
+                     "violated_person_bbox":pose_bbox[:4],
+                     "violated_hardhat_bbox":best_hardhat_detection_candidate[:4],
+                     "hardhat_class_name":best_hardhat_detection_candidate[5],
+                     "violation_score":violation_score
+                    }
+                )
+            if "HARDHAT_DETECTION" in frame_info["rule_violations"]: # If there is a hardhat detection record, it means that there is a violation. This is a bit dangerous implementation, but it is done for simplicity
+                return True
+            return False
+        else:
+            raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")
+
+                
+                    
+
+                 
+
+
+            
+        #return random.choices([True, False], weights=[0.1, 0.9], k=1)[0]
 
     
 
