@@ -62,11 +62,11 @@ class EvaluationManager():
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
                     was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"Restricted Area Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"Hardhat Detection Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Hardhat Detection Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
     
@@ -160,9 +160,9 @@ class EvaluationManager():
                 # calculate intersection percentage with person bounding box and if it is greater than a threshold, return False, otherwise return True
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
                     forklift_bbox = forklift_bbox[:4]
-                    
-                print(pose_bbox)
-                return random.choices([True, False], weights=[0.1, 0.9])  
+                
+                #TODO: Implement the intersection percentage calculation
+                return True
                               
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
         return random.choices([True, False], weights=[0.1, 0.9])
