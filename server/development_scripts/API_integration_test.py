@@ -4,9 +4,8 @@ import requests
 url = input("Enter the URL: ")
 token = input("Enter the token: ")
 enter_data = input("Enter the data: ")
-response = requests.get(url, headers={"token": f"Bearer {token}"})
-url = 'https://example.com/api/endpoint'
 
+response = requests.get(url, headers={"token": f"Bearer {token}"})
 body = {
     "SafetyData": [
 
