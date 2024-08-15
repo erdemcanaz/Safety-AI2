@@ -308,11 +308,14 @@ if __name__ == "__main__":
     server_preferences.PARAM_CAMERA_VERBOSE = False
 
     # Fetch and show a single frame from the camera for all cameras
-    print("Testing the CameraStreamFetcher class")
-    cameras = []
+    print("Printing the camera configurations")
     with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
-                camera_configs = json.load(f)["cameras"]       
-  
+            camera_configs = json.load(f)["cameras"]    
+    pprint.pprint(camera_configs)
+    time.sleep(15)   
+
+    print("Testing the CameraStreamFetcher class")
+    cameras = []   
     for camera_config in camera_configs:         
         cameras.append(CameraStreamFetcher(**camera_config)) 
 
