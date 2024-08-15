@@ -1,6 +1,7 @@
 import cv2
 import base64
 import numpy as np
+import pyperclip
 
 def image_to_base64(image_path):
     # Read the image from file
@@ -32,6 +33,7 @@ image_path = input("Enter the path to the image file: ")
 # Convert the image to a base64 string
 base64_string = image_to_base64(image_path)
 print("Base64 String:", base64_string)
+pyperclip.copy(base64_string)
 
 # Display the image decoded from the base64 string
 display_image_from_base64(base64_string)
