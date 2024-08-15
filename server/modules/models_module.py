@@ -35,7 +35,7 @@ class PoseDetector():
         self.recent_detection_results = {
             "detection_class": "pose", # The class that the detector is detecting
             "frame_uuid": None,
-            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence, normalized_keypoints_dict]
+            "normalized_bboxes": None, # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence, normalized_keypoints_dict]
         }
     
     def detect_frame(self, frame_info:np.ndarray = None):
@@ -68,7 +68,7 @@ class PoseDetector():
                     keypoint_conf = -keypoint_conf
                 normalized_keypoints_dict[keypoint_name] = [keypoint_xn, keypoint_yn, keypoint_conf]
 
-            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf, normalized_keypoints_dict])
+            self.recent_detection_results["normalized_bboxes"] = [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf, normalized_keypoints_dict]
 
     def get_recent_detection_results(self) -> Dict:
         return self.recent_detection_results
@@ -93,7 +93,7 @@ class HardhatDetector():
         self.recent_detection_results = {
             "detection_class": "hardhat", # The class that the detector is detecting
             "frame_uuid": None,
-            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+            "normalized_bboxes": None, # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
         }
 
     def detect_frame(self, frame_info:np.ndarray = None):
@@ -110,7 +110,7 @@ class HardhatDetector():
 
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
-            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
+            self.recent_detection_results["normalized_bboxes"] = [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf]
 
     def get_recent_detection_results(self) -> Dict:
         return self.recent_detection_results
@@ -134,7 +134,7 @@ class ForkliftDetector():
         self.recent_detection_results = {
             "detection_class": "forklift", # The class that the detector is detecting
             "frame_uuid": None,
-            "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
+            "normalized_bboxes": None, # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
         }
 
     def detect_frame(self, frame_info:np.ndarray = None):
@@ -151,7 +151,7 @@ class ForkliftDetector():
 
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
-            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
+            self.recent_detection_results["normalized_bboxes"] = [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf]
     
     def get_recent_detection_results(self) -> Dict:
         return self.recent_detection_results
