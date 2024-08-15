@@ -172,8 +172,30 @@ class StreamManager:
         if invalid_uuid_cameras:
             raise ValueError(f"Invalid UUID format for cameras: {', '.join(invalid_uuid_cameras)}. Please ensure that each UUID is in the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
 
-        server_preferences.PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras=len(self.cameras)) #NOTE: Worst case scenario is when all cameras are fetching frames. It will be updated later to reflect the actual number of fetching cameras.
-    
+        # Check for active rules UUID collisions
+        active_rules_uuids = []
+        for camera in self.cameras:
+            active_rules_uuids.extend([rule.get("rule_uuid") for rule in camera.active_rules])
+        if len(active_rules_uuids) != len(set(active_rules_uuids)):
+            duplicate_uuids = {uuid for uuid in active_rules_uuids if active_rules_uuids.count(uuid) > 1}
+            raise ValueError(f"There are active rules with the same UUID for camera {camera.camera_uuid}: {', '.join(duplicate_uuids)}. Please ensure that each active rule has a unique UUID")
+        
+        # Check for active rules UUID format
+        invalid_uuids = []
+        for camera in self.cameras:
+            active_rules = camera.active_rules
+            for rule in active_rules:
+                rule_uuid = rule.get("rule_uuid")
+                if not uuid_regex.match(rule_uuid):
+                    invalid_uuids.append((camera.camera_uuid, rule_uuid))
+
+        if invalid_uuids:
+            error_messages = [f"Invalid rule UUID format for camera {camera_uuid}: {rule_uuid}" for camera_uuid, rule_uuid in invalid_uuids]
+            raise ValueError("Invalid UUIDs found:\n" + "\n".join(error_messages))
+
+        # Initiliaze the camera fetching delay randomization range considering if the all cameras are fetching frames (worst case scenario)
+        server_preferences.PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras=len(self.cameras))
+            
     def __optimize_camera_decoding_delays(self):        
         # Optimize the decoding delays of the cameras. The decoding delay is the delay between decoding frames from the camera stream.
         # Since decoding is computationally intensive, the decoding delay is used to prevent the cameras from being synchronized.
