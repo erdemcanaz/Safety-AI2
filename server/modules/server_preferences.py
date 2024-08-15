@@ -1,7 +1,7 @@
 import platform
 from pathlib import Path
 
-PARAM_COOLDOWN_DURATION = 5 # The duration of the cooldown period in seconds. During the cooldown period, the server will not evaluate the frames
+PARAM_COOLDOWN_DURATION = 0.25 # The duration of the cooldown period in seconds. During the cooldown period, the server will not evaluate the frames
 
 is_linux = platform.system() == "Linux"
 if is_linux:
