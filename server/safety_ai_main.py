@@ -1,5 +1,6 @@
 # Built-in imports
-import pprint, time, sys, os, cv2
+import pprint, time, sys, os, cv2, 
+from jtop import jtop
 
 # Local imports
 project_directory = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +16,10 @@ stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
 evaluation_manager = evaluation_module.EvaluationManager()
 
 while True:
-
+    with jtop() as jetson:   
+        while jetson.ok():
+            print(jetson.stats)
+            time.sleep(1)
 
     # all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()
     # evaluation_manager.evaluate_frames_info(all_frame_infos)
