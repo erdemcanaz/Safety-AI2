@@ -33,6 +33,7 @@ class EvaluationManager():
             if random_number > self.camera_evaluation_probabilities.setdefault(frame_info["camera_uuid"], server_preferences.MINIMUM_EVALUATION_PROBABILITY):
                 continue
             
+            pprint.pprint(frame_info)
             # Ensure that same frame is not evaluated twice
             if frame_info["camera_uuid"] not in self.recenty_evaluated_frame_uuids_wrt_camera.keys():
                 self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = {}
