@@ -75,6 +75,7 @@ class EvaluationManager():
         x, y = point
         n = len(polygon)
         inside = False
+        print(polygon)
         p1x, p1y = polygon[0]
         for i in range(n+1):
             p2x, p2y = polygon[i % n]
