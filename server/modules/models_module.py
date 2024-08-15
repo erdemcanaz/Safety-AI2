@@ -168,9 +168,7 @@ if __name__ == "__main__":
             if ret:
               if time.time() - last_time_detection > 3:
                 last_time_detection = time.time()
-                pose_detector.yolo_object(frame, show = True)   
-                hard_hat_detector.yolo_object(frame, show = True)
-                forklift_detector.yolo_object(frame, show = True)   
+                forklift_detector.yolo_object(frame, show = True )   
     
     except Exception as e:
         print(e)
