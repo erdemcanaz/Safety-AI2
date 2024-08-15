@@ -166,8 +166,8 @@ class EvaluationManager():
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")            
                               
-    def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
-        return random.choices([True, False], weights=[0.1, 0.9])
+    def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
+        return random.choices([True, False], weights=[0.1, 0.9], k=1)[0]
 
     
 
