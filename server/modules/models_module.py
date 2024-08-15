@@ -33,6 +33,7 @@ class PoseDetector():
     
     def __clear_recent_detection_results(self):
         self.recent_detection_results = {
+            "detection_class": "pose", # The class that the detector is detecting
             "frame_uuid": None,
             "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence, normalized_keypoints_dict]
         }
@@ -90,6 +91,7 @@ class HardhatDetector():
     
     def __clear_recent_detection_results(self):
         self.recent_detection_results = {
+            "detection_class": "hardhat", # The class that the detector is detecting
             "frame_uuid": None,
             "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
         }
@@ -110,6 +112,9 @@ class HardhatDetector():
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
             self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
 
+    def get_recent_detection_results(self) -> Dict:
+        return self.recent_detection_results
+    
 class ForkliftDetector():
     FORKLIFT_MODEL_PATHS = {
         "forklift_detector":f"{Path(__file__).resolve().parent / 'trained_yolo_models' / 'forklift_detector.pt'}", # {0: 'forklift'} -> class 0 is in use
@@ -127,6 +132,7 @@ class ForkliftDetector():
     
     def __clear_recent_detection_results(self):
         self.recent_detection_results = {
+            "detection_class": "forklift", # The class that the detector is detecting
             "frame_uuid": None,
             "normalized_bboxes": [], # List of normalized bounding boxes in the format [x1n, y1n, x2n, y2n, bbox_confidence]
         }
@@ -146,6 +152,9 @@ class ForkliftDetector():
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
             self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf])
+    
+    def get_recent_detection_results(self) -> Dict:
+        return self.recent_detection_results
     
 if __name__ == "__main__":
     last_time_detection = time.time()

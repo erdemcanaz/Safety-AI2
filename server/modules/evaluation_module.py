@@ -26,6 +26,18 @@ class EvaluationManager():
         self.camera_evaluation_probabilities = {} 
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
             
+    def __get_models_to_call(self, active_rules:List[Dict]) -> List[str]:
+        models_to_call = []        
+        for active_rule in active_rules:
+            if active_rule["rule_name"] == "RESTRICTED_AREA":
+                if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
+                if self.forklift_detector not in models_to_call: models_to_call.append(self.forklift_detector)
+            elif active_rule["rule_name"] == "HARDHAT_DETECTION":
+                if self.hardhat_detector not in models_to_call: models_to_call.append(self.hardhat_detector)
+                if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
+    
+        return models_to_call
+    
     def evaluate_frames_info(self, frames_info:List[Dict]):
         for frame_info in frames_info:
             # if random number is less than the camera's evaluation probability, the frame will be evaluated  
@@ -44,30 +56,57 @@ class EvaluationManager():
             active_rules = frame_info["active_rules"]
             for model in self.__get_models_to_call(active_rules): # For active rules of the camera, the models to call will be-> self.pose_detector, self.hardhat_detector, self.forklift_detector
                 model.detect_frame(frame_info = frame_info)
-                    
+                frame_info["detection_results"].append(model.get_recent_detection_results())
+
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
-                    evaluation_result, was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
+                    was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"Restricted Area Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
-                    evaluation_result, was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
+                    was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"Hardhat Detection Rule is applied: {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']}")
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
-
-    def __get_models_to_call(self, active_rules:List[Dict]) -> List[str]:
-        models_to_call = []        
-        for active_rule in active_rules:
-            if active_rule["rule_name"] == "RESTRICTED_AREA":
-                if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
-                if self.forklift_detector not in models_to_call: models_to_call.append(self.forklift_detector)
-            elif active_rule["rule_name"] == "HARDHAT_DETECTION":
-                if self.hardhat_detector not in models_to_call: models_to_call.append(self.hardhat_detector)
-                if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
     
-        return models_to_call
+    def __is_inside_polygon(self, point:Tuple, polygon:List[Tuple]) -> bool:
+        x, y = point
+        n = len(polygon)
+        inside = False
+        p1x, p1y = polygon[0]
+        for i in range(n+1):
+            p2x, p2y = polygon[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+    
+    def __is_two_polygons_intersecting(self, polygon1:List[Tuple], polygon2:List[Tuple]) -> bool:
+        for i in range(len(polygon1)):
+            if self.__is_inside_polygon(polygon1[i], polygon2):
+                return True
+        for i in range(len(polygon2)):
+            if self.__is_inside_polygon(polygon2[i], polygon1):
+                return True
+        return False
+    
+    def find_rectangle_intersection_percentage(self, rect1:List[int], rect2:List[int]) -> float:
+        # Find the intersection percentage of the rectangle 1 to rectangle 2
+        x1, y1, x2, y2 = rect1
+        x2, y2, x2, y2 = rect2
+        w1, h1, w2, h2 = (x2-x1), (y2-y1), (x2-x2), (y2-y2)
+
+        x_overlap = max(0, min(x1+w1, x2+w2) - max(x1, x2))
+        y_overlap = max(0, min(y1+h1, y2+h2) - max(y1, y2))
+        intersection = x_overlap * y_overlap
+        area1 = w1*h1
+        return intersection / (area1)
     
     def __update_camera_usefulness(self, camera_uuid:str, was_usefull:bool) -> None:
         #Update the camera's usefulness score
@@ -103,17 +142,29 @@ class EvaluationManager():
             probability = first_term*server_preferences.GEOMETRIC_R**usefulness_index
             self.camera_evaluation_probabilities[camera_uuid] = max(probability, server_preferences.MINIMUM_EVALUATION_PROBABILITY)     
 
-    def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
+    def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
         # Which method to use for the evaluation
-        return None, random.choices([True, False], weights=[0.1, 0.9])
-        was_usefull_to_evaluate = False
-        evaluation_result = self.DETECTORS[yolo_model_to_use].predict_frame_and_return_detections(frame_info = frame_info, bbox_confidence=0.75)
-        if len(evaluation_result) > 0: was_usefull_to_evaluate = True
+        detection_results = frame_info["detection_results"]
+        if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
+            pose_detections = [detection_result for detection_result in detection_results if detection_result["detection_class"] == "pose"]
+            forklift_detections = [detection_result for detection_result in detection_results if detection_result["detection_class"] == "forklift"]
+            
+            for pose_detection in pose_detections:
+                left_ankle =  pose_detection["normalized_bboxes"][5]["left_ankle"]
+                right_ankle =  pose_detection["normalized_bboxes"][5]["right_ankle"]
 
-        return evaluation_result, was_usefull_to_evaluate
-    
+                is_left_ankle_inside = left_ankle[2]>0 and self.__is_inside_polygon( (left_ankle[0], left_ankle[1]), active_rule["polygon"])
+                is_right_ankle_inside = right_ankle[2]>0 and self.__is_inside_polygon((right_ankle[0], right_ankle[1]), active_rule["polygon"])
+                if not is_left_ankle_inside and not is_right_ankle_inside: return False
+
+            for forklift_detection in forklift_detections:
+                forklift_bbox = forklift_detection["normalized_bboxes"][:4]
+                print(forklift_bbox)
+                #TODO: calculate intersection percentage with person bounding box and if it is greater than a threshold, return False, otherwise return True
+                return False
+                
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> Dict:
-        return None, random.choices([True, False], weights=[0.1, 0.9])
+        return random.choices([True, False], weights=[0.1, 0.9])
 
     
 
