@@ -17,7 +17,7 @@ class EvaluationManager():
             print(f"Camera UUID: {camera_uuid:<10}, Usefulness Score: {usefulness['usefulness_score']:<6.2f}, Evaluation Probability: {self.camera_evaluation_probabilities[camera_uuid]:<2}")
 
     def __init__(self) -> None:   
-        self.pose_detector = models_module.PoseDetector(model_name="yolov8x-pose")
+        self.pose_detector = models_module.PoseDetector(model_name="yolov8m-pose")
         self.hardhat_detector = models_module.HardhatDetector(model_name="hardhat_detector")
         self.forklift_detector = models_module.ForkliftDetector(model_name="forklift_detector")     
         
