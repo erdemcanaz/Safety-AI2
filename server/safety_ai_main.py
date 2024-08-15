@@ -28,7 +28,8 @@ while True:
     sleep_duration = min(total_duration * server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE, server_preferences.PARAM_MAX_SLEEP_DURATION)
 
     print(f"average_evaluation_time: {average_evaluation_time:.2f}, sleep_duration: {sleep_duration:.2f}")
-    time.sleep(sleep_duration)
+    if sleep_duration > 0:
+           time.sleep(sleep_duration)
 
 
 
