@@ -30,6 +30,7 @@ class EvaluationManager():
         
         self.test_frame_evaluation_counter = {} #NOTE: for testing purposes
         self.total_violation_counter = 0 #NOTE: for testing purposes
+        self.number_of_persons = 0 #NOTE: for testing purposes
 
     def __get_models_to_call(self, active_rules:List[Dict]) -> List[str]:
         models_to_call = []        
@@ -74,6 +75,8 @@ class EvaluationManager():
                     was_usefull_to_evaluate, was_violation = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)      
 
+                    if was_usefull_to_evaluate:
+                        self.number_of_persons += 1
                     if was_violation:
                         self.total_violation_counter += 1
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/restricted_area_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
@@ -81,12 +84,14 @@ class EvaluationManager():
                         cv2.waitKey(2500)
                         cv2.destroyAllWindows()
 
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} - {'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} / {self.number_of_persons:<5} - {'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate, was_violation = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
-
+                    
+                    if was_usefull_to_evaluate:
+                        self.number_of_persons += 1
                     if was_violation:
                         self.total_violation_counter += 1
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/hardhat_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
@@ -95,7 +100,7 @@ class EvaluationManager():
                         cv2.waitKey(2500)
                         cv2.destroyAllWindows()
 
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} - {'Hardhat Detection Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} / {self.number_of_persons:<5}- {'Hardhat Detection Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
     
