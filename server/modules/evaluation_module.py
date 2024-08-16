@@ -198,6 +198,8 @@ class EvaluationManager():
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.5: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
+                cv2.imshow("person_frame", frame_info["frame"]) #NOTE: delete this line
+
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
                 is_inside_forklift = False
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
