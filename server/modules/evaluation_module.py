@@ -84,7 +84,7 @@ class EvaluationManager():
                         self.total_violation_counter += 1
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/restricted_area_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
                         cv2.imshow("frame_last_violation", frame_info["frame"])       
-                        cv2.waitKey(2500)
+                        cv2.waitKey(500)
                         cv2.destroyAllWindows()
 
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} / {self.number_of_persons:<5} - {'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
@@ -100,7 +100,7 @@ class EvaluationManager():
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/hardhat_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
                         cv2.imwrite(save_path,  frame_info["frame"])
                         cv2.imshow("frame_last_violation", frame_info["frame"])       
-                        cv2.waitKey(2500)
+                        cv2.waitKey(500)
                         cv2.destroyAllWindows()
 
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} / {self.number_of_persons:<5} - {'Hardhat Detection Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
