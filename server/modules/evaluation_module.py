@@ -90,7 +90,6 @@ class EvaluationManager():
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} / {self.number_of_persons:<5} - {'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
-                    continue
                     was_usefull_to_evaluate, was_violation = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     
@@ -247,10 +246,6 @@ class EvaluationManager():
                 print("A person is detected")
                 was_usefull = True # If a person is detected, the evaluation is usefull
 
-                # resized_image = cv2.resize(frame_info["frame"], (700, 540))
-                # cv2.imshow("person_frame_hardhat", resized_image) #NOTE: delete this line
-                # cv2.waitKey(1000)
-
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
                 is_inside_forklift = False
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
@@ -264,10 +259,14 @@ class EvaluationManager():
                     continue
 
                 # Find the best hardhat detection candidate for the person
+                resized_image = cv2.resize(frame_info["frame"], (700, 540))
+               
+
                 best_hardhat_detection_candidate = None
                 for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
                     if hardhat_bbox[4] < 0.2: continue
                     hardhat_bbox_center = ((hardhat_bbox[0]+hardhat_bbox[2])/2, (hardhat_bbox[1]+hardhat_bbox[3])/2)
+                    cv2.rectangle(resized_image, (int(hardhat_bbox[0]*700), int(hardhat_bbox[1]*540)), (int(hardhat_bbox[2]*700), int(hardhat_bbox[3]*540)), (0, 255, 0), 2)
                     # Check if the hardhat detection is inside the polygon, if not continue to the next hardhat detection
                     if not self.__is_inside_polygon(hardhat_bbox_center, active_rule["normalized_rule_area_polygon_corners"]): continue
 
@@ -278,7 +277,9 @@ class EvaluationManager():
                     elif hardhat_bbox[4] > best_hardhat_detection_candidate[4]: # If the confidence of the new detection is higher, update the best detection
                         best_hardhat_detection_candidate = hardhat_bbox
                
-               
+                cv2.imshow("person_frame_hardhat", resized_image) #NOTE: delete this line
+                cv2.waitKey(1000)
+
                 if best_hardhat_detection_candidate is None: 
                     print("No hardhat detection is found, assuming person is not wearing a hardhat")
                     head_keypoints =  ["nose", "right_eye", "left_eye", "left_ear", "right_ear"]
