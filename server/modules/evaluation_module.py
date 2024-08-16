@@ -202,12 +202,16 @@ class EvaluationManager():
                     if self.__find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.8:
                         is_inside_forklift = True
                         break
-                if is_inside_forklift: continue
+                if is_inside_forklift: 
+                    print("Person is inside the forklift")
+                    continue
                 
                 pose_confidence = pose_bbox[4]
                 mean_ankle_confidence = (left_ankle[2]*is_left_ankle_inside + right_ankle[2]*is_right_ankle_inside) / (is_left_ankle_inside + is_right_ankle_inside) # Booleans are treated as 1 or 0. At this step, atleast one of the ankles is inside the polygon
                 violation_score = pose_confidence * mean_ankle_confidence
-                if violation_score < float(active_rule["trigger_score"]): continue  # If the violation score is less than the trigger score, continue to the next person
+                if violation_score < float(active_rule["trigger_score"]): 
+                    print("Violation score is less than the trigger score")
+                    continue  # If the violation score is less than the trigger score, continue to the next person
                 frame_info["rule_violations"].setdefault("RESTRICTED_AREA", []) # If there is a restricted area record, add it to the frame_info
                 
                 frame_info["rule_violations"]["RESTRICTED_AREA"].append(
@@ -244,7 +248,9 @@ class EvaluationManager():
                     if self.__find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.75:
                         is_inside_forklift = True
                         break
-                if is_inside_forklift: continue
+                if is_inside_forklift: 
+                    print("Person is inside the forklift")
+                    continue
 
                 # Find the best hardhat detection candidate for the person
                 best_hardhat_detection_candidate = None
@@ -260,14 +266,18 @@ class EvaluationManager():
                         best_hardhat_detection_candidate = hardhat_bbox
                     elif hardhat_bbox[4] > best_hardhat_detection_candidate[4]: # If the confidence of the new detection is higher, update the best detection
                         best_hardhat_detection_candidate = hardhat_bbox
-                if best_hardhat_detection_candidate is None: continue
+                if best_hardhat_detection_candidate is None: 
+                    print("No hardhat detection is found")
+                    continue
                 
                 #At this point, a person with hardhat detection is found
                 pose_confidence = pose_bbox[4]
                 hardhat_violation_confidence = (1-best_hardhat_detection_candidate[4]) if best_hardhat_detection_candidate[5] == "hard_hat" else best_hardhat_detection_candidate[4]
                 violation_score = pose_confidence * hardhat_violation_confidence
                 
-                if violation_score < float(active_rule["trigger_score"]): continue # If the violation score is less than the trigger score, continue to the next person
+                if violation_score < float(active_rule["trigger_score"]): 
+                    print("Violation score is less than the trigger score")
+                    continue # If the violation score is less than the trigger score, continue to the next person
 
                 frame_info["rule_violations"].setdefault("HARDHAT_DETECTION", [])
                 frame_info["rule_violations"]["HARDHAT_DETECTION"].append(
