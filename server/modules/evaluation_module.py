@@ -95,7 +95,7 @@ class EvaluationManager():
                     
                     if was_usefull_to_evaluate:
                         self.number_of_persons += 1
-                    if was_violation:
+                    if was_violation or was_usefull_to_evaluate:
                         self.total_violation_counter += 1
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/hardhat_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
                         cv2.imwrite(save_path,  frame_info["frame"])

@@ -161,7 +161,7 @@ class StreamManager:
         self.cameras = []
         self.reinitiliaze_cameras_from_camera_configs_file()
 
-    def reinitiliaze_cameras_from_camera_configs_file(self, number_of_cameras:int = 21):
+    def reinitiliaze_cameras_from_camera_configs_file(self, number_of_cameras:int = 24):
         # Ensure that the cameras are stopped before reinitializing them if they are already fetching frames    
         for camera in self.cameras:
             camera.stop_fetching_frames(wait_for_thread_to_join = True)
