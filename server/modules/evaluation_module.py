@@ -68,13 +68,13 @@ class EvaluationManager():
                     was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)                    
                     if was_usefull_to_evaluate:
-                        cv2.imshow("frame", frame_info["frame"])       
+                        cv2.imshow("frame_restricted_area_violation", frame_info["frame"])       
                         cv2.waitKey(2500)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     if was_usefull_to_evaluate:
-                        cv2.imshow("frame", frame_info["frame"])       
+                        cv2.imshow("frame_hardhat_violation", frame_info["frame"])       
                         cv2.waitKey(2500)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
                     if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Hardhat Detection Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
@@ -160,8 +160,9 @@ class EvaluationManager():
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
-                cv2.imshow("person_frame_hardhat", frame_info["frame"]) #NOTE: delete this line
-                cv2.waitKey(2500)
+                resized_image = cv2.resize(frame_info["frame"], (700, 540))
+                cv2.imshow("person_frame_restricted_area", resized_image) #NOTE: delete this line
+                cv2.waitKey(1000)
 
                 left_ankle =  pose_bbox[5]["left_ankle"]
                 right_ankle =  pose_bbox[5]["right_ankle"]
@@ -202,8 +203,9 @@ class EvaluationManager():
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
-                cv2.imshow("person_frame_hardhat", frame_info["frame"]) #NOTE: delete this line
-                cv2.waitKey(2500)
+                resized_image = cv2.resize(frame_info["frame"], (700, 540))
+                cv2.imshow("person_frame_hardhat", resized_image) #NOTE: delete this line
+                cv2.waitKey(1000)
 
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
                 is_inside_forklift = False
