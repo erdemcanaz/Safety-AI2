@@ -27,7 +27,9 @@ class EvaluationManager():
         self.camera_usefulness = {}
         self.camera_evaluation_probabilities = {} 
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
-            
+        
+        self.test_frame_evaluation_counter = {} #NOTE: for testing purposes
+
     def __get_models_to_call(self, active_rules:List[Dict]) -> List[str]:
         models_to_call = []        
         for active_rule in active_rules:
@@ -57,6 +59,9 @@ class EvaluationManager():
                 continue 
             self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
 
+            self.test_frame_evaluation_counter.setdefault(frame_info["camera_uuid"], 0) #NOTE: for testing purposes
+            self.test_frame_evaluation_counter[frame_info["camera_uuid"]] += 1 #NOTE: for testing purposes
+
             # Evaluate the frame based on the active rules
             active_rules = frame_info["active_rules"]
             for model in self.__get_models_to_call(active_rules): # For active rules of the camera, the models to call will be-> self.pose_detector, self.hardhat_detector, self.forklift_detector
@@ -70,14 +75,14 @@ class EvaluationManager():
                     if was_usefull_to_evaluate:
                         cv2.imshow("frame_restricted_area_violation", frame_info["frame"])       
                         cv2.waitKey(2500)
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info["camera_uuid"]]:<6}|{frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
                     was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     if was_usefull_to_evaluate:
                         cv2.imshow("frame_hardhat_violation", frame_info["frame"])       
                         cv2.waitKey(2500)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Hardhat Detection Rule is applied:':<40} {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"{'Hardhat Detection Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info["camera_uuid"]]:<6}| {frame_info['camera_uuid']}, Was useful ?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
     
