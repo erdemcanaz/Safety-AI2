@@ -68,6 +68,7 @@ class EvaluationManager():
 
             # Evaluate the frame based on the active rules
             active_rules = frame_info["active_rules"]
+
             for model in self.__get_models_to_call(active_rules): # For active rules of the camera, the models to call will be-> self.pose_detector, self.hardhat_detector, self.forklift_detector
                 model.detect_frame(frame_info = frame_info)
                 frame_info["detection_results"].append(model.get_recent_detection_results())
@@ -263,7 +264,6 @@ class EvaluationManager():
 
                 # Find the best hardhat detection candidate for the person
                 best_hardhat_detection_candidate = None
-                pprint.pprint(self.hardhat_detector.get_recent_detection_results())
                 for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
                     if hardhat_bbox[4] < 0.2: continue
                     hardhat_bbox_center = ((hardhat_bbox[0]+hardhat_bbox[2])/2, (hardhat_bbox[1]+hardhat_bbox[3])/2)
@@ -279,8 +279,16 @@ class EvaluationManager():
                
                
                 if best_hardhat_detection_candidate is None: 
-                    violation_score = pose_bbox[4]
                     print("No hardhat detection is found, assuming person is not wearing a hardhat")
+                    head_keypoints =  ["nose", "right_eye", "left_eye", "left_ear", "right_ear"]
+                    for head_keypoint in head_keypoints:
+                        if pose_bbox[5][head_keypoint][2] < 0: continue
+                        if self.__is_inside_polygon((pose_bbox[5][head_keypoint][0], pose_bbox[5][head_keypoint][1]), active_rule["normalized_rule_area_polygon_corners"]):
+                            break
+                    else:
+                        print("No head keypoints are found inside the polygon")
+                        continue
+                    violation_score = pose_bbox[4]
                 else:                
                     #At this point, a person with hardhat detection is found
                     pose_confidence = pose_bbox[4]
