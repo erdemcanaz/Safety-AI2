@@ -161,7 +161,7 @@ class StreamManager:
         self.cameras = []
         self.reinitiliaze_cameras_from_camera_configs_file()
 
-    def reinitiliaze_cameras_from_camera_configs_file(self):
+    def reinitiliaze_cameras_from_camera_configs_file(self, number_of_cameras:int = 30):
         # Ensure that the cameras are stopped before reinitializing them if they are already fetching frames    
         for camera in self.cameras:
             camera.stop_fetching_frames(wait_for_thread_to_join = True)
@@ -170,6 +170,10 @@ class StreamManager:
         # Read the camera configurations from the camera_configs.json file
         with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
                     camera_configs= json.load(f)["cameras"]
+
+        # If the number_of_cameras is specified, only use the first number_of_cameras cameras from the camera_configs
+        if number_of_cameras > 0:
+            camera_configs = camera_configs[:number_of_cameras]
             
         # Create the camera objects
         for camera_config in camera_configs:         
