@@ -175,9 +175,12 @@ class EvaluationManager():
 
     def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
+            was_usefull = False
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
+                was_usefull = True # If a person is detected, the evaluation is usefull 
+
                 # resized_image = cv2.resize(frame_info["frame"], (700, 540))
                 # cv2.imshow("person_frame_restricted_area", resized_image) #NOTE: delete this line
                 # cv2.waitKey(1000)
@@ -191,11 +194,14 @@ class EvaluationManager():
                 if not is_left_ankle_inside and not is_right_ankle_inside: return False
 
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, return False, otherwise return True
+                is_inside_forklift = False
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
                     if forklift_bbox[4] < 0.5: continue # If the confidence of the forklift detection is less than 0.5, skip this forklift
                     forklift_bbox = forklift_bbox[:4]
                     if self.__find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.8:
-                        return False
+                        is_inside_forklift = True
+                        break
+                if is_inside_forklift: continue
                 
                 pose_confidence = pose_bbox[4]
                 mean_ankle_confidence = (left_ankle[2]*is_left_ankle_inside + right_ankle[2]*is_right_ankle_inside) / (is_left_ankle_inside + is_right_ankle_inside) # Booleans are treated as 1 or 0. At this step, atleast one of the ankles is inside the polygon
@@ -210,17 +216,19 @@ class EvaluationManager():
                      "violated_person_bbox":pose_bbox[:4],
                      "violation_score":violation_score
                     }
-                )              
-                return True    
-            return False # If no person is detected, return False        
+                )            
+            return was_usefull # If no person is detected, return False otherwise return True       
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")            
                               
-    def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
+    def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:        
         if active_rule["evaluation_method"] == "INTERSECTION_WITH_PERSON":
+            was_usefull = False
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
+                was_usefull = True # If a person is detected, the evaluation is usefull
+
                 # resized_image = cv2.resize(frame_info["frame"], (700, 540))
                 # cv2.imshow("person_frame_hardhat", resized_image) #NOTE: delete this line
                 # cv2.waitKey(1000)
@@ -268,9 +276,7 @@ class EvaluationManager():
                      "violation_score":violation_score
                     }
                 )
-            if "HARDHAT_DETECTION" in frame_info["rule_violations"]: # If there is a hardhat detection record, it means that there is a violation. This is a bit dangerous implementation, but it is done for simplicity
-                return True
-            return False
+            return was_usefull # If no person is detected, return False otherwise return True
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")
 
