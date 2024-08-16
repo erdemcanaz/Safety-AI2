@@ -296,8 +296,8 @@ class EvaluationManager():
                     {
                      "evaluation_method":active_rule["evaluation_method"],
                      "violated_person_bbox":pose_bbox[:4],
-                     "violated_hardhat_bbox":best_hardhat_detection_candidate[:4],
-                     "hardhat_class_name":best_hardhat_detection_candidate[5],
+                     "violated_hardhat_bbox":best_hardhat_detection_candidate[:4] if best_hardhat_detection_candidate is not None else None,
+                     "hardhat_class_name":best_hardhat_detection_candidate[5] if best_hardhat_detection_candidate is not None else None,
                      "violation_score":violation_score
                     }
                 )
