@@ -192,7 +192,9 @@ class EvaluationManager():
                 # Check if the left or right ankle is inside the polygon, if not return False
                 is_left_ankle_inside = left_ankle[2]>0 and self.__is_inside_polygon( (left_ankle[0], left_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
                 is_right_ankle_inside = right_ankle[2]>0 and self.__is_inside_polygon((right_ankle[0], right_ankle[1]), active_rule["normalized_rule_area_polygon_corners"])
-                if not is_left_ankle_inside and not is_right_ankle_inside: continue # If both ankles are not inside the polygon, continue to the next person
+                if not is_left_ankle_inside and not is_right_ankle_inside: 
+                    print("Both ankles are not inside the polygon")                    
+                    continue # If both ankles are not inside the polygon, continue to the next person
 
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, return False, otherwise return True
                 is_inside_forklift = False
