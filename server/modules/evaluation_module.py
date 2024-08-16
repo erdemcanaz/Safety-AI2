@@ -38,7 +38,9 @@ class EvaluationManager():
                 if self.hardhat_detector not in models_to_call: models_to_call.append(self.hardhat_detector)
                 if self.pose_detector not in models_to_call: models_to_call.append(self.pose_detector)
                 if self.forklift_detector not in models_to_call: models_to_call.append(self.forklift_detector)
-    
+            else:
+                raise ValueError(f"Invalid rule name: {active_rule['rule_name']}")
+            
         return models_to_call
     
     def evaluate_frames_info(self, frames_info:List[Dict]):

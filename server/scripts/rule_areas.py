@@ -43,10 +43,11 @@ def click_event(event, x, y, flags, params):
     if event == cv2.EVENT_LBUTTONDOWN:
         # Normalize coordinates
         height, width, _ = img.shape
-        x_norm = x / width
-        y_norm = y / height
+        x_norm = round(x / width, 3)
+        y_norm = round(y / height, 3)
+
         points.append([x_norm, y_norm])
-        print(f"Point recorded: [{x_norm}, {y_norm}]")
+        print(f"Point recorded: [{x_norm:.3f}, {y_norm:.3f}]")
         print("Current points list:")
         pprint.pprint(points)
         print()
@@ -58,7 +59,7 @@ def click_event(event, x, y, flags, params):
 def display_image(index):
     img_path = os.path.join(folder_path, image_files[index])
     img = cv2.imread(img_path)
-    resized_image = cv2.resize(img, (960, 540))
+    resized_image = cv2.resize(img, (700, 540))
     draw_points(resized_image)
     cv2.imshow("Image Viewer", resized_image)
     cv2.setMouseCallback("Image Viewer", click_event, resized_image)

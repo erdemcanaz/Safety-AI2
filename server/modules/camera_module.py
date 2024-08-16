@@ -115,11 +115,38 @@ class CameraStreamFetcher:
         self.is_fetching_frames = False
 
     def test_try_fetching_single_frame_and_show(self, window_name_to_show:str = "Test Frame"):
+
+        def draw_points(frame, points):
+            for i, point in enumerate(points):
+                x, y = point
+                height, width, _ = frame.shape
+                x = int(x * width)
+                y = int(y * height)
+                cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
+                if i > 0:
+                    x_prev, y_prev = points[i - 1]
+                    x_prev = int(x_prev * width)
+                    y_prev = int(y_prev * height)
+                    cv2.line(frame, (x_prev, y_prev), (x, y), (255, 0, 0), 2)
+
+            # If there are at least 3 points, connect the first and last points to close the polygon
+            if len(points) > 2:
+                x_first, y_first = points[0]
+                x_last, y_last = points[-1]
+                x_first = int(x_first * width)
+                y_first = int(y_first * height)
+                x_last = int(x_last * width)
+                y_last = int(y_last * height)
+                cv2.line(frame, (x_last, y_last), (x_first, y_first), (0, 0, 255), 2)  # Red color for closing the polygon
+
         try:
             cap = cv2.VideoCapture(f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}')
             ret, frame = cap.read()
             resoulution = (None,None)
             if ret:
+                for rule in self.active_rules:
+                    points = rule.get("normalized_rule_area_polygon_corners", [])
+                    draw_points(frame, points)
                 cv2.imshow(window_name_to_show, frame)
                 resoulution = (frame.shape[1], frame.shape[0])
                 cv2.waitKey(1000)
