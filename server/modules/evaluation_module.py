@@ -61,7 +61,8 @@ class EvaluationManager():
                 continue 
             self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
 
-            cv2.imshow(frame_info["camera_uuid"], cv2.resize(frame_info["frame"], (100,100) )) #NOTE: for testing purposes
+            cv2.imshow("last_frame", cv2.resize(frame_info["frame"], (600,600) )) #NOTE: for testing purposes
+            cv2.waitKey(1000) #NOTE: for testing purposes
             self.test_frame_evaluation_counter.setdefault(frame_info["camera_uuid"], 0) #NOTE: for testing purposes
             self.test_frame_evaluation_counter[frame_info["camera_uuid"]] += 1 #NOTE: for testing purposes
 
