@@ -254,8 +254,9 @@ class EvaluationManager():
 
                 # Find the best hardhat detection candidate for the person
                 best_hardhat_detection_candidate = None
+                pprint.pprint(self.hardhat_detector.get_recent_detection_results())
                 for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
-                    if hardhat_bbox[4] < 0.5: continue
+                    if hardhat_bbox[4] < 0.2: continue
                     hardhat_bbox_center = ((hardhat_bbox[0]+hardhat_bbox[2])/2, (hardhat_bbox[1]+hardhat_bbox[3])/2)
                     # Check if the hardhat detection is inside the polygon, if not continue to the next hardhat detection
                     if not self.__is_inside_polygon(hardhat_bbox_center, active_rule["normalized_rule_area_polygon_corners"]): continue
@@ -267,6 +268,7 @@ class EvaluationManager():
                     elif hardhat_bbox[4] > best_hardhat_detection_candidate[4]: # If the confidence of the new detection is higher, update the best detection
                         best_hardhat_detection_candidate = hardhat_bbox
                 if best_hardhat_detection_candidate is None: 
+                    
                     print("No hardhat detection is found")
                     continue
                 
