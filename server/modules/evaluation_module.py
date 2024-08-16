@@ -71,31 +71,31 @@ class EvaluationManager():
 
             for active_rule in active_rules:
                 if active_rule["rule_name"] == "RESTRICTED_AREA":
-                    was_usefull_to_evaluate = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
+                    was_usefull_to_evaluate, was_violation = self.__restricted_area_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)      
 
-                    if was_usefull_to_evaluate:
+                    if was_violation:
                         self.total_violation_counter += 1
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/restricted_area_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
                         cv2.imshow("frame_last_violation", frame_info["frame"])       
-                        cv2.waitKey(10000)
+                        cv2.waitKey(2500)
                         cv2.destroyAllWindows()
 
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} - {'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} - {'Restricted Area Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
                 
                 elif active_rule["rule_name"] == "HARDHAT_DETECTION":
-                    was_usefull_to_evaluate = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
+                    was_usefull_to_evaluate, was_violation = self.__hardhat_rule(frame_info = frame_info, active_rule = active_rule)
                     self.__update_camera_usefulness(camera_uuid=frame_info["camera_uuid"], was_usefull=was_usefull_to_evaluate)
 
-                    if was_usefull_to_evaluate:
+                    if was_violation:
                         self.total_violation_counter += 1
                         save_path = f"{server_preferences.PATH_VOLUME}/reports/hardhat_violation_{frame_info['camera_uuid']}_{datetime.datetime.now().strftime('%H_%M_%S')}.jpg"
                         cv2.imwrite(save_path,  frame_info["frame"])
                         cv2.imshow("frame_last_violation", frame_info["frame"])       
-                        cv2.waitKey(10000)
+                        cv2.waitKey(2500)
                         cv2.destroyAllWindows()
 
-                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} - {'Hardhat Detection Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<5}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
+                    if server_preferences.PARAM_EVALUATION_VERBOSE: print(f"#{self.total_violation_counter:<4} - {'Hardhat Detection Rule is applied:':<40} { self.test_frame_evaluation_counter[frame_info['camera_uuid']]:<6}| {frame_info['camera_uuid']}, Was useful?: {was_usefull_to_evaluate:<3}, Was violation?:{was_violation:<3}, Usefulness Score: {self.camera_usefulness[frame_info['camera_uuid']]['usefulness_score']:.2f}")
 
         self.__update_camera_evaluation_probabilities_considering_camera_usefulnesses()
     
@@ -176,6 +176,7 @@ class EvaluationManager():
     def __restricted_area_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:
         if active_rule["evaluation_method"] == "ANKLE_INSIDE_POLYGON":
             was_usefull = False
+            was_violation = False
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
@@ -216,14 +217,16 @@ class EvaluationManager():
                      "violated_person_bbox":pose_bbox[:4],
                      "violation_score":violation_score
                     }
-                )            
-            return was_usefull # If no person is detected, return False otherwise return True       
+                )  
+                was_violation = True          
+            return was_usefull, was_violation # If no person is detected, return False otherwise return True       
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")            
                               
     def __hardhat_rule(self, frame_info:Dict = None, active_rule:Dict = None) -> bool:        
         if active_rule["evaluation_method"] == "INTERSECTION_WITH_PERSON":
             was_usefull = False
+            was_violation = False
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
@@ -276,7 +279,8 @@ class EvaluationManager():
                      "violation_score":violation_score
                     }
                 )
-            return was_usefull # If no person is detected, return False otherwise return True
+                was_violation = True
+            return was_usefull, was_violation # If no person is detected, return False otherwise return True
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")
 
