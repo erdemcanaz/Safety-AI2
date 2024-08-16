@@ -268,6 +268,7 @@ class EvaluationManager():
                         best_hardhat_detection_candidate = hardhat_bbox
                 if best_hardhat_detection_candidate is None: 
                     print("No hardhat detection is found")
+                    pprint.pprint(self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"])
                     continue
                 
                 #At this point, a person with hardhat detection is found
