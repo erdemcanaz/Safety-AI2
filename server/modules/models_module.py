@@ -100,7 +100,7 @@ class HardhatDetector():
         self.__clear_recent_detection_results()
         self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"]
 
-        detections = self.yolo_object(frame_info["frame"], task = "hardhat", verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)[0]
+        detections = self.yolo_object(frame_info["frame"], task = "detection", verbose= server_preferences.HARDHAT_DETECTION_VERBOSE)[0]
         for detection in detections:
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])

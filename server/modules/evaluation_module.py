@@ -249,7 +249,7 @@ class EvaluationManager():
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
                 is_inside_forklift = False
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
-                    if forklift_bbox[4] < 0.5: continue # If the confidence of the forklift detection is less than 0.5, skip this forklift
+                    if forklift_bbox[4] < 0.3: continue # If the confidence of the forklift detection is less than 0.3, skip this forklift
                     forklift_bbox = forklift_bbox[:4]
                     if self.__find_rectangle_intersection_percentage(pose_bbox[:4], forklift_bbox) > 0.75:
                         is_inside_forklift = True
@@ -264,7 +264,7 @@ class EvaluationManager():
 
                 best_hardhat_detection_candidate = None
                 for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
-                    if hardhat_bbox[4] < 0.2: continue
+                    if hardhat_bbox[4] < 0.3: continue
                     hardhat_bbox_center = ((hardhat_bbox[0]+hardhat_bbox[2])/2, (hardhat_bbox[1]+hardhat_bbox[3])/2)
                     cv2.rectangle(resized_image, (int(hardhat_bbox[0]*700), int(hardhat_bbox[1]*540)), (int(hardhat_bbox[2]*700), int(hardhat_bbox[3]*540)), (0, 255, 0), 2)
                     # Check if the hardhat detection is inside the polygon, if not continue to the next hardhat detection
