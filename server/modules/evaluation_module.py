@@ -6,7 +6,6 @@ import models_module
 
 import cv2
 
-
 class EvaluationManager():
     def test_print_camera_usefulness_and_evaluation_probability(self):
         print("")
@@ -241,6 +240,7 @@ class EvaluationManager():
         if active_rule["evaluation_method"] == "INTERSECTION_WITH_PERSON":
             was_usefull = False
             was_violation = False
+
             for pose_bbox in self.pose_detector.get_recent_detection_results()["normalized_bboxes"]:
                 if pose_bbox[4] < 0.75: continue # If the confidence of the pose detection is less than 0.5, skip this person
                 print("A person is detected")
@@ -261,6 +261,8 @@ class EvaluationManager():
                 # Find the best hardhat detection candidate for the person
                 resized_image = cv2.resize(frame_info["frame"], (700, 540))
                
+                pprint.pprint(pose_bbox)
+                continue
 
                 best_hardhat_detection_candidate = None
                 for hardhat_bbox in self.hardhat_detector.get_recent_detection_results()["normalized_bboxes"]:
@@ -312,7 +314,7 @@ class EvaluationManager():
                     }
                 )
                 was_violation = True
-            return was_usefull, was_violation # If no person is detected, return False otherwise return True
+            return was_usefull, was_violation
         else:
             raise ValueError(f"Invalid evaluation method: {active_rule['evaluation_method']}")
 
