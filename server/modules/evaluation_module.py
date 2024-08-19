@@ -246,6 +246,7 @@ class EvaluationManager():
                 print("A person is detected")
                 was_usefull = True # If a person is detected, the evaluation is usefull
 
+                pprint.pprint(pose_bbox)
                 # calculate intersection percentage of the person bounding box with forklift and if it is greater than a threshold, continue to the next person
                 is_inside_forklift = False
                 for forklift_bbox in self.forklift_detector.get_recent_detection_results()["normalized_bboxes"]:
@@ -261,7 +262,6 @@ class EvaluationManager():
                 # Find the best hardhat detection candidate for the person
                 resized_image = cv2.resize(frame_info["frame"], (700, 540))
                
-                pprint.pprint(pose_bbox)
                 continue
 
                 best_hardhat_detection_candidate = None
