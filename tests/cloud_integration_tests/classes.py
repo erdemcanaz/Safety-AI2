@@ -65,7 +65,7 @@ class ViolationLog:
         if not success:
             raise ValueError('Failed to encode image')
         
-        base64_encoded_image = base64.b64encode(encoded_image.tobytes())
+        base64_encoded_image = base64.b64encode(encoded_image)
         self.violation_dict["Image"] = base64_encoded_image
 
         pass
