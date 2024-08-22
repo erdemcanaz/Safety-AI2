@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import random, uuid, base64, copy, requests, json
+import random, uuid, base64, copy, requests, json, pprint
 
 class ViolationLog:
     COMMON_RESOLUTIONS = {
@@ -61,11 +61,11 @@ class ViolationLog:
         width, height = int(width), int(height)
         random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 
-        # success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
-        # if not success:
-        #     raise ValueError('Failed to encode image')
+        success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
+        if not success:
+            raise ValueError('Failed to encode image')
         
-        base64_encoded_image = base64.b64encode(random_frame)
+        base64_encoded_image = base64.b64encode(encoded_image.tobytes())
         self.violation_dict["Image"] = base64_encoded_image
 
         pass
@@ -98,6 +98,7 @@ class PostRequest:
         self.body["SafetyData"].append(new_data)
 
     def send_post_request(self):     
+        pprint.pprint(self.body)
         response = requests.post(self.endpoint_url, headers = self.headers, data=json.dumps(self.body))
         print(response.status_code)
         print(response.text)
