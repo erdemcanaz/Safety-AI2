@@ -35,6 +35,7 @@ class ViolationLog:
             "CameraUID": None,          # (str) | An unix identifier (UUID4)
             "Image": None,              # (str?)| base encoded image (preferably jpg but any format is accepted)
         }
+        self.cv2_image = None
 
     def set_as_default_correct_dict(self):
         default_resolution = ViolationLog.COMMON_RESOLUTIONS["test_default"].split("x")
@@ -43,6 +44,7 @@ class ViolationLog:
         success, encoded_image = cv2.imencode('.jpg', random_frame)
         if not success:
             raise ValueError('Failed to encode image')       
+        self.cv2_image = random_frame        
         base64_encoded_jpg_image = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
         self.violation_dict = {
             "RelatedShiftDate": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),   # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23
@@ -64,6 +66,7 @@ class ViolationLog:
         success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
         if not success:
             raise ValueError('Failed to encode image')
+        self.cv2_image = random_frame
         
         base64_encoded_image = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
         self.violation_dict["Image"] = base64_encoded_image
@@ -77,8 +80,8 @@ class ViolationLog:
         formatted_str = ""
         for key, value in self.violation_dict.items():
             if key == "Image":
-                height, width = self.violation_dict["Image"].shape[:2]
-                encoding = self.violation_dict["Image"].dtype
+                height, width = self.cv2_image.shape[:2]
+                encoding = self.cv2_image.dtype
                 formatted_str +=f"{key}: {width}x{height} - {encoding} - {value[:10]}"+" | "
             else:
                 formatted_str +=f"{key}: {value}"+" | "
