@@ -80,7 +80,7 @@ def ping_endpoint(endpoint_url:str=None):
 def correct_request_test(post_request:classes.PostRequest = None):
     violation = classes.ViolationLog()
     violation.set_as_default_correct_dict()
-    #violation.update_image_as(resolution_key= "test_default", image_format = "jpg")
+    violation.update_image_as(resolution_key= "test_default", image_format = "jpg")
 
     post_request.clear_body()
     post_request.body["SafetyData"].append(violation.get_violation_log())

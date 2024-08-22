@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import random, uuid, base64, copy, requests, json, pprint
+import datetime
 
 class ViolationLog:
     COMMON_RESOLUTIONS = {
@@ -44,9 +45,9 @@ class ViolationLog:
             raise ValueError('Failed to encode image')       
         base64_encoded_jpg_image = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
         self.violation_dict = {
-            "RelatedShiftDate": "15.08.2024 14:15:10",   # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23 
-            "DeviceTimestamp": "15.08.2024 16:15:10",    # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23     
-            "RelatedShiftNo": 3,     # (str) | one of ['0', '1', '2']
+            "RelatedShiftDate": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),   # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23
+            "DeviceTimestamp": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),    # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23     
+            "RelatedShiftNo": random.choice["1", "2", "3"],     # (str) | one of ['0', '1', '2']
             "RegionName": "SHE-matters",         # (str) | any string 
             "ViolationType": "restricted_area_rule_statistics",      # (str) | one of 
             "ViolationScore": f"{random.randint(1,99)}",     # (str) | a number 0<= X <= 100
@@ -64,7 +65,7 @@ class ViolationLog:
         if not success:
             raise ValueError('Failed to encode image')
         
-        base64_encoded_image = base64.b64encode(encoded_image.tobytes())
+        base64_encoded_image = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
         self.violation_dict["Image"] = base64_encoded_image
 
         pass
