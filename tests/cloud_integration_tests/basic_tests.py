@@ -78,13 +78,16 @@ def ping_endpoint(endpoint_url:str=None):
         print(f"Error pinging {endpoint_url}: {e}")
 
 def correct_request_test(post_request:classes.PostRequest = None):
+    # Send a single request with a default violation log that is known to be working
     violation = classes.ViolationLog()
     violation.set_as_default_correct_dict()
     violation.update_image_as(resolution_key= "test_default", image_format = "jpg")
 
     post_request.clear_body()
     post_request.body["SafetyData"].append(violation.get_violation_log())
-    post_request.send_post_request()
+    r = post_request.send_post_request()
+    post_request.print_request(status_code=r["status_code"], expected_status_code=200, text=r["text"])
+    
 
 post_request = classes.PostRequest()
 post_request.clear_body()

@@ -73,6 +73,17 @@ class ViolationLog:
     def get_violation_log(self):
         return copy.deepcopy(self.violation_dict)
     
+    def get_formatted_dict_as_str(self):
+        formatted_str = ""
+        for key, value in self.violation_dict.items():
+            if key == "Image":
+                height, width = self.violation_dict["Image"].shape[:2]
+                encoding = self.violation_dict["Image"].dtype
+                formatted_str +=f"{key}: {width}x{height} - {encoding} - {value[:10]}"+" | "
+            else:
+                formatted_str +=f"{key}: {value}"+" | "
+        return formatted_str
+    
 class PostRequest:
     def __init__(self):
         self.endpoint_url = input("End-point URL: ")
@@ -98,7 +109,17 @@ class PostRequest:
         self.body["SafetyData"].append(new_data)
 
     def send_post_request(self):     
-        pprint.pprint(self.body)
         response = requests.post(self.endpoint_url, headers = self.headers, data=json.dumps(self.body))
-        print(response.status_code)
-        print(response.text)
+        return {
+            "status_code": response.status_code,
+            "text": response.text
+        }
+
+    def get_info_as_str(self)->str:
+        return f"Endpoint URL: {self.endpoint_url} | Headers: {json.dumps(self.headers)}"
+                                                               
+    def print_request(self, status_code:int = None, expected_status_code:int = None, text:str = None):
+        print(f"Status Code: {status_code} Expected Status Code: {expected_status_code}, {text}" , self.get_info_as_str())
+        violation_logs = self.body["SafetyData"]
+        for violation in violation_logs:
+            print("    ",ViolationLog(violation).get_formatted_dict_as_str())
