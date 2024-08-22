@@ -86,5 +86,7 @@ def correct_request_test(post_request:classes.PostRequest = None):
     post_request.body["SafetyData"].append(violation.get_violation_log())
     post_request.send_post_request()
 
-    
-correct_request_test()
+post_request = classes.PostRequest()
+post_request.clear_body()
+
+correct_request_test(post_request=post_request)
