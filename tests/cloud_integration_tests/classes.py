@@ -81,8 +81,7 @@ class ViolationLog:
         for key, value in self.violation_dict.items():
             if key == "Image":
                 height, width = self.cv2_image.shape[:2]
-                encoding = self.cv2_image.dtype
-                formatted_str +=f"{key}: {width}x{height} - {encoding} - {value[:10]}"+" | "
+                formatted_str +=f"{key}: {width}x{height} - {value[:10]}"+" | "
             else:
                 formatted_str +=f"{key}: {value}"+" | "
         print(f"\t\t{formatted_str}")
@@ -117,7 +116,7 @@ class PostRequest:
             "status_code": response.status_code,
             "text": response.text
         }
-
+    
     def get_info_as_str(self)->str:
         return f"Endpoint URL: {self.endpoint_url} | Headers: {json.dumps(self.headers)}"
                                                                
