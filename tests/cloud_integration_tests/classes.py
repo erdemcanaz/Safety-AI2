@@ -61,11 +61,11 @@ class ViolationLog:
         width, height = int(width), int(height)
         random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 
-        success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
-        if not success:
-            raise ValueError('Failed to encode image')
+        # success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
+        # if not success:
+        #     raise ValueError('Failed to encode image')
         
-        base64_encoded_image = base64.b64encode(encoded_image)
+        base64_encoded_image = base64.b64encode(random_frame)
         self.violation_dict["Image"] = base64_encoded_image
 
         pass
