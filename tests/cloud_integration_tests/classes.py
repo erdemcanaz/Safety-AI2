@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
-import random, uuid, base64, copy
+import random, uuid, base64, copy, requests, json
 
 class ViolationLog:
     COMMON_RESOLUTIONS = {
-        "test_default": "960x540",   # quarter of 1920x1080
+        "test_default": "1280x720",  # quarter of 1920x1080
         "VGA": "640x480",            # 307,200 pixels, ~900 KB
         "480i": "720x480",           # 345,600 pixels, ~1 MB
         "480p": "720x480",           # 345,600 pixels, ~1 MB
@@ -56,6 +56,20 @@ class ViolationLog:
             "Image": base64_encoded_jpg_image,              # (str?)| base encoded image (preferably jpg but any format is accepted)
         }
 
+    def update_image_as(self, resolution_key:str = None, image_format:str = None):
+        width, height = ViolationLog.COMMON_RESOLUTIONS[resolution_key].split("x")
+        width, height = int(width), int(height)
+        random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
+
+        success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
+        if not success:
+            raise ValueError('Failed to encode image')
+        
+        base64_encoded_image = base64.b64encode(encoded_image.tobytes())
+        self.violation_dict["Image"] = base64_encoded_image
+
+        pass
+    
     def get_violation_log(self):
         return copy.deepcopy(self.violation_dict)
     
@@ -83,5 +97,7 @@ class PostRequest:
     def append_new_data(self, new_data:dict = None):
         self.body["SafetyData"].append(new_data)
 
-    def get_endpoint_url(self):
-        return self.endpoint_url
+    def send_post_request(self):     
+        response = requests.post(self.endpoint_url, headers = self.headers, data=json.dumps(self.body))
+        print(response.status_code)
+        print(response.text)
