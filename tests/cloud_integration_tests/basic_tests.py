@@ -86,7 +86,8 @@ def append_text_to_txt_file(text:str = None, file_name:str = None):
         f.write(text)
 
 def incorrect_token_test(post_request:classes.PostRequest = None):
-    print("\n\nIncorrect token test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default but with an incorrect token value\n")
+    log_row = "\n\nIncorrect token test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default but with an incorrect token value\n"
+    print(log_row)
     initial_token_value = post_request.headers["token"]
     try:
         violation = classes.ViolationLog()
@@ -97,7 +98,7 @@ def incorrect_token_test(post_request:classes.PostRequest = None):
         post_request.headers["token"] = "Incorrect token value"
         post_request.body["SafetyData"].append(violation.get_violation_log())
         r = post_request.send_post_request()
-        log_row = post_request.print_(status_code=r["status_code"], expected_status_code="Not 200", text=r["text"])+"\n"
+        log_row += post_request.print_(status_code=r["status_code"], expected_status_code="Not 200", text=r["text"])+"\n"
         log_row += violation.print_()
         return log_row
     except Exception as e:
@@ -109,7 +110,8 @@ def incorrect_token_test(post_request:classes.PostRequest = None):
 def correct_request_test(post_request:classes.PostRequest = None):
     # Send a single request with a default violation log that is known to be working
 
-    print("\n\nCorrect request test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default\n")
+    log_row = "\n\nCorrect request test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default\n"
+    print(log_row)
     try:
         violation = classes.ViolationLog()
         violation.set_as_default_correct_dict()
@@ -118,18 +120,50 @@ def correct_request_test(post_request:classes.PostRequest = None):
         post_request.clear_body()
         post_request.body["SafetyData"].append(violation.get_violation_log())
         r = post_request.send_post_request()
-        log_row = post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+        log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
         log_row += violation.print_()
         return log_row
     except Exception as e:
         print(f"Error: {e}")
         return f"Error: {e}"
 
+def multiple_correct_request_test(post_request:classes.PostRequest = None):
+    # Send a single request with multiple default violation logs that are known to be working
+    log_row = "\n\nMultiple correct request test: post multiple requests with default violation logs that are known to be working where format is jpg and resolution is test_default\n"
+    print(log_row)
 
-clear_txt_file(file_name="test_log.txt")
-append_text_to_txt_file(file_name="test_log.txt", text=f"TEST LOGS {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+    for number_of_violations in [1, 5, 10, 50, 100, 250]:    
+        log_row += f"----Number of violations = {number_of_violations}"
+        try:
+            post_request.clear_body()
+            violations_list = []
+            for i in range(number_of_violations):
+                violation = classes.ViolationLog()
+                violation.set_as_default_correct_dict()
+                violation.update_image_as(resolution_key= "test_default", image_format = "jpg")
+                post_request.append_new_data(violation.get_violation_log())
+                violations_list.append(violation)
+
+            post_request.clear_body()
+            r = post_request.send_post_request()
+            log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+
+            for violation_ in violations_list:
+                log_row += violation_.print_()+"\n"
+        
+        except Exception as e:
+            print(f"Error: {e}")
+            log_row += f"\nError:{e}"
+            return log_row
+
+PARAM_LOG_TXT_NAME = "test_log.txt"
+
+clear_txt_file(file_name=PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-# incorrect_token_test(post_request=post_request)
-# correct_request_test(post_request=post_request)
+append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
