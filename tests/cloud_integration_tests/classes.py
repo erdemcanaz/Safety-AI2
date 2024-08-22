@@ -121,5 +121,13 @@ class PostRequest:
     def print_request(self, status_code:int = None, expected_status_code:int = None, text:str = None):
         print(f"Status Code: {status_code} Expected Status Code: {expected_status_code}, {text}" , self.get_info_as_str())
         violation_logs = self.body["SafetyData"]
-        for violation in violation_logs:
-            print("    ",violation.get_formatted_dict_as_str())
+        for violation_dict in violation_logs:
+            formatted_str = ""
+            for key, value in violation_dict.items():
+                if key == "Image":
+                    height, width = violation_dict["Image"].shape[:2]
+                    encoding = violation_dict["Image"].dtype
+                    formatted_str +=f"{key}: {width}x{height} - {encoding} - {value[:10]}"+" | "
+                else:
+                    formatted_str +=f"{key}: {value}"+" | "
+            print(formatted_str)
