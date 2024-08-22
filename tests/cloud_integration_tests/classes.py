@@ -42,8 +42,7 @@ class ViolationLog:
         success, encoded_image = cv2.imencode('.jpg', random_frame)
         if not success:
             raise ValueError('Failed to encode image')       
-        base64_encoded_jpg_image = base64.b64encode(encoded_image.tobytes()) 
-        
+        base64_encoded_jpg_image = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
         self.violation_dict = {
             "RelatedShiftDate": "15.08.2024 14:15:10",   # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23 
             "DeviceTimestamp": "15.08.2024 16:15:10",    # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23     
