@@ -1,6 +1,6 @@
 import requests
 import classes
-import pprint,random, unicodedata
+import pprint,random, unicodedata,datetime
 
 def create_mock_data(type_of_data:str = None):   
     if type_of_data == "None":
@@ -77,6 +77,14 @@ def ping_endpoint(endpoint_url:str=None):
     except requests.exceptions.RequestException as e:
         print(f"Error pinging {endpoint_url}: {e}")
 
+def clear_txt_file(file_name:str = None):
+    with open(file_name, "w") as f:
+        f.write("")
+
+def append_text_to_txt_file(text:str = None, file_name:str = None):
+    with open(file_name, "a") as f:
+        f.write(text)
+
 def incorrect_token_test(post_request:classes.PostRequest = None):
     print("\n\nIncorrect token test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default but with an incorrect token value\n")
     initial_token_value = post_request.headers["token"]
@@ -89,10 +97,12 @@ def incorrect_token_test(post_request:classes.PostRequest = None):
         post_request.headers["token"] = "Incorrect token value"
         post_request.body["SafetyData"].append(violation.get_violation_log())
         r = post_request.send_post_request()
-        post_request.print_(status_code=r["status_code"], expected_status_code="Not 200", text=r["text"])
-        violation.print_()
+        log_row = post_request.print_(status_code=r["status_code"], expected_status_code="Not 200", text=r["text"])+"\n"
+        log_row += violation.print_()
+        return log_row
     except Exception as e:
         print(f"Error: {e}")
+        return f"Error: {e}"
     finally:
         post_request.headers["token"] = initial_token_value
 
@@ -108,16 +118,18 @@ def correct_request_test(post_request:classes.PostRequest = None):
         post_request.clear_body()
         post_request.body["SafetyData"].append(violation.get_violation_log())
         r = post_request.send_post_request()
-        post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])
-        violation.print_()
+        log_row = post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+        log_row += violation.print_()
+        return log_row
     except Exception as e:
         print(f"Error: {e}")
+        return f"Error: {e}"
 
-    
-    
 
+clear_txt_file(file_name="test_log.txt")
+append_text_to_txt_file(file_name="test_log.txt", text=f"TEST LOGS {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-incorrect_token_test(post_request=post_request)
-correct_request_test(post_request=post_request)
+# incorrect_token_test(post_request=post_request)
+# correct_request_test(post_request=post_request)

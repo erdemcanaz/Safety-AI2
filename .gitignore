@@ -8,6 +8,8 @@ server/modules/trained_yolo_models/yolov8x-pose.pt
 local/*
 !local/.gitkeep
 
+test_log.txt
+
 server/configs/*
 !server/configs/.gitkeep
 
