@@ -47,7 +47,7 @@ class ViolationLog:
         self.violation_dict = {
             "RelatedShiftDate": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),   # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23
             "DeviceTimestamp": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),    # (str) | %dd.%mm.%yyyy %hh:%mm:%ss | 15.08.2024 11:11:23     
-            "RelatedShiftNo": random.choice["1", "2", "3"],     # (str) | one of ['0', '1', '2']
+            "RelatedShiftNo": random.choice(["1", "2", "3"]),     # (str) | one of ['0', '1', '2']
             "RegionName": "SHE-matters",         # (str) | any string 
             "ViolationType": "restricted_area_rule_statistics",      # (str) | one of 
             "ViolationScore": f"{random.randint(1,99)}",     # (str) | a number 0<= X <= 100
