@@ -53,7 +53,7 @@ class ViolationLog:
             "ViolationScore": f"{random.randint(1,99)}",     # (str) | a number 0<= X <= 100
             "ViolationUID": str(uuid.uuid4()),       # (str) | An unix identifier (UUID4)
             "CameraUID": str(uuid.uuid4()),          # (str) | An unix identifier (UUID4)
-            "Image": base64_encoded_jpg_image,              # (str?)| base encoded image (preferably jpg but any format is accepted)
+            "Image": "",              # (str?)| base encoded image (preferably jpg but any format is accepted)
         }
 
     def update_image_as(self, resolution_key:str = None, image_format:str = None):
