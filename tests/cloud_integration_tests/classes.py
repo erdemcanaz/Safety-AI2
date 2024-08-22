@@ -122,4 +122,4 @@ class PostRequest:
         print(f"Status Code: {status_code} Expected Status Code: {expected_status_code}, {text}" , self.get_info_as_str())
         violation_logs = self.body["SafetyData"]
         for violation in violation_logs:
-            print("    ",ViolationLog(violation).get_formatted_dict_as_str())
+            print("    ",violation.get_formatted_dict_as_str())
