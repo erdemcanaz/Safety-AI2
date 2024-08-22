@@ -86,7 +86,9 @@ def correct_request_test(post_request:classes.PostRequest = None):
     post_request.clear_body()
     post_request.body["SafetyData"].append(violation.get_violation_log())
     r = post_request.send_post_request()
-    post_request.print_request(status_code=r["status_code"], expected_status_code=200, text=r["text"])
+    post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])
+    violation.print_()
+    
     
 
 post_request = classes.PostRequest()

@@ -73,7 +73,7 @@ class ViolationLog:
     def get_violation_log(self):
         return copy.deepcopy(self.violation_dict)
     
-    def get_formatted_dict_as_str(self):
+    def print_(self):
         formatted_str = ""
         for key, value in self.violation_dict.items():
             if key == "Image":
@@ -82,7 +82,7 @@ class ViolationLog:
                 formatted_str +=f"{key}: {width}x{height} - {encoding} - {value[:10]}"+" | "
             else:
                 formatted_str +=f"{key}: {value}"+" | "
-        return formatted_str
+        print(f"\t\t{formatted_str}")
     
 class PostRequest:
     def __init__(self):
@@ -118,16 +118,6 @@ class PostRequest:
     def get_info_as_str(self)->str:
         return f"Endpoint URL: {self.endpoint_url} | Headers: {json.dumps(self.headers)}"
                                                                
-    def print_request(self, status_code:int = None, expected_status_code:int = None, text:str = None):
+    def print_(self, status_code:int = None, expected_status_code:int = None, text:str = None):
         print(f"Status Code: {status_code} Expected Status Code: {expected_status_code}, {text}" , self.get_info_as_str())
-        violation_logs = self.body["SafetyData"]
-        for violation_dict in violation_logs:
-            formatted_str = ""
-            for key, value in violation_dict.items():
-                if key == "Image":
-                    height, width = violation_dict["Image"].shape[:2]
-                    encoding = violation_dict["Image"].dtype
-                    formatted_str +=f"{key}: {width}x{height} - {encoding} - {value[:10]}"+" | "
-                else:
-                    formatted_str +=f"{key}: {value}"+" | "
-            print(formatted_str)
+
