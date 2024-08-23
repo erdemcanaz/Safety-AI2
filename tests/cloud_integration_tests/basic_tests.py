@@ -151,8 +151,8 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
         print(f"{'-'*25}\n----Number of violations = {number_of_violations}\n")
         time.sleep(2.0)
         try:
-            log_row += f"start_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n"
-            print(f"start_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n")
+            log_row += f"start_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n"
+            print(f"start_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n")
 
             post_request.clear_body()
             violations_list = []
