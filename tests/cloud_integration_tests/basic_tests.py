@@ -257,6 +257,31 @@ def future_date_test(post_request:classes.PostRequest = None):
         print(f"Error: {e}")
         return f"Error: {e}"
 
+def check_violation_score(post_request:classes.PostRequest = None):
+    log_row = f"\n\n{'='*70}\nViolation score test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the violation score (str) is changed to -1.0, 0.0, 50.1, 50.12345678911121314151617181920,  99.99, 100.0, 101\n"
+    print(log_row)
+
+    violation_scores = [-1.0, 0.0, 50.1, 50.12345678911121314151617181920,  99.99, 100.0, 101]
+    for violation_score in violation_scores:
+        log_row += f"{'-'*25}\n\n----Violation score = {violation_score}\n"
+        print(f"{'-'*25}\n\n----Violation score = {violation_score}\n")
+        try:
+            violation = classes.ViolationLog()
+            violation.set_as_default_correct_dict()
+            violation.update_image_as(resolution_key= "test_default", image_format = "jpg")                
+            violation.update_violation_dict_key(key = "ViolationScore", value = str(violation_score))
+
+            post_request.clear_body()
+            post_request.body["SafetyData"].append(violation.get_violation_log())
+            r = post_request.send_post_request()
+            log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+            log_row += violation.print_()
+        except Exception as e:
+            print(f"Error: {e}")
+            return f"Error: {e}"
+
+    return log_row
+
 def check_data_types_for_all_fields(post_request:classes.PostRequest = None):
 
     log_row = f"\n\n{'='*70}\nData types test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the data types are changed for each field one at a time\n"
@@ -310,4 +335,6 @@ post_request.clear_body()
 # time.sleep(2.0)
 # append_text_to_txt_file(text = future_date_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 # time.sleep(2.0)
-append_text_to_txt_file(text = check_data_types_for_all_fields(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = check_violation_score(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
+# append_text_to_txt_file(text = check_data_types_for_all_fields(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
