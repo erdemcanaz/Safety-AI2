@@ -134,7 +134,7 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
     print(log_row)
 
     for number_of_violations in [1, 5, 10, 25]:    
-        log_row += f"----Number of violations = {number_of_violations}"
+        log_row += f"----Number of violations = {number_of_violations}\n"
         try:
             post_request.clear_body()
             violations_list = []
@@ -151,7 +151,7 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
 
             for violation_ in violations_list[:10]:
                 log_row += violation_.print_()+"\n"
-            if len(violations_list > 10):print("...\n")
+            if len(violations_list) > 10:print("...\n")
         
         except Exception as e:
             print(f"Error: {e}")
