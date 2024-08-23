@@ -231,12 +231,12 @@ def image_encoding_and_resolution_test(post_request:classes.PostRequest = None):
                 post_request.body["SafetyData"].append(violation.get_violation_log())
                 r = post_request.send_post_request()
                 log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
-                log_row += violation.print_()
-                return log_row
+                log_row += violation.print_()               
             except Exception as e:
                 print(f"Error: {e}")
                 return f"Error: {e}"
-
+            
+    return log_row
 #================================================================================================
 PARAM_LOG_TXT_NAME = "test_log.txt"
 
@@ -246,14 +246,14 @@ append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
+# append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
+# append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
+# append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
+# append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
+# append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
 append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
