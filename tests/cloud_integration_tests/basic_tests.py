@@ -67,23 +67,6 @@ def create_mock_data(type_of_data:str = None):
     else:
         raise ValueError("Unknown type_of_data")
 
-def ping_endpoint(post_request:classes.PostRequest = None):
-    endpoint_url = post_request.endpoint_url
-    log_row = f"\n\n{'='*70}\nPing test: ping to {endpoint_url}\n"
-    print(log_row)
-    try:
-        response = requests.get(endpoint_url)
-        if response.status_code == 200:
-            print(f"Ping to {endpoint_url} successful!")
-            log_row += f"Ping to {endpoint_url} successful!\n"
-        else:
-            print(f"Ping to {endpoint_url} failed with status code: {response.status_code}")
-            log_row += f"Ping to {endpoint_url} failed with status code: {response.status_code}\n"
-    except requests.exceptions.RequestException as e:
-        print(f"Error pinging {endpoint_url}: {e}")
-
-    return log_row
-
 def clear_txt_file(file_name:str = None):
     with open(file_name, "w") as f:
         f.write("")
@@ -282,8 +265,6 @@ append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-append_text_to_txt_file(text = ping_endpoint(post_request = post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
 # append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 # time.sleep(2.0)
 # append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
