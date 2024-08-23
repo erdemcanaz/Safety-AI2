@@ -173,6 +173,38 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
     
     return log_row
 
+def date_formats_request_test(post_request:classes.PostRequest = None):
+    # Send a single request with a default violation log that is known to be working
+
+    log_row = f"\n\n{'='*70}\Date format test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the date is gradually set to more general. For example  15.08.2024 11:11:23 ->  15.08.2024 11:11 -> ... ->  15.08.2024 \n"
+    print(log_row)
+
+    try:
+        for date_format in ["%d.%m.%Y %H:%M:%S.%f", "%d.%m.%Y %H:%M:%S", "%d.%m.%Y %H:%M", "%d.%m.%Y %H", "%d.%m.%Y"]:
+            time.sleep(2.5)
+            log_row += f"{'-'*25}\n----Date format = {date_format}\n"
+            try:
+                violation = classes.ViolationLog()
+                violation.set_as_default_correct_dict()
+                violation.update_image_as(resolution_key= "test_default", image_format = "jpg")                
+                timestamp = datetime.datetime.now().strftime(date_format)
+                violation.update_violation_dict_key(key = "RelatedShiftDate", value = timestamp)
+                violation.update_violation_dict_key(key = "DeviceTimestamp", value = timestamp)
+
+                post_request.clear_body()
+                post_request.body["SafetyData"].append(violation.get_violation_log())
+                r = post_request.send_post_request()
+                log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+                log_row += violation.print_()
+            except Exception as e:
+                log_row += f"\nError: {e}"
+
+        return log_row
+    except Exception as e:
+        print(f"Error: {e}")
+        return f"Error: {e}"
+
+#================================================================================================
 PARAM_LOG_TXT_NAME = "test_log.txt"
 
 clear_txt_file(file_name=PARAM_LOG_TXT_NAME)
@@ -181,7 +213,6 @@ append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-
 append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 time.sleep(2.5)
 append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
@@ -189,3 +220,5 @@ time.sleep(2.5)
 append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 time.sleep(2.5)
 append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.5)
+append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
