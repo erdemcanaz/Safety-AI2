@@ -135,6 +135,7 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
 
     for number_of_violations in [1, 5, 10, 25]:    
         log_row += f"----Number of violations = {number_of_violations}\n"
+        print(f"----Number of violations = {number_of_violations}\n")
         try:
             post_request.clear_body()
             violations_list = []
