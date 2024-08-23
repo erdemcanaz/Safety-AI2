@@ -65,11 +65,12 @@ class ViolationLog:
         width, height = int(width), int(height)
         random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 
-        text = self.violation_dict["ViolationUID"]
+        text = f"Violation: {self.violation_dict["ViolationUID"]} | ({width}x{height}) | {image_format}"
         text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 1)[0]
         text_x = (random_frame.shape[1] - text_width) // 2
         text_y = (random_frame.shape[0] + text_height) // 2
         cv2.putText(random_frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
+
 
         success, encoded_image = cv2.imencode(f'.{image_format}', random_frame)
         if not success:
