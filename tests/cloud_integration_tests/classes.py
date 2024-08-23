@@ -65,7 +65,7 @@ class ViolationLog:
         width, height = int(width), int(height)
         random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 
-        text = f"Violation: {self.violation_dict["ViolationUID"]} | ({width}x{height}) | {image_format}"
+        text = f"Violation: {self.violation_dict['ViolationUID']} | ({width}x{height}) | {image_format}"
         text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 1)[0]
         text_x = (random_frame.shape[1] - text_width) // 2
         text_y = (random_frame.shape[0] + text_height) // 2
