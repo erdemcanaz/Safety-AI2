@@ -5,7 +5,7 @@ import datetime
 
 class ViolationLog:
     COMMON_RESOLUTIONS = {
-        "test_default": "1280x720",  # quarter of 1920x1080
+        "test_default": "640x360",   # 
         "240p": "320x240",           # 
         "360p": "640x360",           # 
         "480p": "720x480",           # 345,600 pixels, ~1 MB
