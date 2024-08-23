@@ -6,8 +6,10 @@ import datetime
 class ViolationLog:
     COMMON_RESOLUTIONS = {
         "test_default": "1280x720",  # quarter of 1920x1080
-        "VGA": "640x480",            # 307,200 pixels, ~900 KB
+        "240p": "320×240",           # 
+        "360p": "640x360",           # 
         "480p": "720x480",           # 345,600 pixels, ~1 MB
+        "VGA": "640x480",            # 307,200 pixels, ~900 KB
         "576i": "720x576",           # 414,720 pixels, ~1.2 MB
         "SVGA": "800x600",           # 480,000 pixels, ~1.4 MB
         "HD": "1366x768",            # 1,049,088 pixels, ~3 MB

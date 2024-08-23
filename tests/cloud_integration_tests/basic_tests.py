@@ -213,7 +213,7 @@ def date_formats_request_test(post_request:classes.PostRequest = None):
     return log_row, brief_log_row
 
 def image_encoding_and_resolution_test(post_request:classes.PostRequest = None):
-    resolution_names = ["test_default", "VGA", "480p", "576i", "SVGA", "HD", "XGA", "WXGA", "720p", "SXGA", "1080p", "QHD", "4K UHD", "5K", "8K UHD"]
+    resolution_names = ["test_default", "VGA", "240p", "360p", "480p", "576i", "SVGA", "HD", "XGA", "WXGA", "720p", "SXGA", "1080p", "QHD", "4K UHD", "5K", "8K UHD"]
     image_encodings = [".jpg", ".png"]
     
     brief_log_row = f"\n\n{'='*70}\nImage encoding and resolution test: post a single request with a default violation log that is known to be working where format is {image_encodings} and resolution is {resolution_names}\n"
