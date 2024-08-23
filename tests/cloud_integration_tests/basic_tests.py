@@ -244,6 +244,7 @@ def image_encoding_and_resolution_test(post_request:classes.PostRequest = None):
                 log_row += f"Error: {e}"
                 brief_log_row += f"Image encoding = {image_encoding}, Resolution = {resolution_name} | Error: {e}"
             log_row += f"end_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n"
+        
             print(f"end_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n")
             
     return log_row, brief_log_row
