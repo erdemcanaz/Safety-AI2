@@ -1,6 +1,6 @@
 import requests
 import classes
-import pprint,random, unicodedata,datetime
+import pprint,random, unicodedata,datetime, time
 
 def create_mock_data(type_of_data:str = None):   
     if type_of_data == "None":
@@ -108,6 +108,19 @@ def incorrect_token_test(post_request:classes.PostRequest = None):
     finally:
         post_request.headers["token"] = initial_token_value
 
+def empty_request_test(post_request:classes.PostRequest = None):
+    # Send an empty request
+    log_row = "\n\nEmpty request test: post an empty request\n"
+    print(log_row)
+    try:
+        post_request.clear_body()
+        r = post_request.send_post_request()
+        log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+        return log_row
+    except Exception as e:
+        print(f"Error: {e}")
+        return f"Error: {e}"
+    
 def correct_request_test(post_request:classes.PostRequest = None):
     # Send a single request with a default violation log that is known to be working
 
@@ -136,6 +149,7 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
     for number_of_violations in [1, 5, 10, 25]:    
         log_row += f"----Number of violations = {number_of_violations}\n"
         print(f"----Number of violations = {number_of_violations}\n")
+        time.sleep(2.5)
         try:
             post_request.clear_body()
             violations_list = []
@@ -146,7 +160,6 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
                 post_request.append_new_data(violation.get_violation_log())
                 violations_list.append(violation)
 
-            post_request.clear_body()
             r = post_request.send_post_request()
             log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
 
@@ -169,5 +182,6 @@ post_request = classes.PostRequest()
 post_request.clear_body()
 
 append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
