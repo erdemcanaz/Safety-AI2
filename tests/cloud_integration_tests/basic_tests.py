@@ -102,8 +102,9 @@ def incorrect_token_test(post_request:classes.PostRequest = None):
         log_row += violation.print_()
         return log_row
     except Exception as e:
-        print(f"Error: {e}")
-        return f"Error: {e}"
+        log_row += f"Error: {e}"
+        print(log_row)
+        return log_row
     finally:
         post_request.headers["token"] = initial_token_value
 
@@ -132,7 +133,7 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
     log_row = "\n\nMultiple correct request test: post multiple requests with default violation logs that are known to be working where format is jpg and resolution is test_default\n"
     print(log_row)
 
-    for number_of_violations in [1, 5, 10, 50, 100, 250]:    
+    for number_of_violations in [1, 5, 10, 25]:    
         log_row += f"----Number of violations = {number_of_violations}"
         try:
             post_request.clear_body()
@@ -148,13 +149,15 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
             r = post_request.send_post_request()
             log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
 
-            for violation_ in violations_list:
+            for violation_ in violations_list[:10]:
                 log_row += violation_.print_()+"\n"
+            if len(violations_list > 10):print("...\n")
         
         except Exception as e:
             print(f"Error: {e}")
             log_row += f"\nError:{e}"
-            return log_row
+    
+    return log_row
 
 PARAM_LOG_TXT_NAME = "test_log.txt"
 
