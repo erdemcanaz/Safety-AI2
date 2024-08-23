@@ -67,15 +67,22 @@ def create_mock_data(type_of_data:str = None):
     else:
         raise ValueError("Unknown type_of_data")
 
-def ping_endpoint(endpoint_url:str=None):
+def ping_endpoint(post_request:classes.PostRequest = None):
+    endpoint_url = post_request.endpoint_url
+    log_row = f"\n\n{'='*70}\nPing test: ping to {endpoint_url}\n"
+    print(log_row)
     try:
         response = requests.get(endpoint_url)
         if response.status_code == 200:
             print(f"Ping to {endpoint_url} successful!")
+            log_row += f"Ping to {endpoint_url} successful!\n"
         else:
             print(f"Ping to {endpoint_url} failed with status code: {response.status_code}")
+            log_row += f"Ping to {endpoint_url} failed with status code: {response.status_code}\n"
     except requests.exceptions.RequestException as e:
         print(f"Error pinging {endpoint_url}: {e}")
+
+    return log_row
 
 def clear_txt_file(file_name:str = None):
     with open(file_name, "w") as f:
@@ -222,10 +229,13 @@ def image_encoding_and_resolution_test(post_request:classes.PostRequest = None):
             time.sleep(2)
             log_row += f"{'-'*25}\n\n----Image encoding = {image_encoding}, Resolution = {resolution_name}\n"
             print(f"{'-'*25}\n\n----Image encoding = {image_encoding}, Resolution = {resolution_name}\n")
+            log_row += f"start_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n"
+            print(f"start_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n")
             try:
                 violation = classes.ViolationLog()
                 violation.set_as_default_correct_dict()
                 violation.update_image_as(resolution_key= resolution_name, image_format = image_encoding)
+                violation.update_violation_dict_key("ViolationUID", resolution_name+"-"+violation.violation_dict["ViolationUID"])
                 
                 post_request.clear_body()
                 post_request.body["SafetyData"].append(violation.get_violation_log())
@@ -235,8 +245,34 @@ def image_encoding_and_resolution_test(post_request:classes.PostRequest = None):
             except Exception as e:
                 print(f"Error: {e}")
                 return f"Error: {e}"
+            log_row += f"end_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n"
+            print(f"end_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n")
             
     return log_row
+
+def future_date_test(post_request:classes.PostRequest = None):
+    # Send a single request with a default violation log that is known to be working
+
+    log_row = f"\n\n{'='*70}\nFuture date test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the date is set to future (+5 years) \n"
+    print(log_row)
+
+    try:
+        violation = classes.ViolationLog()
+        violation.set_as_default_correct_dict()
+        violation.update_image_as(resolution_key= "test_default", image_format = "jpg")                
+        timestamp = (datetime.datetime.now() + datetime.timedelta(years=5)).strftime("%d.%m.%Y %H:%M:%S")
+        violation.update_violation_dict_key(key = "RelatedShiftDate", value = timestamp)
+        violation.update_violation_dict_key(key = "DeviceTimestamp", value = timestamp)
+
+        post_request.clear_body()
+        post_request.body["SafetyData"].append(violation.get_violation_log())
+        r = post_request.send_post_request()
+        log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+        log_row += violation.print_()
+        return log_row
+    except Exception as e:
+        print(f"Error: {e}")
+        return f"Error: {e}"
 #================================================================================================
 PARAM_LOG_TXT_NAME = "test_log.txt"
 
@@ -246,6 +282,8 @@ append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime
 post_request = classes.PostRequest()
 post_request.clear_body()
 
+append_text_to_txt_file(text = ping_endpoint(post_request = post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
 # append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 # time.sleep(2.0)
 # append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
@@ -256,4 +294,6 @@ post_request.clear_body()
 # time.sleep(2.0)
 # append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
 # time.sleep(2.0)
-append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+#append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+# time.sleep(2.0)
+append_text_to_txt_file(text = future_date_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
