@@ -282,6 +282,30 @@ def check_violation_score(post_request:classes.PostRequest = None):
 
     return log_row
 
+def check_defined_rule_types(post_request:classes.PostRequest = None):
+    log_row = f"\n\n{'='*70}\nViolation type test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the violation type is changed to unknown types\n"
+    print(log_row)
+
+    violation_types = ["not defined rule", "restricted_area_rule_statistics", "hardhat_violation", "working_at_height_violation"]
+    for violation_type in violation_types:
+        log_row += f"{'-'*25}\n\n----Violation type = {violation_type}\n"
+        print(f"{'-'*25}\n\n----Violation type = {violation_type}\n")
+        try:
+            violation = classes.ViolationLog()
+            violation.set_as_default_correct_dict()
+            violation.update_image_as(resolution_key= "test_default", image_format = "jpg")                
+            violation.update_violation_dict_key(key = "ViolationType", value = violation_type)
+
+            post_request.clear_body()
+            post_request.body["SafetyData"].append(violation.get_violation_log())
+            r = post_request.send_post_request()
+            log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+            log_row += violation.print_()
+        except Exception as e:
+            print(f"Error: {e}")
+            log_row += f"Error: {e}"
+    return log_row
+        
 def check_data_types_for_all_fields(post_request:classes.PostRequest = None):
 
     log_row = f"\n\n{'='*70}\nData types test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the data types are changed for each field one at a time\n"
@@ -321,20 +345,22 @@ append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-# append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-# append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-# append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-# append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-# append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-#append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-# append_text_to_txt_file(text = future_date_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
+append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = future_date_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
 append_text_to_txt_file(text = check_violation_score(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-# time.sleep(2.0)
-# append_text_to_txt_file(text = check_data_types_for_all_fields(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = check_defined_rule_types(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = check_data_types_for_all_fields(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
