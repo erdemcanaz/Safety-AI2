@@ -135,7 +135,7 @@ def correct_request_test(post_request:classes.PostRequest = None):
         log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
         brief_log_row += f"status_code: {r['status_code']} | expected_status_code: 200 | text: {r['text']}\n"
         log_row += violation.print_()
-        return log_row
+        return log_row, brief_log_row
     except Exception as e:
         print(f"Error: {e}")
         log_row += f"Error: {e}"
@@ -269,7 +269,6 @@ def future_date_test(post_request:classes.PostRequest = None):
         log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
         brief_log_row += f"status_code: {r['status_code']} | expected_status_code: 200 | text: {r['text']}\n"
         log_row += violation.print_()
-        return log_row
     except Exception as e:
         print(f"Error: {e}")
         log_row += f"Error: {e}"
@@ -376,7 +375,6 @@ append_text_to_txt_file(file_name=PARAM_BRIEF_LOG_TXT_NAME, text=f"TEST LOGS {da
 post_request = classes.PostRequest()
 post_request.clear_body()
 
-
 log_row, brief_log_row = incorrect_token_test(post_request=post_request)
 append_text_to_txt_file(text = log_row, file_name= PARAM_LOG_TXT_NAME)
 append_text_to_txt_file(text = brief_log_row, file_name= PARAM_BRIEF_LOG_TXT_NAME)
@@ -401,21 +399,18 @@ log_row, brief_log_row = image_encoding_and_resolution_test(post_request=post_re
 append_text_to_txt_file(text = log_row, file_name= PARAM_LOG_TXT_NAME)
 append_text_to_txt_file(text = brief_log_row, file_name= PARAM_BRIEF_LOG_TXT_NAME)
 time.sleep(2.0)
-
-append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+log_row, brief_log_row = future_date_test(post_request=post_request)
+append_text_to_txt_file(text = log_row, file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = brief_log_row, file_name= PARAM_BRIEF_LOG_TXT_NAME)
 time.sleep(2.0)
-append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+log_row, brief_log_row = check_violation_score(post_request=post_request)
+append_text_to_txt_file(text = log_row, file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = brief_log_row, file_name= PARAM_BRIEF_LOG_TXT_NAME)
 time.sleep(2.0)
-append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+log_row, brief_log_row = check_defined_rule_types(post_request=post_request)
+append_text_to_txt_file(text = log_row, file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = brief_log_row, file_name= PARAM_BRIEF_LOG_TXT_NAME)
 time.sleep(2.0)
-append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = future_date_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = check_violation_score(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = check_defined_rule_types(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.0)
-append_text_to_txt_file(text = check_data_types_for_all_fields(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+log_row, brief_log_row = check_data_types_for_all_fields(post_request=post_request)
+append_text_to_txt_file(text = log_row, file_name= PARAM_LOG_TXT_NAME)
+append_text_to_txt_file(text = brief_log_row, file_name= PARAM_BRIEF_LOG_TXT_NAME)
