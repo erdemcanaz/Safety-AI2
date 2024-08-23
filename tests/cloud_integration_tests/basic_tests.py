@@ -170,8 +170,8 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
                 log_row += violation_.print_()+"\n"
             if len(violations_list) > 50:print("...\n")
 
-            log_row += f"end_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n"
-            print(f"end_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n")
+            log_row += f"end_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n"
+            print(f"end_time: {datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')}\n")
         except Exception as e:
             print(f"Error: {e}")
             log_row += f"\nError:{e}"
