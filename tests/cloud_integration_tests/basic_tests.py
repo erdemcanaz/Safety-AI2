@@ -86,7 +86,7 @@ def append_text_to_txt_file(text:str = None, file_name:str = None):
         f.write(text)
 
 def incorrect_token_test(post_request:classes.PostRequest = None):
-    log_row = "\n\nIncorrect token test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default but with an incorrect token value\n"
+    log_row = f"\n\n{'='*70}\nIncorrect token test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default but with an incorrect token value\n"
     print(log_row)
     initial_token_value = post_request.headers["token"]
     try:
@@ -110,7 +110,7 @@ def incorrect_token_test(post_request:classes.PostRequest = None):
 
 def empty_request_test(post_request:classes.PostRequest = None):
     # Send an empty request
-    log_row = "\n\nEmpty request test: post an empty request\n"
+    log_row = f"\n\n{'='*70}\nEmpty request test: post an empty request\n"
     print(log_row)
     try:
         post_request.clear_body()
@@ -124,7 +124,7 @@ def empty_request_test(post_request:classes.PostRequest = None):
 def correct_request_test(post_request:classes.PostRequest = None):
     # Send a single request with a default violation log that is known to be working
 
-    log_row = "\n\nCorrect request test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default\n"
+    log_row = f"\n\n{'='*70}\nCorrect request test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default\n"
     print(log_row)
     try:
         violation = classes.ViolationLog()
@@ -143,12 +143,12 @@ def correct_request_test(post_request:classes.PostRequest = None):
 
 def multiple_correct_request_test(post_request:classes.PostRequest = None):
     # Send a single request with multiple default violation logs that are known to be working
-    log_row = "\n\nMultiple correct request test: post multiple requests with default violation logs that are known to be working where format is jpg and resolution is test_default\n"
+    log_row = f"\n\n{'='*70}\nMultiple correct request test: post multiple requests with default violation logs that are known to be working where format is jpg and resolution is test_default\n"
     print(log_row)
 
     for number_of_violations in [1, 5, 10, 25]:    
-        log_row += f"----Number of violations = {number_of_violations}\n"
-        print(f"----Number of violations = {number_of_violations}\n")
+        log_row += f"{'-'*25}\n----Number of violations = {number_of_violations}\n"
+        print(f"{'-'*25}\n----Number of violations = {number_of_violations}\n")
         time.sleep(2.5)
         try:
             post_request.clear_body()
@@ -181,7 +181,11 @@ append_text_to_txt_file(file_name=PARAM_LOG_TXT_NAME, text=f"TEST LOGS {datetime
 post_request = classes.PostRequest()
 post_request.clear_body()
 
+
 append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.5)
 append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.5)
 append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.5)
 append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
