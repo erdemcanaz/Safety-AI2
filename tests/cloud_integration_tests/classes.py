@@ -7,7 +7,6 @@ class ViolationLog:
     COMMON_RESOLUTIONS = {
         "test_default": "1280x720",  # quarter of 1920x1080
         "VGA": "640x480",            # 307,200 pixels, ~900 KB
-        "480i": "720x480",           # 345,600 pixels, ~1 MB
         "480p": "720x480",           # 345,600 pixels, ~1 MB
         "576i": "720x576",           # 414,720 pixels, ~1.2 MB
         "SVGA": "800x600",           # 480,000 pixels, ~1.4 MB
@@ -60,7 +59,7 @@ class ViolationLog:
 
     def update_violation_dict_key(self, key:str, value:str):
         self.violation_dict[key] = value
-        
+
     def update_image_as(self, resolution_key:str = None, image_format:str = None):
         width, height = ViolationLog.COMMON_RESOLUTIONS[resolution_key].split("x")
         width, height = int(width), int(height)

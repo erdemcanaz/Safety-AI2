@@ -146,11 +146,14 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
     log_row = f"\n\n{'='*70}\nMultiple correct request test: post multiple requests with default violation logs that are known to be working where format is jpg and resolution is test_default\n"
     print(log_row)
 
-    for number_of_violations in [1, 5, 10, 25]:    
+    for number_of_violations in [1, 5, 10, 15, 20, 25]:    
         log_row += f"{'-'*25}\n----Number of violations = {number_of_violations}\n"
         print(f"{'-'*25}\n----Number of violations = {number_of_violations}\n")
-        time.sleep(2.5)
+        time.sleep(2.0)
         try:
+            log_row += f"start_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n"
+            print(f"start_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n")
+
             post_request.clear_body()
             violations_list = []
             for i in range(number_of_violations):
@@ -165,8 +168,10 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
 
             for violation_ in violations_list[:10]:
                 log_row += violation_.print_()+"\n"
-            if len(violations_list) > 10:print("...\n")
-        
+            if len(violations_list) > 50:print("...\n")
+
+            log_row += f"end_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n"
+            print(f"end_time: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n")
         except Exception as e:
             print(f"Error: {e}")
             log_row += f"\nError:{e}"
@@ -176,13 +181,14 @@ def multiple_correct_request_test(post_request:classes.PostRequest = None):
 def date_formats_request_test(post_request:classes.PostRequest = None):
     # Send a single request with a default violation log that is known to be working
 
-    log_row = f"\n\n{'='*70}\Date format test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the date is gradually set to more general. For example  15.08.2024 11:11:23 ->  15.08.2024 11:11 -> ... ->  15.08.2024 \n"
+    log_row = f"\n\n{'='*70}\nDate format test: post a single request with a default violation log that is known to be working where format is jpg and resolution is test_default. But the date is gradually set to more general. For example  15.08.2024 11:11:23 ->  15.08.2024 11:11 -> ... ->  15.08.2024 \n"
     print(log_row)
 
     try:
         for date_format in ["%d.%m.%Y %H:%M:%S.%f", "%d.%m.%Y %H:%M:%S", "%d.%m.%Y %H:%M", "%d.%m.%Y %H", "%d.%m.%Y"]:
-            time.sleep(2.5)
-            log_row += f"{'-'*25}\n----Date format = {date_format}\n"
+            time.sleep(2.0)
+            log_row += f"{'-'*25}\n\n----Date format = {date_format}\n"
+            print(f"{'-'*25}\n\n----Date format = {date_format}\n")
             try:
                 violation = classes.ViolationLog()
                 violation.set_as_default_correct_dict()
@@ -204,6 +210,33 @@ def date_formats_request_test(post_request:classes.PostRequest = None):
         print(f"Error: {e}")
         return f"Error: {e}"
 
+def image_encoding_and_resolution_test(post_request:classes.PostRequest = None):
+    resolution_names = ["test_default", "VGA", "480p", "576i", "SVGA", "HD", "XGA", "WXGA", "720p", "SXGA", "1080p", "QHD", "4K UHD", "5K", "8K UHD"]
+    image_encodings = [".jpg", ".png"]
+    
+    log_row = f"\n\n{'='*70}\nImage encoding and resolution test: post a single request with a default violation log that is known to be working where format is {image_encodings} and resolution is {resolution_names}\n"
+    print(log_row)
+
+    for image_encoding in image_encodings:
+        for resolution_name in resolution_names:
+            time.sleep(2)
+            log_row += f"{'-'*25}\n\n----Image encoding = {image_encoding}, Resolution = {resolution_name}\n"
+            print(f"{'-'*25}\n\n----Image encoding = {image_encoding}, Resolution = {resolution_name}\n")
+            try:
+                violation = classes.ViolationLog()
+                violation.set_as_default_correct_dict()
+                violation.update_image_as(resolution_key= resolution_name, image_format = image_encoding)
+                
+                post_request.clear_body()
+                post_request.body["SafetyData"].append(violation.get_violation_log())
+                r = post_request.send_post_request()
+                log_row += post_request.print_(status_code=r["status_code"], expected_status_code=200, text=r["text"])+"\n"
+                log_row += violation.print_()
+                return log_row
+            except Exception as e:
+                print(f"Error: {e}")
+                return f"Error: {e}"
+
 #================================================================================================
 PARAM_LOG_TXT_NAME = "test_log.txt"
 
@@ -214,11 +247,13 @@ post_request = classes.PostRequest()
 post_request.clear_body()
 
 append_text_to_txt_file(text = incorrect_token_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.5)
+time.sleep(2.0)
 append_text_to_txt_file(text = empty_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.5)
+time.sleep(2.0)
 append_text_to_txt_file(text = correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.5)
+time.sleep(2.0)
 append_text_to_txt_file(text = multiple_correct_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
-time.sleep(2.5)
+time.sleep(2.0)
 append_text_to_txt_file(text = date_formats_request_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
+time.sleep(2.0)
+append_text_to_txt_file(text = image_encoding_and_resolution_test(post_request=post_request), file_name= PARAM_LOG_TXT_NAME)
