@@ -1,4 +1,5 @@
 import cv2
+import preferences
 
 class MouseTracker:
     def __init__(self, window_name="Window"):
@@ -15,7 +16,7 @@ class MouseTracker:
         self.last_position = (x, y)  # Update last position
         normalized_x = x / 1920
         normalized_y = y / 1080
-        print(f"Mouse position: {self.last_position}, ({normalized_x:.3f}, {normalized_y:.3f})")
+        if preferences.PRINT_MOUSE_COORDINATES: print(f"Mouse position: {self.last_position}, ({normalized_x:.3f}, {normalized_y:.3f})")
 
 
         if event == cv2.EVENT_LBUTTONDOWN:
