@@ -2,6 +2,7 @@ import uuid, os, time, pprint, requests, datetime
 from pathlib import Path
 import cv2, numpy as np
 import SQL_module
+import preferences
 
 class AdminPanel:
 
@@ -18,7 +19,7 @@ class AdminPanel:
             "4": "Fetch camera info by uuid",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -93,7 +94,7 @@ class AdminPanel:
             "2": "Get encrypted image by uuid",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -156,7 +157,7 @@ class AdminPanel:
             "3": "Get all last camera frame info without BLOB",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -223,7 +224,7 @@ class AdminPanel:
             "3": "Get all camera counts",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -272,7 +273,7 @@ class AdminPanel:
             "6": "Fetch all user info table"
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -344,7 +345,7 @@ class AdminPanel:
             "4": "Fetch all authorizations",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -391,7 +392,7 @@ class AdminPanel:
             "2": "Get Shift Counts Between Dates",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -428,7 +429,7 @@ class AdminPanel:
             "3": "Fetch All Rules",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -475,7 +476,7 @@ class AdminPanel:
             "3": "Fetch Reported Violations by Violation UUID",
         }
         while True:
-            os.system("cls")
+            os.system(preferences.CLEAR_TERMINAL_COMMAND)
             for key, value in TASKS.items(): print(f"{key}: {value}")
             chosen_task = input("Please select a task to perform:".ljust(50))
             if chosen_task == "0":
@@ -551,7 +552,7 @@ if __name__ == "__main__":
         "9": "Reported Violations Table"
     }
     while True:
-        os.system("cls")
+        os.system(preferences.CLEAR_TERMINAL_COMMAND)
         for key, value in TASKS.items(): print(f"{key}: {value}")
         chosen_task = input("Please select a table to work with:".ljust(50))
 
