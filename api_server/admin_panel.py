@@ -4,12 +4,37 @@ import cv2, numpy as np
 import SQL_module
 import preferences
 
-class AdminPanel:
+class AdminPanel:       
 
     def __init__(self, db_name:str = "database.db", delete_existing_db:bool = False):
         self.database_manager = SQL_module.DatabaseManager(db_name = db_name, delete_existing_db=delete_existing_db)
         time.sleep(1)
         
+    def create_admin_user(self):
+        username = input("Enter username:".ljust(50))
+        plain_password = input("Enter plain password".ljust(50))
+        personal_fullname = input("Enter personal fullname".ljust(50))
+
+        AUTHORIZATIONS = [
+            'MENAGE_USERS',
+            'ISG_UI',
+            'QUALITY_UI',
+            'SECURITY_UI',
+            'EDIT_RULES',
+            'REPORT_VIOLATIONS',
+            'SUMMARY_PAGE',
+            'UPDATE_CAMERAS',
+            'IOT_DEVICES'
+        ]
+
+        self.database_manager.create_user(username=username, personal_fullname=personal_fullname, plain_password=plain_password)
+        user_uuid=self.database_manager.get_user_by_username(username=username)
+        for authorization_name in AUTHORIZATIONS:
+            self.database_manager.authorize_user(user_uuid=user_uuid, authorization_name=authorization_name)
+
+        print("Admin user is created succesfully")
+        time.sleep(2)
+
     def camera_info_table(self):
         TASKS = {
             "0": "Previous Menu",
