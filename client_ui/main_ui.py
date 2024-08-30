@@ -76,7 +76,7 @@ cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 cv2.setWindowProperty(WINDOW_NAME, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 mouse_tracker = MouseTracker(window_name=WINDOW_NAME)
 keyboard_tracker = KeyboardTracker()
-api_dealer = ApiDealer(server_ip_address="192.168.0.26")
+api_dealer = ApiDealer(server_ip_address=preferences.SERVER_IP_ADDRESS)
 popup_dealer = PopupDealer(pos_n=(0.33, 0.90), size_n=(0.33, 0.05))
 
 DYNAMIC_PROGRAM_STATE = [0,0,0] #page no, page state, other if required -> login page: [1,0,0]
