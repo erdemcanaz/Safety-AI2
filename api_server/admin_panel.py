@@ -574,7 +574,8 @@ if __name__ == "__main__":
         "6": "Authorizations Table",
         "7": "Shift Counts Table",
         "8": "Rules Info Table",
-        "9": "Reported Violations Table"
+        "9": "Reported Violations Table",
+        "10": "Create Admin User"
     }
     while True:
         os.system(preferences.CLEAR_TERMINAL_COMMAND)
@@ -601,6 +602,8 @@ if __name__ == "__main__":
             admin_panel.rules_info_table()
         elif chosen_task == "9":
             admin_panel.reported_violations_table()
+        elif chosen_task == "10":
+            admin_panel.create_admin_user()
         else:
             print("Invalid choice. Please try again.")
             time.sleep(2)     
