@@ -7,7 +7,7 @@ IMAGE_PATHS = {
     "register_page_template": "src/templates/register_page_template.png",
     "which_app_page_template": "src/templates/which_app_page_template.png",
     "update_cameras_page_template": "src/templates/update_cameras_page_template.png",
-    "isg_ui_page_template": "src/templates/ISG_ui_page_template.png",
+    "isg_ui_page_template": "src/templates/isg_ui_page_template.png",
     "edit_rules_page_template": "src/templates/edit_rules_page_template.png",
     "reported_violations_page_template": "src/templates/reported_violations_page_template.png",
 
