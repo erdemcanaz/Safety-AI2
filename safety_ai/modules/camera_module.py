@@ -259,18 +259,18 @@ class StreamManager:
         for camera_info_dict in self.camera_info_dicts.values():
             camera_info_dict.update({'active_rules':[]}) 
 
-        # Reinitialize the camera stream fetchers if there is a change in the camera info       
-        self.stop_cameras_by_uuid([]) # Stop all cameras, waits for the threads to join
+        # Stop all cameras. Code waits for the threads to join.
+        self.stop_cameras_by_uuid([])
+        self.camera_stream_fetchers = [] # Garbage collect the old camera stream fetchers
         for camera_info_dict in self.camera_info_dicts.values():
             self.camera_stream_fetchers.append(CameraStreamFetcher(**camera_info_dict))
 
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
         stop_all_cameras = len(camera_uuids) == 0
-        for camera in self.cameras:
+        for camera in self.camera_stream_fetchers:
             if stop_all_cameras or camera.camera_uuid in camera_uuids:
                 camera.stop_fetching_frames()  
 
-        
     def reinitiliaze_cameras_from_camera_configs_file(self, number_of_cameras:int = 24):
         # Ensure that the cameras are stopped before reinitializing them if they are already fetching frames    
         for camera in self.cameras:
