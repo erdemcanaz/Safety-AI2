@@ -159,7 +159,6 @@ class ReportedViolationsPage:
                 program_state[0] = 2
                 return
             elif callback == ["left_clicked_callback", self.assign_today_as_dates_button.identifier, True]:   
-                print("assign_today_as_dates_button")
                 today = datetime.datetime.now().strftime("%d.%m.%Y")    
                 self.start_date_input.set_text(today)
                 self.end_date_input.set_text(today)
@@ -168,7 +167,6 @@ class ReportedViolationsPage:
                 end_date = self.end_date_input.get_text()
                 result = self.api_dealer.fetch_reported_violations_between_dates(start_date_ddmmyyyy= start_date, end_date_ddmmyyyy = end_date)
                 if result[0]:
-                    pprint.pprint(result[2]['reported_violations'])
                     self.fetched_violations = result[2]['reported_violations'] # camera_uuid, image_uuid, region_name, violation_date, violation_score, violation_type, violation_uuid
                     formatted_violations = []
                     for ind, violation in enumerate(self.fetched_violations):                        

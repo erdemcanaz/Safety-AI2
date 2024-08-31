@@ -270,8 +270,6 @@ class EditRulesPage:
 
         # Apply the callbacks ==========================================
         for callback in callback_results:
-            if callback[0] != "mouse_over_callback":
-                print(callback)
             if callback == ["left_clicked_callback", self.previous_page_button.identifier, True]:
                 program_state[0] = 2
                 return
@@ -302,7 +300,6 @@ class EditRulesPage:
                 if self.selected_camera_info is None: return
                 camera_uuid = self.selected_camera_info["camera_uuid"]
                 result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
-                pprint.pprint(result)                
                 if result[0]:
                     self.selected_camera_last_frame_info = result[2]["last_frame_info"]
                     if self.selected_camera_last_frame_info is None:
@@ -351,7 +348,6 @@ class EditRulesPage:
             elif callback[0] == "item_right_clicked_callback" and callback[1] == self.rules_list_item.identifier:
                 selected_index = callback[3]
                 selected_rule_info = self.selected_camera_rules_info[selected_index]
-                pprint.pprint(selected_rule_info)
                 result = self.api_dealer.delete_rule_by_rule_uuid(rule_uuid=selected_rule_info["rule_uuid"])
                 if result[0]:
                     self.popup_dealer.append_popup({"background_color":(0,255,0), "created_at":time.time(), "duration":2, "text":"Kural silindi"})

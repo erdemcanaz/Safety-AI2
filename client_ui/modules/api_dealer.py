@@ -189,7 +189,6 @@ class ApiDealer():
         header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
         try:
             response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_encrypted_image_by_uuid?image_uuid={image_uuid}", headers=header, timeout=1)
-            pprint.pprint(response.json())
             if response.status_code == 200:
                 return [True, response.status_code, response.json()]
             else:

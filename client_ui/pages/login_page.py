@@ -130,7 +130,6 @@ class LoginPage:
                         }
                     )             
                 else:
-                    print(result)
                     self.popup_dealer.append_popup(
                         {
                             "background_color": (0, 0, 255),
