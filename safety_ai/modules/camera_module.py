@@ -288,7 +288,7 @@ class StreamManager:
         frames_to_show = []
     
         for camera in self.camera_stream_fetchers:
-            frame = camera.get_last_frame_info()["frame"] if camera.get_last_frame_info() is not None else None
+            frame = camera.get_last_frame_info()["cv2_frame"] if camera.get_last_frame_info() is not None else None
             if frame is not None:
                 frames_to_show.append(frame)            
 
