@@ -170,7 +170,8 @@ class StreamManager:
 
     def update_cameras(self, update_interval_seconds:float = 30):
         if time.time() - self.last_time_camera_info_dict_updated < update_interval_seconds: return # If the camera info was updated recently, skip updating it
-
+        self.last_time_camera_info_dict_updated = time.time()
+        
         # Fetch the camera info from the server and update the camera_info_dict
         response = self.api_dealer.fetch_all_camera_info()
         if response[0]:
