@@ -221,6 +221,7 @@ class ReportViolation(BaseModel):
 async def create_reported_violation_api(report_violation_data: ReportViolation):
     report_violation_data.update("save_folder", PREFERENCES.ENCRYPTED_IMAGE_FOLDER)
     try:
+        print("adqwdwqdqf")
         return {"reported_violation":  database_manager.create_reported_violation_v2(**report_violation_data.dict())}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
