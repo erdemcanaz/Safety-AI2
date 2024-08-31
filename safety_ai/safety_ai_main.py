@@ -16,11 +16,7 @@ sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the syste
 sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
 
 import PREFERENCES
-import (
-    safety_ai_api_dealer_module
-    camera_module
-    models_module
-)
+import safety_ai_api_dealer_module, camera_module, models_module
 
 #================================================================================================================================================================
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
