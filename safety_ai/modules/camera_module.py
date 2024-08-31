@@ -14,7 +14,7 @@ class CameraStreamFetcher:
             'camera_uuid',
             'camera_region',
             'camera_description',
-            'is_alive',
+            'camera_status',
             'NVR_ip',            
             'camera_ip_address',
             'username',
@@ -42,7 +42,7 @@ class CameraStreamFetcher:
         self.__print_wrapper(condition = PREFERENCES.SAFETY_AI_VERBOSES['camera_initialization'], message = f'CameraStreamFetcher object created for {self.camera_ip_address}')
 
     def __repr__(self) -> str:
-        return f'CameraStreamFetcher({self.camera_ip_address}, is_alive={self.is_alive}, is_fetching_frames={self.is_fetching_frames})'
+        return f'CameraStreamFetcher({self.camera_ip_address}, camera_status={self.camera_status}, is_fetching_frames={self.is_fetching_frames})'
     
     def __print_wrapper(self, condition:False, message:str = ""):
         if condition: print(f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
@@ -162,7 +162,7 @@ class CameraStreamFetcher:
 class StreamManager:
     def __init__(self, api_dealer:safety_ai_api_dealer.SafetyAIApiDealer = None) -> None:  
         self.api_dealer = api_dealer   
-        self.camera_info_dicts ={} # A dict where the key is the camera UUID and the value is the camera info
+        self.camera_info_dicts ={} # A dict where the key is the camera UUID and the value is the camera info | # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
         self.last_time_camera_info_dict_updated = 0 # The time when the camera info dictionary was last updated
         self.camera_rules_dicts = {} # A dict where the key is the camera UUID and the value is the camera rules
         self.last_time_camera_rules_dict_updated = 0 # The time when the camera rules dictionary was last updated
@@ -199,7 +199,7 @@ class StreamManager:
         is_camera_info_changed = False
         is_camera_removed = False
 
-        fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
+        fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username]
         fetched_camera_info_dicts = {fetched_camera_info_dict['camera_uuid']: fetched_camera_info_dict for fetched_camera_info_dict in fetched_dicts}
         
         #check for new cameras
