@@ -1,3 +1,5 @@
+.db
+
 !server/modules/trained_yolo_models/.gitkeep
 server/modules/trained_yolo_models/yolov8n-pose.pt
 server/modules/trained_yolo_models/yolov8s-pose.pt
