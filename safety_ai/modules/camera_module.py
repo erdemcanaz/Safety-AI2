@@ -160,23 +160,63 @@ class CameraStreamFetcher:
 class StreamManager:
     def __init__(self, api_dealer:safety_ai_api_dealer.SafetyAIApiDealer = None) -> None:  
         self.api_dealer = api_dealer   
-        self.camera_info_dict = {} # A dictionary to store the camera informations   
+        self.camera_info_dicts ={} # A dict where the key is the camera UUID and the value is the camera info
         self.last_time_camera_info_dict_updated = 0 # The time when the camera info dictionary was last updated
-        self.camera_rules_dict = {} # A dictionary to store the camera rules
+        self.camera_rules_dicts = {} # A dict where the key is the camera UUID and the value is the camera rules
         self.last_time_camera_rules_dict_updated = 0 # The time when the camera rules dictionary was last updated
-        self.cameras = []
+        self.camera_stream_fetchers = [] # A list of CameraStreamFetcher objects
 
         # self.reinitiliaze_cameras_from_camera_configs_file()
 
     def update_cameras(self, update_interval_seconds:float = 30):
+        #NOTE: this function is not optimized for performance for the seek of simplicity. Main reason is that camera info and rules are not updated frequently. 
+        # If the camera info and rules are updated frequently, this function should be optimized for performance. No need to reinitilize all the cameras.
+
         if time.time() - self.last_time_camera_info_dict_updated < update_interval_seconds: return # If the camera info was updated recently, skip updating it
         self.last_time_camera_info_dict_updated = time.time()
-        
+
         # Fetch the camera info from the server and update the camera_info_dict
         response = self.api_dealer.fetch_all_camera_info()
+
         if response[0]:
-            fetched_camera_info_dict = response[2]["camera_info"]
-            pprint.pprint(fetched_camera_info_dict)
+            # Initialize flags
+            is_new_camera_added = False
+            is_camera_info_changed = False
+            is_camera_removed = False
+
+            fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
+            fetched_camera_info_dicts = {fetched_camera_info['camera_uuid']: fetched_camera_info for fetched_camera_info_dict in fetched_dicts}
+            
+            #check for new cameras
+            for fetched_camera_uuid in fetched_camera_info_dicts.keys():
+                if fetched_camera_uuid not in self.camera_info_dicts:
+                    is_new_camera_added = True
+                    break
+
+            # check for deleted cameras
+            for existing_camera_uuid in self.camera_info_dicts.keys():
+                if existing_camera_uuid not in fetched_camera_info_dicts:
+                    is_camera_removed = True
+                    break
+            
+            # check for updated cameras
+            for fetched_camera_uuid, fetched_camera_info in fetched_camera_info_dicts.items():
+                if fetched_camera_uuid in self.camera_info_dicts:
+                    for key, value in fetched_camera_info.items():
+                        if self.camera_info_dicts[fetched_camera_uuid][key] != value:
+                            self.camera_info_dicts[fetched_camera_uuid][key] = value
+                            is_camera_info_changed = True
+                            break
+            
+            # Update the camera stream fetchers if there is a change in the camera info
+            if is_new_camera_added or is_camera_info_changed or is_camera_removed:
+                self.camera_info_dicts = fetched_camera_info_dicts 
+                pprint.pprint(self.camera_info_dicts)
+                # self.stop_cameras_by_uuid([]) # Stop all cameras
+                # self.camera_stream_fetchers = []
+
+                # ip_addresses = [camera_info_dict["camera_ip_address"] for camera_info_dict in self.camera_info_dicts.values()]
+
         else:
             print(f"Error in fetching camera info: {response[2]}")
 
