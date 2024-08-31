@@ -31,7 +31,7 @@ class AdminPanel:
             'QUALITY_UI',
             'SECURITY_UI',
             'EDIT_RULES',
-            'REPORT_VIOLATIONS',
+            'REPORTED_VIOLATIONS',
             'SUMMARY_PAGE',
             'UPDATE_CAMERAS',
             'IOT_DEVICES'
