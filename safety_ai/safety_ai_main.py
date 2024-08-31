@@ -25,9 +25,10 @@ stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 while True:
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS)
-
-    stream_manager._StreamManager__test_show_all_frames()
-
+    recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
+    #stream_manager._StreamManager__test_show_all_frames()
+    
+    
 
 
 def test_api_functionality():
