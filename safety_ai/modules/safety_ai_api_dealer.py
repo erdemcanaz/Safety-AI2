@@ -40,6 +40,7 @@ class SafetyAIApiDealer():
             # If the response is 401 Unauthorized, refresh the token and retry once with the new token
             elif response.status_code == 401:
                 self.__update_access_token()
+                print(f"Token is refreshed. New token: {self.JWT_TOKEN}")
                 header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}  # Update the header with the new token                
                 response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_camera_info", headers=header, timeout=1)
                 if response.status_code == 200:
