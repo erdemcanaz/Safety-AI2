@@ -38,3 +38,9 @@ SAFETY_AI_VERBOSES = {
     "frame_decoding_failed": True,
     "error_raised_rtsp": True,
 }
+
+
+# Models module related parameters
+MODELS_MODULE_VERBOSES = {
+   "pose_detection_model_verbose": True,
+}

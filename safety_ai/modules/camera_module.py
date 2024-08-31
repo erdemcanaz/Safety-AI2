@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 import PREFERENCES
-import safety_ai_api_dealer
+import safety_ai_api_dealer_module
 
 class CameraStreamFetcher:
     def __init__(self, **kwargs )->None:  
@@ -106,7 +106,7 @@ class CameraStreamFetcher:
    
 class StreamManager:
 
-    def __init__(self, api_dealer:safety_ai_api_dealer.SafetyAIApiDealer = None) -> None:  
+    def __init__(self, api_dealer:safety_ai_api_dealer_module.SafetyAIApiDealer = None) -> None:  
         self.api_dealer = api_dealer   
         self.camera_info_dicts ={} # A dict where the key is the camera UUID and the value is the camera info | # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
         self.last_time_camera_info_dict_updated = 0 # The time when the camera info dictionary was last updated
