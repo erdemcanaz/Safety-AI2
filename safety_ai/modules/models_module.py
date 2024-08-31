@@ -54,7 +54,7 @@ class PoseDetector():
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
             if box_cls_name not in ["person"]: continue
 
-            detection_dict = {'bbox_class_name': box_cls_name, "bbox_confidence": box_conf, "bbox": [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3]]}
+            detection_dict = {'bbox_class_name': box_cls_name, "bbox_confidence": box_conf, "bbox": [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3]], 'keypoints': None}
 
             key_points = detection.keypoints  # Keypoints object for pose outputs
             keypoint_confs = key_points.conf.cpu().numpy()[0]
@@ -68,9 +68,9 @@ class PoseDetector():
                 if keypoint_xn == 0 and keypoint_yn == 0: #if the keypoint is not detected, but this is also a prediction. Thus the confidence should not be set to zero. negative values are used to indicate that the keypoint is not detected
                     keypoint_conf = -keypoint_conf
                 normalized_keypoints_dict[keypoint_name] = [keypoint_xn, keypoint_yn, keypoint_conf]
-
             detection_dict["keypoints"] = normalized_keypoints_dict
-            self.recent_detection_results["normalized_bboxes"].append([box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3], box_conf, normalized_keypoints_dict])
+            
+            self.recent_detection_results["detections"].append(detection_dict)
 
     def get_recent_detection_results(self) -> Dict:
         return self.recent_detection_results
