@@ -310,7 +310,6 @@ class DatabaseManager:
         if camera_uuid is None:
             camera_uuid = str(uuid.uuid4())
         # Check if the camera_uuid is valid or not
-        print(camera_uuid)
         regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
         if not regex.match(camera_uuid):
             raise ValueError('Invalid camera_uuid provided')
@@ -333,8 +332,8 @@ class DatabaseManager:
             raise ValueError('Username and password are required')
                 
         # Format the camera_description and camera_region
-        camera_description = "Henüz Atanmadı" if camera_description == None else camera_description
-        camera_region = "Henüz Atanmadı" if camera_region == None else camera_region
+        camera_description = "" if camera_description == None else camera_description
+        camera_region = "" if camera_region == None else camera_region
 
         # Check if the camera_uuid is unique or not
         query = '''
