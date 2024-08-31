@@ -9,9 +9,14 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 import jwt, cv2
 
+# Local imports
+API_SERVER_DIRECTORY = Path(__file__).resolve().parent
+SAFETY_AI2_DIRECTORY = API_SERVER_DIRECTORY.parent
+sys.path.append(SAFETY_AI2_DIRECTORY) # Add the modules directory to the system path so that imports work
+
 #Custom Imports
 import SQL_module
-from ... import PREFERENCES
+import PREFERENCES 
 
 # Constants
 SERVER_JWT_KEY = "c56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"

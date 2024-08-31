@@ -1,8 +1,15 @@
-import uuid, os, time, pprint, requests, datetime
+import uuid, os, time, pprint, requests, datetime, sys
 from pathlib import Path
 import cv2, numpy as np
 import SQL_module
-from ... import PREFERENCES
+
+# Local imports
+API_SERVER_DIRECTORY = Path(__file__).resolve().parent
+SAFETY_AI2_DIRECTORY = API_SERVER_DIRECTORY.parent
+sys.path.append(SAFETY_AI2_DIRECTORY) # Add the modules directory to the system path so that imports work
+
+import PREFERENCES
+
 class AdminPanel:       
 
     def __init__(self, db_path:str = None, delete_existing_db:bool = False):
