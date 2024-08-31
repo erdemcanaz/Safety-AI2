@@ -144,7 +144,7 @@ async def create_camera_info_api(camera_info: CreateCameraInfo):
     try:
         return {"camera_info":  database_manager.create_camera_info(**camera_info_dict)}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(sktatus_code=400, detail=str(e))
     
 class UpdateCameraInfo(BaseModel):
     camera_uuid: str
