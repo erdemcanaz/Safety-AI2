@@ -301,10 +301,16 @@ class StreamManager:
             duplicate_uuids = {uuid for uuid in active_rule_uuids if active_rule_uuids.count(uuid) > 1}
             raise ValueError(f"There are active rules with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each active rule has a unique UUID")
         
-        fetched_camera_rules_dicts = {fetched_rule_dict['camera_uuid']: fetched_rule_dict for fetched_rule_dict in fetched_dicts}        
-        pprint.pprint(fetched_camera_rules_dicts) # DEBUG_PRINT
-
         # Update the camera rules of the CAMERA STREAM FETCHERS =================================================================================
+        self.camera_rules_dicts = {fetched_rule_dict['camera_uuid']: fetched_rule_dict for fetched_rule_dict in fetched_dicts}    
+
+        for camera_stream_fetcher in self.camera_stream_fetchers:
+            camera_uuid = camera_stream_fetcher.camera_uuid
+            if camera_uuid in self.camera_rules_dicts:
+                camera_stream_fetcher.update_active_rules(self.camera_rules_dicts[camera_uuid])
+            else:
+                camera_stream_fetcher.update_active_rules([])
+                
 
 
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
