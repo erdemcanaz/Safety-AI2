@@ -96,7 +96,6 @@ class CameraStreamFetcher:
 
                             self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
                             if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
-                            self.last_frame_info = frame
                     else:
                         if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed']: self.__print_with_header(text = f'Error in decoding frame from {self.camera_ip_address}')
         except Exception as e:
@@ -288,13 +287,11 @@ class StreamManager:
         frames_to_show = []
     
         for camera in self.camera_stream_fetchers:
-            last_frame_info = camera.get_last_frame_info()
-            pprint.pprint(last_frame_info)#DEBUG_PRINT
-            # frame = camera.get_last_frame_info()["cv2_frame"] if camera.get_last_frame_info() is not None else None
+            frame = camera.get_last_frame_info()["cv2_frame"] if camera.get_last_frame_info() is not None else None
+            if frame is not None:
+                
+                frames_to_show.append(frame)            
 
-            # if frame is not None:
-            #     frames_to_show.append(frame)            
-        return 
         num_frames = len(frames_to_show)
 
         if num_frames == 0:
