@@ -1,5 +1,15 @@
-import preferences
-import time
+import time, sys
+from pathlib import Path
+
+# Local imports
+CLIENT_UI_DIRECTORY = Path(__file__).resolve().parent
+SAFETY_AI2_DIRECTORY = CLIENT_UI_DIRECTORY.parent
+print(f"CLIENT_UI_DIRECTORY: {CLIENT_UI_DIRECTORY}")
+print(f"SAFETY_AI2_DIRECTORY: {SAFETY_AI2_DIRECTORY}")
+sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
+
+import PREFERENCES
+
 import modules.ui_items as ui_items
 from   modules.api_dealer import ApiDealer
 from   modules.popup_dealer import PopupDealer
@@ -76,7 +86,7 @@ cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 cv2.setWindowProperty(WINDOW_NAME, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 mouse_tracker = MouseTracker(window_name=WINDOW_NAME)
 keyboard_tracker = KeyboardTracker()
-api_dealer = ApiDealer(server_ip_address=preferences.SERVER_IP_ADDRESS)
+api_dealer = ApiDealer(server_ip_address=PREFERENCES.SERVER_IP_ADDRESS)
 popup_dealer = PopupDealer(pos_n=(0.33, 0.90), size_n=(0.33, 0.05))
 
 DYNAMIC_PROGRAM_STATE = [0,0,0] #page no, page state, other if required -> login page: [1,0,0]
