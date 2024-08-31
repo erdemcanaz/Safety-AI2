@@ -216,11 +216,12 @@ class StreamManager:
         for camera_info_dict in self.camera_info_dicts.values():
             camera_info_dict.update({'active_rules':[]}) 
 
-        # Stop all cameras. Code waits for the threads to join.
+        # Stop cameras code waits for the threads to join.
         self.stop_cameras_by_uuid([])
         self.camera_stream_fetchers = [] # Garbage collect the old camera stream fetchers
         for camera_info_dict in self.camera_info_dicts.values():
             self.camera_stream_fetchers.append(CameraStreamFetcher(**camera_info_dict))
+        self.start_cameras_by_uuid([]) 
 
     def update_camera_rules(self, update_interval_seconds:float = 30):
         """
