@@ -30,7 +30,7 @@ class AdminPanel:
         ]
 
         self.database_manager.create_user(username=username, personal_fullname=personal_fullname, plain_password=plain_password)
-        user_uuid=self.database_manager.get_user_by_username(username=username)
+        user_uuid=self.database_manager.get_user_by_username(username=username)["user_uuid"]
         for authorization_name in AUTHORIZATIONS:
             self.database_manager.authorize_user(user_uuid=user_uuid, authorization_name=authorization_name)
 
