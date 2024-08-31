@@ -11,9 +11,23 @@ class SafetyAIApiDealer():
         self.SERVER_IP_ADDRESS = PREFERENCES.SERVER_IP_ADDRESS   
         self.USERNAME = PREFERENCES.SAFETY_AI_USER_INFO['username']
         self.PASSWORD = PREFERENCES.SAFETY_AI_USER_INFO['password']
+        self.PERSONAL_FULLNAME = PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname']
         self.JWT_TOKEN = None
         self.DECODED_TOKEN = None
-        self.PERSONAL_FULLNAME = ""
+
+        self.__ensure_safety_ai_robot_user_exists()
+        self.__update_access_token()
+
+    def __ensure_safety_ai_robot_user_exists(self):
+        payload = {'username': self.USERNAME, 'plain_password': self.PASSWORD, 'personal_fullname': self.PERSONAL_FULLNAME}
+        try:
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_user", json=payload, timeout=1)
+            if response.status_code == 200:
+                return [True, response.status_code, response.json()]
+            else:
+                return [False, response.status_code, response.json()]
+        except Exception as e:
+            return [False, -1, str(e), {"detail": str(e)}]
 
     def __update_access_token(self) -> bool: #AKA login
         # Ensure that both username and password are provided
