@@ -11,5 +11,5 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SERVER_IP_ADDRESS = input("Server IP Address: ")
     PRINT_MOUSE_COORDINATES = False
     CLEAR_TERMINAL_COMMAND = "clear"
-    SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent.parent.parent / "safety_ai_volume" / "api_server" / "safety_ai.db"
+    SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent.parent.parent / "safety_AI_volume" / "api_server" / "safety_ai.db"
 
