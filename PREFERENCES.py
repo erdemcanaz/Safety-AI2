@@ -24,6 +24,8 @@ else:
 
 # Safety-AI related parameters
 SAFETY_AI_VERBOSES = {
+    'header_class_name_width': 30, # The width of the class name in the printed header
+    "updating_camera_info": True,
     "camera_initialization": True,
     "CRUD_on_camera_info": True,
 }

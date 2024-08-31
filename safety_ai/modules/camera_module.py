@@ -44,6 +44,9 @@ class CameraStreamFetcher:
     def __repr__(self) -> str:
         return f'CameraStreamFetcher({self.camera_ip_address}, camera_status={self.camera_status}, is_fetching_frames={self.is_fetching_frames})'
     
+    def update_active_rules(self, active_rules:List = []):
+        self.active_rules = active_rules
+
     def __print_wrapper(self, condition:False, message:str = ""):
         if condition: print(f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
         
@@ -160,6 +163,7 @@ class CameraStreamFetcher:
             return False, (None,None)
     
 class StreamManager:
+
     def __init__(self, api_dealer:safety_ai_api_dealer.SafetyAIApiDealer = None) -> None:  
         self.api_dealer = api_dealer   
         self.camera_info_dicts ={} # A dict where the key is the camera UUID and the value is the camera info | # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
@@ -168,8 +172,13 @@ class StreamManager:
         self.last_time_camera_rules_dict_updated = 0 # The time when the camera rules dictionary was last updated
         self.camera_stream_fetchers = [] # A list of CameraStreamFetcher objects
 
-        # self.reinitiliaze_cameras_from_camera_configs_file()
-
+    def __print_with_header(self, text:str = "", pprint_object = None):
+        print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {'StreamManager':<{PREFERENCES.SAFETY_AI_VERBOSES['header_class_name_width']}} | {text}")
+        if pprint_object is not None:
+            formatted_text = pprint.pformat(text)   
+            for line in formatted_text.splitlines():
+                print(f"\t{line}")
+        
     def update_cameras(self, update_interval_seconds:float = 30):
         """
         This function periodically fetches updated camera information from the server and synchronizes the camera_stream_fetchers list with the latest data.
@@ -186,12 +195,13 @@ class StreamManager:
 
         if time.time() - self.last_time_camera_info_dict_updated < update_interval_seconds: return # If the camera info was updated recently, skip updating it
         self.last_time_camera_info_dict_updated = time.time()
+        if(PREFERENCES.SAFETY_AI_VERBOSES['updating_camera_info']):self.__print_with_header(text=f"Checking if camera info is changed")
 
         # Fetch the camera info from the server and update the camera_info_dict
         response = self.api_dealer.fetch_all_camera_info() # [is_successful, status code, response_data]
 
         if response[0] == False:
-            print(f"Error in fetching camera info: {response[2]}")
+            self.__print_with_header(text=f"Error in fetching camera info", pprint_object=response[2])
             return
 
         # Initialize flags
@@ -224,7 +234,7 @@ class StreamManager:
                         break
         
         if not is_new_camera_added and not is_camera_info_changed and not is_camera_removed: return # If there is no change in the camera info, skip updating the camera stream fetchers
-        if PREFERENCES.SAFETY_AI_VERBOSES["CRUD_on_camera_info"]: print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | StreamManager | New camera added: {is_new_camera_added:<6}, Camera info changed: {is_camera_info_changed:<6}, Camera removed: {is_camera_removed:<6}")
+        self.__print_with_header(text=f"New camera added: {is_new_camera_added}, Camera info changed: {is_camera_info_changed}, Camera removed: {is_camera_removed}")
                                                                         
         # UPDATE THE CAMERA INFO DICTIONARY & REINITIALIZE THE CAMERA STREAM FETCHERS ========================================================
         self.camera_info_dicts = fetched_camera_info_dicts 
@@ -264,6 +274,27 @@ class StreamManager:
         self.camera_stream_fetchers = [] # Garbage collect the old camera stream fetchers
         for camera_info_dict in self.camera_info_dicts.values():
             self.camera_stream_fetchers.append(CameraStreamFetcher(**camera_info_dict))
+
+    def update_camera_rules(self, update_interval_seconds:float = 30):
+        """
+        This function periodically fetches updated camera rules from the server and synchronizes the camera_stream_fetchers list with the latest data.
+        Every 'update_interval_seconds' seconds, the function retrieves the current camera rules, checking for any new, updated, or removed rules. If changes are detected, the camera_stream_fetchers list is fully refreshed: all existing camera streams are stopped and removed, and new stream fetcher objects are initialized to reflect the latest camera data.
+        The function also includes several built-in validation checks:
+        - Checks for active rule UUID collisions.
+        - Validates active rule UUID formats.
+        """
+        if time.time() - self.last_time_camera_rules_dict_updated < update_interval_seconds: return
+        self.last_time_camera_rules_dict_updated = time.time()
+        if PREFERENCES.SAFETY_AI_VERBOSES['updating_camera_info']: self.__print_with_header(text=f"Updating camera rules")
+
+        # Fetch the camera rules from the server and update the camera_rules_dict        
+        response = self.api_dealer.fetch_all_rules() # [is_successful, status code, response_data]
+        if response[0] == False:
+            self.__print_with_header(text=f"Error in fetching camera rules", pprint_object=response[2])
+            return
+        
+        pprint.pprint(response[2])
+
 
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
         stop_all_cameras = len(camera_uuids) == 0

@@ -70,6 +70,29 @@ class SafetyAIApiDealer():
         except Exception as e: # In case of an exception, return the exception details                        
             return [False, None, {"detail": str(e)}]
 
+    def fetch_all_rules(self):
+        header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        try:   
+            response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_rules", headers=header, timeout=1)            
+            if response.status_code == 200:
+                return [True, response.status_code, response.json()]
+                        
+            # If the response is 401 Unauthorized, refresh the token and retry once with the new token
+            elif response.status_code == 401:
+                self.__update_access_token()
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}  # Update the header with the new token                
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_rules", headers=header, timeout=1)  
+                if response.status_code == 200:
+                    return [True, response.status_code, response.json()]
+                else:
+                    return [False, response.status_code, response.json()]
+                
+            # For other status codes, return the response as is
+            else:
+                return [False, response.status_code, response.json()]
+        except Exception as e:
+            return [False, None, {"detail": str(e)}]
+
     def update_count(self, camera_uuid:str=None, count_type:str = None, delta_count:int = None):
         header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
         
@@ -152,12 +175,3 @@ class SafetyAIApiDealer():
         except Exception as e:        
             return [False, None, {"detail": str(e)}]
         
-# class ReportViolation(BaseModel):
-#     camera_uuid: str
-#     violation_frame_b64: str
-#     violation_date_ddmmyyy_hhmmss: str # e.g. "01.01.2021 12:34:56"
-#     violation_type: str
-#     violation_score: float # any floating number
-#     region_name: str
-
-

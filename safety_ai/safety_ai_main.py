@@ -25,7 +25,8 @@ stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 #her X'dk da bir kamera kuralları değişti mi kontrol denemesi yapılacak
 
 while True:
-    stream_manager.update_cameras(update_interval_seconds = 5)
+    stream_manager.update_cameras(update_interval_seconds = 60)
+    stream_manager.update_camera_rules(update_interval_seconds = 5)
 
 
 
