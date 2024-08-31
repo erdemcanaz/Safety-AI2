@@ -12,7 +12,9 @@ import jwt, cv2
 # Local imports
 API_SERVER_DIRECTORY = Path(__file__).resolve().parent
 SAFETY_AI2_DIRECTORY = API_SERVER_DIRECTORY.parent
-sys.path.append(SAFETY_AI2_DIRECTORY) # Add the modules directory to the system path so that imports work
+print(f"API_SERVER_DIRECTORY: {API_SERVER_DIRECTORY}")
+print(f"SAFETY_AI2_DIRECTORY: {SAFETY_AI2_DIRECTORY}")
+sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
 
 #Custom Imports
 import SQL_module
