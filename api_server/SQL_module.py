@@ -16,12 +16,15 @@ import os, re, hashlib, time
 class DatabaseManager:
     DEVICE_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
 
-    def __init__(self, db_name='safety_ai.db', delete_existing_db=False):
-        if delete_existing_db and os.path.exists(db_name):
-            os.remove(db_name) if os.path.exists(db_name) else None
-            print(f"#{db_name} is recreated")
+    def __init__(self, db_path=None, delete_existing_db=False):
+        if db_path is None:
+            raise ValueError('db_name is required')
+        
+        if delete_existing_db and os.path.exists(db_path):
+            os.remove(db_path) if os.path.exists(db_path) else None
+            print(f"#{db_path} is recreated")
 
-        self.conn = sqlite3.connect(db_name) # creates a new database if it doesn't exist
+        self.conn = sqlite3.connect(db_path) # creates a new database if it doesn't exist
         self.ensure_image_paths_table_exists()
         self.ensure_last_frames_table_exists()
         self.ensure_camera_counts_table_exists()

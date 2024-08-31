@@ -6,8 +6,10 @@ import preferences
 
 class AdminPanel:       
 
-    def __init__(self, db_name:str = "database.db", delete_existing_db:bool = False):
-        self.database_manager = SQL_module.DatabaseManager(db_name = db_name, delete_existing_db=delete_existing_db)
+    def __init__(self, db_path:str = None, delete_existing_db:bool = False):
+        if db_path is None:
+            raise ValueError("db_path cannot be None")
+        self.database_manager = SQL_module.DatabaseManager(db_path = db_path, delete_existing_db=delete_existing_db)
         time.sleep(1)
         
     def create_admin_user(self):
@@ -559,10 +561,9 @@ class AdminPanel:
         input("Press any key to continue...")
       
 if __name__ == "__main__":
-    database_name = "safety_ai.db"
-    print("connecting to database ", database_name)
+    print("connecting to database ", preferences.SQL_DATABASE_PATH)
     should_delete_existing_db = True if input("Overwrite existing database? (write 'overwrite'):".ljust(50)) == "overwrite" else False
-    admin_panel = AdminPanel(db_name=database_name, delete_existing_db=should_delete_existing_db)
+    admin_panel = AdminPanel(db_path=preferences.SQL_DATABASE_PATH, delete_existing_db=should_delete_existing_db)
 
     TASKS = {
         "0": "Exit",
