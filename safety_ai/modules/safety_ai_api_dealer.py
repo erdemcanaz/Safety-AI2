@@ -60,7 +60,7 @@ class SafetyAIApiDealer():
         try:
             payload = {'camera_uuid': camera_uuid, 'count_type': count_type, 'delta_count': delta_count}
             # Send a request to the server to update 'count_type' of 'camera_uuid' by 'delta_count'
-            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_count", headers=header, payload=payload, timeout=1)            
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_count", headers=header, json=payload, timeout=1)            
             if response.status_code == 200:
                 return [True, response.status_code, response.json()]
             
