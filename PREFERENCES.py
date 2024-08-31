@@ -7,9 +7,11 @@ if os.name == "nt":  # For Windows (i.e development environment)
     PRINT_MOUSE_COORDINATES = True
     CLEAR_TERMINAL_COMMAND = "cls"
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH/ "api_server" / "safety_ai.db"
+    PRINT_MOUSE_COORDINATES = True
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SERVER_IP_ADDRESS = "172.17.27.12"
     PRINT_MOUSE_COORDINATES = False
     CLEAR_TERMINAL_COMMAND = "clear"
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "safety_ai.db"
+    PRINT_MOUSE_COORDINATES = False
 
