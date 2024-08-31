@@ -21,3 +21,9 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
 else:
     raise Exception("Unknown operating system")
 
+
+# Safety-AI related parameters
+SAFETY_AI_VERBOSES = {
+    "camera_initialization": True,
+    "CRUD_on_camera_info": True,
+}

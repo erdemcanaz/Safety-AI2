@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 import cv2
 import numpy as np
+
 import PREFERENCES
 import safety_ai_api_dealer
 
@@ -21,6 +22,7 @@ class CameraStreamFetcher:
             'stream_path',
             'active_rules'
     ] 
+
     def __init__(self, **kwargs )->None:  
 
         for key in CameraStreamFetcher.CLASS_PARAM_CAMERA_CONFIG_KEYS:
@@ -37,7 +39,7 @@ class CameraStreamFetcher:
         self.is_fetching_frames = False                         # A flag to indicate whether the camera is fetching frames or not. If true, the camera is fetching frames. If false, the camera is not fetching frames
         self.last_frame_info = None                             # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, active_rules, is_evaluated
         self.recent_frames= []                                  # The last 'CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP' frames fetched from the camera
-        self.__print_wrapper(condition = server_preferences.PARAM_CAMERA_VERBOSE, message = f'CameraStreamFetcher object created for {self.camera_ip_address}')
+        self.__print_wrapper(condition = PREFERENCES.SAFETY_AI_VERBOSES['camera_initialization'], message = f'CameraStreamFetcher object created for {self.camera_ip_address}')
 
     def __repr__(self) -> str:
         return f'CameraStreamFetcher({self.camera_ip_address}, is_alive={self.is_alive}, is_fetching_frames={self.is_fetching_frames})'
@@ -169,56 +171,104 @@ class StreamManager:
         # self.reinitiliaze_cameras_from_camera_configs_file()
 
     def update_cameras(self, update_interval_seconds:float = 30):
-        #NOTE: this function is not optimized for performance for the seek of simplicity. Main reason is that camera info and rules are not updated frequently. 
-        # If the camera info and rules are updated frequently, this function should be optimized for performance. No need to reinitilize all the cameras.
+        """
+        This function periodically fetches updated camera information from the server and synchronizes the camera_stream_fetchers list with the latest data.
+        Every 'update_interval_seconds' seconds, the function retrieves the current camera info, checking for any new, updated, or removed cameras. If changes are detected, the camera_stream_fetchers list is fully refreshed: all existing camera streams are stopped and removed, and new stream fetcher objects are initialized to reflect the latest camera data.
+        The function also includes several built-in validation checks:
+        - Checks for IP address collisions.
+        - Checks for camera UUID collisions.
+        - Validates camera UUID formats.
+        - Validates IP address formats (xxx.xxx.xxx.xxx), ensuring each segment is a digit between 0-9.
+        """
+        # NOTE: This function prioritizes simplicity over performance optimization, as camera information and rules are not updated frequently. 
+        # If updates to camera information and rules become more frequent, consider optimizing this function to enhance performance. 
+        # In such cases, it may be unnecessary to reinitialize all cameras. Yet, easier to implement and maintain this way.
 
         if time.time() - self.last_time_camera_info_dict_updated < update_interval_seconds: return # If the camera info was updated recently, skip updating it
         self.last_time_camera_info_dict_updated = time.time()
 
         # Fetch the camera info from the server and update the camera_info_dict
-        response = self.api_dealer.fetch_all_camera_info()
+        response = self.api_dealer.fetch_all_camera_info() # [is_successful, status code, response_data]
 
-        if response[0]:
-            # Initialize flags
-            is_new_camera_added = False
-            is_camera_info_changed = False
-            is_camera_removed = False
-
-            fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
-            fetched_camera_info_dicts = {fetched_camera_info_dict['camera_uuid']: fetched_camera_info_dict for fetched_camera_info_dict in fetched_dicts}
-            
-            #check for new cameras
-            for fetched_camera_uuid in fetched_camera_info_dicts.keys():
-                if fetched_camera_uuid not in self.camera_info_dicts:
-                    is_new_camera_added = True
-                    break
-
-            # check for deleted cameras
-            for existing_camera_uuid in self.camera_info_dicts.keys():
-                if existing_camera_uuid not in fetched_camera_info_dicts:
-                    is_camera_removed = True
-                    break
-            
-            # check for updated cameras
-            for fetched_camera_uuid, fetched_camera_info in fetched_camera_info_dicts.items():
-                if fetched_camera_uuid in self.camera_info_dicts:
-                    for key, value in fetched_camera_info.items():
-                        if self.camera_info_dicts[fetched_camera_uuid][key] != value:
-                            self.camera_info_dicts[fetched_camera_uuid][key] = value
-                            is_camera_info_changed = True
-                            break
-            
-            # Update the camera stream fetchers if there is a change in the camera info
-            if is_new_camera_added or is_camera_info_changed or is_camera_removed:
-                self.camera_info_dicts = fetched_camera_info_dicts 
-                pprint.pprint(self.camera_info_dicts)
-                # self.stop_cameras_by_uuid([]) # Stop all cameras
-                # self.camera_stream_fetchers = []
-
-                # ip_addresses = [camera_info_dict["camera_ip_address"] for camera_info_dict in self.camera_info_dicts.values()]
-
-        else:
+        if response[0] == False:
             print(f"Error in fetching camera info: {response[2]}")
+            return
+
+        # Initialize flags
+        is_new_camera_added = False
+        is_camera_info_changed = False
+        is_camera_removed = False
+
+        fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
+        fetched_camera_info_dicts = {fetched_camera_info_dict['camera_uuid']: fetched_camera_info_dict for fetched_camera_info_dict in fetched_dicts}
+        
+        #check for new cameras
+        for fetched_camera_uuid in fetched_camera_info_dicts.keys():
+            if fetched_camera_uuid not in self.camera_info_dicts:
+                is_new_camera_added = True
+                break
+
+        # check for deleted cameras
+        for existing_camera_uuid in self.camera_info_dicts.keys():
+            if existing_camera_uuid not in fetched_camera_info_dicts:
+                is_camera_removed = True
+                break
+        
+        # check for updated cameras
+        for fetched_camera_uuid, fetched_camera_info in fetched_camera_info_dicts.items():
+            if fetched_camera_uuid in self.camera_info_dicts:
+                for key, value in fetched_camera_info.items():
+                    if self.camera_info_dicts[fetched_camera_uuid][key] != value:
+                        self.camera_info_dicts[fetched_camera_uuid][key] = value
+                        is_camera_info_changed = True
+                        break
+        
+        if not is_new_camera_added and not is_camera_info_changed and not is_camera_removed: return # If there is no change in the camera info, skip updating the camera stream fetchers
+        if PREFERENCES.SAFETY_AI_VERBOSES["CRUD_on_camera_info"]: print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | StreamManager | New camera added: {is_new_camera_added:<6}, Camera info changed: {is_camera_info_changed:<6}, Camera removed: {is_camera_removed:<6}")
+                                                                        
+        # UPDATE THE CAMERA INFO DICTIONARY & REINITIALIZE THE CAMERA STREAM FETCHERS ========================================================
+        self.camera_info_dicts = fetched_camera_info_dicts 
+
+        # Check for IP collisions
+        camera_ip_addresses = [camera_info_dict["camera_ip_address"] for camera_info_dict in self.camera_info_dicts.values()]
+        if len(camera_ip_addresses) != len(set(camera_ip_addresses)):
+            duplicate_ips = {ip for ip in camera_ip_addresses if camera_ip_addresses.count(ip) > 1}
+            raise ValueError(f"There are cameras with the same IP address: {', '.join(duplicate_ips)}. Please ensure that each camera has a unique IP address")
+        
+        # Check for IP format (xxx.xxx.xxx.xxx) where x is a digit between 0-9
+        invalid_ip_cameras = [
+            camera_info_dict["camera_ip_address"] for camera_info_dict in self.camera_info_dicts.values()
+            if not all(part.isdigit() and 0 <= int(part) <= 255 for part in camera_info_dict["camera_ip_address"].split('.'))
+        ]
+        if invalid_ip_cameras:
+            raise ValueError(f"Invalid IP address format for cameras: {', '.join(invalid_ip_cameras)}. Please ensure that each IP address is in the format XXX.XXX.XXX.XXX where x is a digit between 0-9")
+        
+        # Check for camera UUID collisions
+        camera_uuids = [camera_info_dict["camera_uuid"] for camera_info_dict in self.camera_info_dicts.values()]
+        if len(camera_uuids) != len(set(camera_uuids)):
+            duplicate_uuids = {uuid for uuid in camera_uuids if camera_uuids.count(uuid) > 1}
+            raise ValueError(f"There are cameras with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each camera has a unique UUID")
+        
+        # Check for camera UUID format
+        uuid_regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', re.IGNORECASE)
+        invalid_uuid_cameras = [camera_info_dict["camera_uuid"] for camera_info_dict in self.camera_info_dicts.values() if not uuid_regex.match(camera_info_dict["camera_uuid"])]
+        if invalid_uuid_cameras:
+            raise ValueError(f"Invalid UUID format for cameras: {', '.join(invalid_uuid_cameras)}. Please ensure that each UUID is in the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+        
+        # The rules will be fetched separately, assume that there are no active rules for now
+        for camera_info_dict in self.camera_info_dicts.values():
+            camera_info_dict.update({'active_rules':[]}) 
+
+        # Reinitialize the camera stream fetchers if there is a change in the camera info       
+        self.stop_cameras_by_uuid([]) # Stop all cameras, waits for the threads to join
+        for camera_info_dict in self.camera_info_dicts.values():
+            self.camera_stream_fetchers.append(CameraStreamFetcher(**camera_info_dict))
+
+    def stop_cameras_by_uuid(self, camera_uuids:List[str]):
+        stop_all_cameras = len(camera_uuids) == 0
+        for camera in self.cameras:
+            if stop_all_cameras or camera.camera_uuid in camera_uuids:
+                camera.stop_fetching_frames()  
 
         
     def reinitiliaze_cameras_from_camera_configs_file(self, number_of_cameras:int = 24):
@@ -303,15 +353,6 @@ class StreamManager:
         for camera in self.cameras:
             if camera.is_alive and (start_all_alive_cameras or camera.camera_uuid in camera_uuids):           
                 camera.start_fetching_frames()
-
-        self.__optimize_camera_decoding_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
-
-    def stop_cameras_by_uuid(self, camera_uuids:List[str]):
-        # Stop fetching frames from the cameras. If camera_uuids is empty, stop all cameras, otherwise stop only the cameras with the specified uuids
-        stop_all_cameras = len(camera_uuids) == 0
-        for camera in self.cameras:
-            if stop_all_cameras or camera.camera_uuid in camera_uuids:
-                camera.stop_fetching_frames()        
 
         self.__optimize_camera_decoding_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
 
