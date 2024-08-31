@@ -665,16 +665,7 @@ class DatabaseManager:
             "is_deleted": is_deleted,
             "image_category": image_category
         }
-        # return {
-        #     "image_uuid": retrieved_image_uuid,
-        #     "frame_b64": base64.b64encode(image_data).decode('utf-8') if convert_b64_to_cv2frame else None,
-        #     "image": image if not convert_b64_to_cv2frame else None,
-        #     "random_key": random_key,
-        #     "encrypted_image_path": encrypted_image_path,
-        #     "is_deleted": is_deleted,
-        #     "image_category": image_category
-        # } 
-    
+        
     # LAST_FRAMES TABLE FUNCTIONS
     def ensure_last_frames_table_exists(self):
         # ========================================================================================================
