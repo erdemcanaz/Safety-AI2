@@ -21,7 +21,7 @@ import SQL_module
 import PREFERENCES 
 
 # Constants
-SERVER_JWT_KEY = "c56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"
+SERVER_JWT_KEY = "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"
 #SERVER_JWT_KEY = secrets.token_hex(32)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -30,7 +30,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # FastAPI Server
 
 app = FastAPI()
-database_manager = SQL_module.DatabaseManager(db_path = PREFERENCES.SQL_DATABASE_PATH)
+database_manager = SQL_module.DatabaseManager(db_path = PREFERENCES.SQL_DATABASE_PATH, delete_existing_db= False)
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -210,6 +210,21 @@ async def fetch_reported_violations_between_dates_api(start_date: str, end_date:
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+class ReportViolation(BaseModel):
+    camera_uuid: str
+    violation_frame_b64: str
+    violation_date_ddmmyyy_hhmmss: str # e.g. "01.01.2021 12:34:56"
+    violation_type: str
+    violation_score: float # any floating number
+    region_name: str
+@app.post("/create_reported_violation")
+async def create_reported_violation_api(report_violation_data: ReportViolation):
+    report_violation_data.update("save_folder", PREFERENCES.ENCRYPTED_IMAGE_FOLDER)
+    try:
+        return {"reported_violation":  database_manager.create_reported_violation_v2(**report_violation_data.dict())}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
 # Image Paths Table API =================================================================================================
 @app.get("/get_encrypted_image_by_uuid")
 async def get_encrypted_image_by_uuid_api(image_uuid: str):

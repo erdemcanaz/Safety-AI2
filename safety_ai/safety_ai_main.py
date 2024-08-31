@@ -1,6 +1,7 @@
 # Built-in imports
 import pprint, time, sys, os, cv2, datetime
 from pathlib import Path
+import numpy as np
 
 # Local imports
 SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent
@@ -17,6 +18,7 @@ sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the sy
 import PREFERENCES
 import safety_ai_api_dealer
 
+#================================================================================================================================================================
 api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
 
 r = api_dealer.fetch_all_camera_info()
@@ -30,7 +32,17 @@ shift_date = datetime.datetime.now().strftime("%d.%m.%Y")
 r = api_dealer.update_shift_count(camera_uuid=camera_uuid, shift_date_ddmmyyyy=shift_date, shift_no="0", count_type="TRIAL", delta_count=1)
 pprint.pprint(r)
 
-# Initialize the SQL database
+width, height = 1920, 1080
+random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
+text = f"Violation: ({width}x{height}) | {'.jpg'}"
+text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 1)[0]
+text_x = (random_frame.shape[1] - text_width) // 2
+text_y = (random_frame.shape[0] + text_height) // 2
+cv2.putText(random_frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
+
+r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=random_frame, violation_date_ddmmyyy_hhmmss=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"), violation_type="TRIAL_VIOLATION", violation_score=999, region_name="Region 1")
+pprint.pprint(r)
+
 
 # import server_preferences
 # import camera_module 

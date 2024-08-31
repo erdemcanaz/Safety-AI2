@@ -1,6 +1,8 @@
-import requests
+import requests, base64
 import json, pprint
 import jwt
+import numpy as np
+import cv2
 
 import PREFERENCES
 
@@ -83,7 +85,7 @@ class SafetyAIApiDealer():
 
     def update_shift_count(self, camera_uuid:str=None, shift_date_ddmmyyyy:str=None, shift_no:str=None, count_type:str = None, delta_count:int = None):
         header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-        
+
         try:
             payload = {'camera_uuid': camera_uuid, 'shift_date_ddmmyyyy': shift_date_ddmmyyyy, 'shift_no': shift_no, 'count_type': count_type, 'delta_count': delta_count}
             response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_shift_count", headers=header, json=payload, timeout=1)            
@@ -107,7 +109,41 @@ class SafetyAIApiDealer():
         except Exception as e:        
             return [False, None, {"detail": str(e)}]
 
-
-
+    def create_reported_violation(self, camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date_ddmmyyy_hhmmss:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None):
+        header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        try:
+            # Convert the violation frame to a base64 string
+            _, violation_frame_b64 = cv2.imencode('.jpg', violation_frame)  # Encode image as JPEG
+            violation_frame_bytes = violation_frame_b64.tobytes()  # Convert to bytes
+            violation_frame_b64 = base64.b64encode(violation_frame_bytes).decode('utf-8')  # Encode to base64 and convert to string
+            
+            payload = {'camera_uuid': camera_uuid, 'violation_frame_b64': violation_frame_b64, 'violation_date_ddmmyyy_hhmmss': violation_date_ddmmyyy_hhmmss, 'violation_type': violation_type, 'violation_score': violation_score, 'region_name': region_name}
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_reported_violation", headers=header, json=payload, timeout=1)            
+            if response.status_code == 200:
+                return [True, response.status_code, response.json()]
+            
+            # If the response is 401 Unauthorized, refresh the token and retry once with the new token
+            elif response.status_code == 401:
+                self.__update_access_token()
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}  # Update the header with the new token                
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/create_reported_violation", headers=header, timeout=1)
+                if response.status_code == 200:
+                    return [True, response.status_code, response.json()]
+                else:
+                    return [False, response.status_code, response.json()]
+                
+            # For other status codes, return the response as is
+            else:
+                return [False, response.status_code, response.json()]
+        except Exception as e:        
+            return [False, None, {"detail": str(e)}]
+        
+# class ReportViolation(BaseModel):
+#     camera_uuid: str
+#     violation_frame_b64: str
+#     violation_date_ddmmyyy_hhmmss: str # e.g. "01.01.2021 12:34:56"
+#     violation_type: str
+#     violation_score: float # any floating number
+#     region_name: str
 
 

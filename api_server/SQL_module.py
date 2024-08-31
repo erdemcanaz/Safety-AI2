@@ -96,6 +96,24 @@ class DatabaseManager:
         '''
         self.conn.execute(query, (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid))
         self.conn.commit()
+
+    def create_reported_violation_v2(self, camera_uuid:str=None, violation_frame_b64:str=None, violation_date_ddmmyyy_hhmmss:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None, save_folder:str=None):
+        #def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None)-> str:
+        # Save the violation frame as a base64 encoded string and insert the path to the table
+        violation_uuid = str(uuid.uuid4())
+        image_uuid = str(uuid.uuid4())
+
+        cv2_violation_frame = cv2.imdecode(np.frombuffer(base64.b64decode(violation_frame_b64), np.uint8), cv2.IMREAD_COLOR)
+        violation_datetime = datetime.datetime.strptime(violation_date_ddmmyyy_hhmmss, "%d.%m.%Y %H:%M:%S")        
+        self.save_encrypted_image_and_insert_path_to_table(save_folder=save_folder, image=cv2_violation_frame, image_category='violation_frame', image_uuid=image_uuid)
+        
+        # Insert the violation to the table
+        query = '''
+        INSERT INTO reported_violations (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        '''
+        self.conn.execute(query, (violation_uuid, violation_datetime, region_name, violation_type, violation_score, camera_uuid, image_uuid))
+        self.conn.commit()
         
     def fetch_reported_violations_between_dates(self, start_date:datetime.datetime=None, end_date:datetime.datetime=None)-> list:
         query = '''
