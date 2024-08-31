@@ -208,7 +208,7 @@ class ReportedViolationsPage:
                             \nTalep Tarihi: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}
                             """
                         
-                        picasso.draw_text_on_frame_with_newlines(frame=resized_image, text = text, pos=(10,20))
+                        picasso.draw_text_on_frame_with_newlines(frame=resized_image, text = text, position=(10,20))
                                                     
                         cv2.namedWindow("Violation Image", cv2.WINDOW_NORMAL)
                         cv2.setWindowProperty("Violation Image", cv2.WND_PROP_TOPMOST, 1) # Set the window to always be on top
