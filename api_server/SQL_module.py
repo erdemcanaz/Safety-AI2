@@ -1204,6 +1204,14 @@ class DatabaseManager:
             self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], count_type, shift_date_ddmmyyyy, str(shift_no), delta_count))
 
         self.conn.commit()
+        return {
+            "camera_uuid": camera_uuid,
+            "count_type": count_type,
+            "shift_date_ddmmyyyy": shift_date_ddmmyyyy,
+            "shift_no": shift_no,
+            "previous_value": previous_value,
+            "delta_count": delta_count,
+        }
 
     def get_shift_counts_between_dates(self, start_date: datetime.datetime=None, end_date: datetime.datetime=None) -> list:
         # One can fetch for a relatively elastic start and end date with additional entries, then post-filter the results in the application

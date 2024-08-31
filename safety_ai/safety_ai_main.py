@@ -26,7 +26,6 @@ camera_uuid = r[2]['camera_info'][0]['camera_uuid']
 r = api_dealer.update_count(camera_uuid=camera_uuid, count_type="TRIAL", delta_count=1)
 pprint.pprint(r)
 
-#self, camera_uuid:str=None, shift_date_ddmmyyyy:str=None, shift_no:str=None, count_type:str = None, delta_count:int = None
 shift_date = datetime.datetime.now().strftime("%d.%m.%Y")
 r = api_dealer.update_shift_count(camera_uuid=camera_uuid, shift_date_ddmmyyyy=shift_date, shift_no="0", count_type="TRIAL", delta_count=1)
 pprint.pprint(r)

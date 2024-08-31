@@ -250,7 +250,7 @@ class UpdateShiftCount(BaseModel):
 async def update_shift_count_api(update_shift_count_data: UpdateShiftCount, authenticated_user = Depends(authenticate_user_by_token)):
     #TODO: check if user can update shift count
     try:
-        return {"count":  database_manager.update_shift_count(**update_shift_count_data.dict())}
+        return {"shift_count":  database_manager.update_shift_count(**update_shift_count_data.dict())}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
