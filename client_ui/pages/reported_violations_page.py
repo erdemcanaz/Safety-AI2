@@ -194,10 +194,11 @@ class ReportedViolationsPage:
                         self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Görüntü bulunamadı."})
                     else:
                         self.last_shown_violation_frame_info['image'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.last_shown_violation_frame_info['image_b64']),np.uint8), cv2.IMREAD_COLOR)
-                        resized_image = cv2.resize(self.last_shown_violation_frame_info['image'], (1280, 960), interpolation = cv2.INTER_AREA)
+                        resized_image = cv2.resize(self.last_shown_violation_frame_info['image'], (960, 720), interpolation = cv2.INTER_AREA)
 
                         cv2.namedWindow("Violation Image", cv2.WINDOW_NORMAL)
-                        cv2.setWindowProperty("Violation Image", cv2.WND_PROP_TOPMOST, 1)
+                        cv2.setWindowProperty("Violation Image", cv2.WND_PROP_TOPMOST, 1) # Set the window to always be on top
+                        cv2.resizeWindow("Violation Image", resized_image.shape[1], resized_image.shape[0])
                         cv2.imshow("Violation Image", resized_image)
                 else:
                     self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
