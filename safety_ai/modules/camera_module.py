@@ -8,24 +8,9 @@ import PREFERENCES
 import safety_ai_api_dealer
 
 class CameraStreamFetcher:
-    CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP = 10                         # The number of frames to keep in the recent_frames list. If the list grows larger than this number, the oldest frames are removed
-    CLASS_PARAM_MINIMUM_DURATION_BETWEEN_RECENT_FRAME_APPENDING = 1.5 # The minimum duration between appending frames to the recent_frames list in seconds. This is to prevent the list from growing too large too quickly. If a frame is fetched before this duration has passed, it is not appended to the list
-    CLASS_PARAM_CAMERA_CONFIG_KEYS = [                                # Will be added to the object as attributes
-            'camera_uuid',
-            'camera_region',
-            'camera_description',
-            'camera_status',
-            'NVR_ip_address',            
-            'camera_ip_address',
-            'username',
-            'password',
-            'stream_path',
-            'active_rules'
-    ] 
-
     def __init__(self, **kwargs )->None:  
-
-        for key in CameraStreamFetcher.CLASS_PARAM_CAMERA_CONFIG_KEYS:
+        
+        for key in ['camera_uuid', 'camera_region', 'camera_description', 'camera_status', 'NVR_ip_address', 'camera_ip_address', 'username', 'password', 'stream_path']: # Check if all the required arguments are provided
             if key not in kwargs.keys():
                 raise ValueError(f"Missing camera config argument. Required: {key}")
 
@@ -38,15 +23,22 @@ class CameraStreamFetcher:
         self.camera_retrieving_delay_uniform_range = [0, 10]    # The range of uniform distribution for the delay between frame retrievals. Otherwise grab is used where no decoding happens. The delay is calculated as a random number between the range
         self.is_fetching_frames = False                         # A flag to indicate whether the camera is fetching frames or not. If true, the camera is fetching frames. If false, the camera is not fetching frames
         self.last_frame_info = None                             # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, active_rules, is_evaluated
-        self.recent_frames= []                                  # The last 'CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP' frames fetched from the camera
-        self.__print_wrapper(condition = PREFERENCES.SAFETY_AI_VERBOSES['camera_initialization'], message = f'CameraStreamFetcher object created for {self.camera_ip_address}')
+       
+        self.__print_with_header(text = f'CameraStreamFetcher object created for {self.camera_ip_address}')
 
     def __repr__(self) -> str:
         return f'CameraStreamFetcher({self.camera_ip_address}, camera_status={self.camera_status}, is_fetching_frames={self.is_fetching_frames})'
     
-    def __print_wrapper(self, condition:False, message:str = ""):
-        if condition: print(f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
-     
+    def __print_with_header(self, text:str = "", pprint_object = None):
+        """
+        This function prints the text with the header 'CameraStreamFetcher' and the current timestamp. If the pprint_object is provided, it is pretty-printed as well with an indentation.
+        """
+        print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {'CameraStreamFetcher':<{PREFERENCES.SAFETY_AI_VERBOSES['header_class_name_width']}} | {text}")
+        if pprint_object is not None:
+            formatted_text = pprint.pformat(text)   
+            for line in formatted_text.splitlines():
+                print(f"\t{line}")
+        
     def update_active_rules(self, active_rules:List = []):
         self.active_rules = active_rules
     
@@ -54,19 +46,11 @@ class CameraStreamFetcher:
         return self.camera_status == "active"
     
     def get_last_frame_info(self)->Dict:
+        """
+        This function is thread-safe. It returns the last frame info fetched from the camera. If no frame is fetched yet, it returns None.
+        """
         with self.lock:
             return copy.deepcopy(self.last_frame_info) # To prevent race conditions. Since the self.last_frame_info is continuously updated by the RTSP thread, it is better to return a deep copy of it
-    
-    def get_recent_frames_infos(self)->List[np.ndarray]:
-        with self.lock:            
-            return copy.deepcopy(self.recent_frames)   # To prevent race conditions. Since the self.recent_frames is continuously updated by the RTSP thread, it is better to return a deep copy of it
-        
-    def append_frame_to_recent_frames(self, frame:np.ndarray):
-        if self.last_frame_info is None or time.time() - self.last_frame_info["frame_timestamp"] > self.CLASS_PARAM_MINIMUM_DURATION_BETWEEN_RECENT_FRAME_APPENDING:
-            self.recent_frames.append(frame)
-            if len(self.recent_frames) > self.CLASS_PARAM_NUMBER_OF_FRAMES_TO_KEEP:
-                popped_frame = self.recent_frames.pop(0)
-                del popped_frame  # Explicitly delete the popped frame immediately to free up memory
     
     def start_fetching_frames(self):
         if self.RTSP_thread is not None: self.stop_fetching_frames(wait_for_thread_to_join = True)  # Stop the thread if it is already running
@@ -75,16 +59,16 @@ class CameraStreamFetcher:
         self.RTSP_thread = threading.Thread(target=self.__IP_camera_frame_fetching_thread)
         self.RTSP_thread.daemon = True                                                              # Set the thread as a daemon means that it will stop when the main program stops
         self.RTSP_thread.start()   
-        self.__print_wrapper(condition = server_preferences.PARAM_CAMERA_VERBOSE, message = f'Started fetching frames from {self.camera_ip_address}')
+        if PREFERENCES.SAFETY_AI_VERBOSES['frame_fetching_starts']: self.__print_with_header(text = f'Started fetching frames from {self.camera_ip_address}')
 
     def stop_fetching_frames(self, wait_for_thread_to_join:bool = True):
         self.is_fetching_frames = False  
         if wait_for_thread_to_join: self.RTSP_thread.join()
         self.RTSP_thread = None
-        self.__print_wrapper(condition = server_preferences.PARAM_CAMERA_VERBOSE, message = f'Stopped fetching frames from {self.camera_ip_address}')
+        if PREFERENCES.SAFETY_AI_VERBOSES['frame_fetching_stops']: self.__print_with_header(text = f'Stopped fetching frames from {self.camera_ip_address}')
 
     def __IP_camera_frame_fetching_thread(self):
-        cap = None
+        cap = None # cv2 capture object to capture the frames from the camera rtsp stream
 
         try:
             # Open the camera RTSP stream which takes about 2 seconds
@@ -103,68 +87,24 @@ class CameraStreamFetcher:
                     if ret:
                         with self.lock:
                             self.last_frame_info = {}
-                            self.last_frame_info["frame"] = frame
+                            self.last_frame_info["cv2_frame"] = frame
                             self.last_frame_info["camera_uuid"] = self.camera_uuid
                             self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
                             self.last_frame_info["frame_timestamp"] = time.time()
                             self.last_frame_info["active_rules"] = self.active_rules
-                            self.last_frame_info["detection_results"] = []
-                            self.last_frame_info["rule_violations"] = {}
                             self.number_of_frames_fetched += 1
-                            self.camera_fetching_delay = random.uniform(server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[0], server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
-                            self.__print_wrapper(condition=server_preferences.PARAM_CAMERA_VERBOSE, message = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} | Delay: {self.camera_fetching_delay:.2f} seconds') 
-                            self.append_frame_to_recent_frames(frame)
+
+                            self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
+                            self.__print_with_header(condition=PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded'], message = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
+                            self.last_frame_info = frame
                     else:
-                        self.__print_wrapper(condition=server_preferences.PARAM_CAMERA_VERBOSE, message = f'Error in decoding frame from {self.camera_ip_address}')
-                        continue          
+                        self.__print_with_header(condition=PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed'], message = f'Error in decoding frame from {self.camera_ip_address}')
         except Exception as e:
-            self.__print_wrapper(condition=server_preferences.PARAM_CAMERA_VERBOSE, message = f'Error in fetching frames from {self.camera_ip_address}: {e}')
-
-        if cap is not None: cap.release()
-        self.is_fetching_frames = False
-
-    def test_try_fetching_single_frame_and_show(self, window_name_to_show:str = "Test Frame"):
-
-        def draw_points(frame, points):
-            for i, point in enumerate(points):
-                x, y = point
-                height, width, _ = frame.shape
-                x = int(x * width)
-                y = int(y * height)
-                cv2.circle(frame, (x, y), 5, (0, 255, 0), -1)
-                if i > 0:
-                    x_prev, y_prev = points[i - 1]
-                    x_prev = int(x_prev * width)
-                    y_prev = int(y_prev * height)
-                    cv2.line(frame, (x_prev, y_prev), (x, y), (255, 0, 0), 2)
-
-            # If there are at least 3 points, connect the first and last points to close the polygon
-            if len(points) > 2:
-                x_first, y_first = points[0]
-                x_last, y_last = points[-1]
-                x_first = int(x_first * width)
-                y_first = int(y_first * height)
-                x_last = int(x_last * width)
-                y_last = int(y_last * height)
-                cv2.line(frame, (x_last, y_last), (x_first, y_first), (0, 0, 255), 2)  # Red color for closing the polygon
-
-        try:
-            cap = cv2.VideoCapture(f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}')
-            ret, frame = cap.read()
-            resoulution = (None,None)
-            if ret:
-                for rule in self.active_rules:
-                    points = rule.get("normalized_rule_area_polygon_corners", [])
-                    draw_points(frame, points)
-                cv2.imshow(window_name_to_show, frame)
-                resoulution = (frame.shape[1], frame.shape[0])
-                cv2.waitKey(1000)
-
-            cap.release()
-            return ret, resoulution, frame
-        except Exception as e:
-            return False, (None,None)
-    
+            if PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp']: self.__print_with_header(condition=PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp'], message = f'Error in fetching frames from {self.camera_ip_address}: {e}')
+        finally:
+            if cap is not None: cap.release()
+            self.is_fetching_frames = False
+   
 class StreamManager:
 
     def __init__(self, api_dealer:safety_ai_api_dealer.SafetyAIApiDealer = None) -> None:  
