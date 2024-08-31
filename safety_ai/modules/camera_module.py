@@ -15,7 +15,7 @@ class CameraStreamFetcher:
             'camera_region',
             'camera_description',
             'camera_status',
-            'NVR_ip',            
+            'NVR_ip_address',            
             'camera_ip_address',
             'username',
             'password',
