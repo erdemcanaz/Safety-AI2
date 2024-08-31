@@ -169,7 +169,7 @@ async def update_camera_info_attribute_api(update_info: UpdateCameraInfo):
         raise HTTPException(status_code=400, detail=str(e))
     
 @app.get("/fetch_all_camera_info")
-async def fetch_all_camera_info_api():
+async def fetch_all_camera_info_api(authenticated_user: User = Depends(authenticate_user_by_token)):
     #TODO: check if user can fetch camera info
     try:
         return {"camera_info":  database_manager.fetch_all_camera_info()}
@@ -182,7 +182,6 @@ async def delete_camera_info_by_uuid_api(camera_uuid: str):
         return {"camera_info":  database_manager.delete_camera_info_by_uuid(camera_uuid)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
 
 # Last Frames Table API =================================================================================================
 @app.get("/get_all_last_camera_frame_info_without_BLOB")
