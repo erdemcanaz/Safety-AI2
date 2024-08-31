@@ -28,6 +28,9 @@ stream_manager.update_cameras(update_interval_seconds = 60)
 stream_manager.update_camera_rules(update_interval_seconds = 5)
 stream_manager.start_cameras_by_uuid([])
 while True:
+    stream_manager.update_cameras(update_interval_seconds = 60)
+    stream_manager.update_camera_rules(update_interval_seconds = 5)
+
     stream_manager._StreamManager__test_show_all_frames()
 
 

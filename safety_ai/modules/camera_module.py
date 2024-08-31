@@ -95,7 +95,7 @@ class CameraStreamFetcher:
                             self.number_of_frames_fetched += 1
 
                             self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
-                            if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
+                            if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address:<15} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
                     else:
                         if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed']: self.__print_with_header(text = f'Error in decoding frame from {self.camera_ip_address}')
         except Exception as e:
