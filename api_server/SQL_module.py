@@ -114,6 +114,15 @@ class DatabaseManager:
         '''
         self.conn.execute(query, (violation_uuid, violation_datetime, region_name, violation_type, violation_score, camera_uuid, image_uuid))
         self.conn.commit()
+        return {
+            "violation_uuid": violation_uuid,
+            "violation_date": violation_datetime,
+            "region_name": region_name,
+            "violation_type": violation_type,
+            "violation_score": violation_score,
+            "camera_uuid": camera_uuid,
+            "image_uuid": image_uuid
+        }
         
     def fetch_reported_violations_between_dates(self, start_date:datetime.datetime=None, end_date:datetime.datetime=None)-> list:
         query = '''
