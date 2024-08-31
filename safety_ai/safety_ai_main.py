@@ -1,17 +1,28 @@
 # Built-in imports
 import pprint, time, sys, os, cv2
+from pathlib import Path
 
 # Local imports
-project_directory = os.path.dirname(os.path.abspath(__file__))
-modules_directory = os.path.join(project_directory, 'modules')
-sys.path.append(modules_directory) # Add the modules directory to the system path so that imports work
+SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent
+MODULES_DIRECTORY = SAFETY_AI_DIRECTORY / "modules"
 
+SAFETY_AI2_DIRECTORY = SAFETY_AI_DIRECTORY.parent
+print(f"API_SERVER_DIRECTORY: {SAFETY_AI_DIRECTORY}")
+print(f"MODULES_DIRECTORY: {MODULES_DIRECTORY}")
+print(f"SAFETY_AI2_DIRECTORY: {SAFETY_AI2_DIRECTORY}")
 
-import preferences
-import SQL_module
+sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the system path so that imports work
+sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
+
+import PREFERENCES
+import safety_ai_api_dealer
+
+api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
+
+r = api_dealer.fetch_all_camera_info()
+pprint.pprint(r)
 
 # Initialize the SQL database
-sql_manager = SQL_module.SQLManager(preferences.SQL_DATABASE_PATH)
 
 # import server_preferences
 # import camera_module 
