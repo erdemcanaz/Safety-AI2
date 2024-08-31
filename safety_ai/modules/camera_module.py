@@ -100,7 +100,7 @@ class CameraStreamFetcher:
                     else:
                         self.__print_with_header(condition=PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed'], message = f'Error in decoding frame from {self.camera_ip_address}')
         except Exception as e:
-            if PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp']: self.__print_with_header(condition=PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp'], message = f'Error in fetching frames from {self.camera_ip_address}: {e}')
+            if PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp']: self.__print_with_header(text = f'Error in fetching frames from {self.camera_ip_address}: {e}')
         finally:
             if cap is not None: cap.release()
             self.is_fetching_frames = False
