@@ -24,6 +24,7 @@ class DatabaseManager:
             os.remove(db_path) if os.path.exists(db_path) else None
             print(f"#{db_path} is recreated")
 
+        print(f"Connecting to {db_path}")
         self.conn = sqlite3.connect(db_path) # creates a new database if it doesn't exist
         self.ensure_image_paths_table_exists()
         self.ensure_last_frames_table_exists()
