@@ -22,6 +22,9 @@ api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
 r = api_dealer.fetch_all_camera_info()
 pprint.pprint(r)
 
+r = api_dealer.update_count(camera_uuid="be0bbc50-3add-4b63-84be-f7ce11637d0b", count_type="people", delta_count=1)
+pprint.pprint(r)
+
 # Initialize the SQL database
 
 # import server_preferences

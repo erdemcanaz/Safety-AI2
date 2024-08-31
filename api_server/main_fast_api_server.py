@@ -228,6 +228,17 @@ async def get_counts_by_camera_uuid_api(camera_uuid: str):
     except Exception as e:
         return {"error": str(e)}
     
+class UpdateCount(BaseModel):
+    camera_uuid: str
+    count_type: str
+    delta_count: int
+@app.post("/update_count")
+async def update_count_api(update_count_data: UpdateCount):
+    try:
+        return {"count":  database_manager.update_count(**update_count_data.dict())}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.get("/fetch_all_counts")
 async def fetch_all_counts_api():
     #TODO: check if user can fetch camera info

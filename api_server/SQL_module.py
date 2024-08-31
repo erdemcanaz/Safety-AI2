@@ -844,6 +844,11 @@ class DatabaseManager:
             self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], count_type, delta_count))
 
         self.conn.commit()
+        return {
+            "camera_uuid": camera_uuid,
+            "count_type": count_type,
+            "delta_count": delta_count,
+        }
         
     def get_counts_by_camera_uuid(self, camera_uuid:str=None)-> int:
         # Ensure camera_uuid is proper

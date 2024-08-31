@@ -40,7 +40,6 @@ class SafetyAIApiDealer():
             # If the response is 401 Unauthorized, refresh the token and retry once with the new token
             elif response.status_code == 401:
                 self.__update_access_token()
-                print(f"Token is refreshed. New token: {self.JWT_TOKEN}")
                 header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}  # Update the header with the new token                
                 response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_camera_info", headers=header, timeout=1)
                 if response.status_code == 200:
@@ -54,7 +53,33 @@ class SafetyAIApiDealer():
         
         except Exception as e: # In case of an exception, return the exception details                        
             return [False, None, {"detail": str(e)}]
-                                        
+
+    def update_count(self, camera_uuid:str=None, count_type:str = None, delta_count:int = None):
+        header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        
+        try:
+            payload = {'camera_uuid': camera_uuid, 'count_type': count_type, 'delta_count': delta_count}
+            # Send a request to the server to update 'count_type' of 'camera_uuid' by 'delta_count'
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_count", headers=header, payload=payload, timeout=1)            
+            if response.status_code == 200:
+                return [True, response.status_code, response.json()]
+            
+            # If the response is 401 Unauthorized, refresh the token and retry once with the new token
+            elif response.status_code == 401:
+                self.__update_access_token()
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}  # Update the header with the new token                
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/update_count", headers=header, timeout=1)
+                if response.status_code == 200:
+                    return [True, response.status_code, response.json()]
+                else:
+                    return [False, response.status_code, response.json()]
+                
+            # For other status codes, return the response as is
+            else:
+                return [False, response.status_code, response.json()]        
+            
+        except Exception as e:        
+            return [False, None, {"detail": str(e)}]                          
             
 
 
