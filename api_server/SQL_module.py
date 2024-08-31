@@ -124,17 +124,25 @@ class DatabaseManager:
             "image_uuid": image_uuid
         }
         
-    def fetch_reported_violations_between_dates(self, start_date:datetime.datetime=None, end_date:datetime.datetime=None)-> list:
+    def fetch_reported_violations_between_dates(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None, query_limit: int = 999) -> list:
         query = '''
-        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid FROM reported_violations WHERE violation_date BETWEEN ? AND ?
+        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid
+        FROM reported_violations
+        WHERE violation_date BETWEEN ? AND ?
+        ORDER BY violation_date DESC
+        LIMIT ?
         '''
-        cursor = self.conn.execute(query, (start_date, end_date))
+        
+        # Execute the query with start_date, end_date, and limit parameters
+        cursor = self.conn.execute(query, (start_date, end_date, query_limit))
         rows = cursor.fetchall()
-        if rows is None:
+        
+        if not rows:
             return []
         
         column_names = [description[0] for description in cursor.description]
         result = [dict(zip(column_names, row)) for row in rows]
+        
         return result
 
     def fetch_reported_violation_by_violation_uuid(self, violation_uuid:str=None)-> dict:
