@@ -3,6 +3,9 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 import os, re, hashlib, time
+
+import PREFERENCES
+
 # (+ 1)     camera_info_table
 # (+ 1.1)   last_frames table
 # (+ 1.2)   reported_violations
@@ -214,15 +217,15 @@ class DatabaseManager:
             raise ValueError('No camera found with the provided camera_uuid')
         
         # Ensure rule_department is proper
-        if rule_department not in ['ISG', 'KALITE', 'GUVENLIK']:
+        if rule_department not in PREFERENCES.DEFINED_DEPARTMENTS:
             raise ValueError('Invalid rule_department provided')
         
         # Ensure rule_type is proper
-        if rule_type not in ['hardhat_violation', 'restricted_area_violation']:
+        if rule_type not in PREFERENCES.DEFINED_RULES.keys():
             raise ValueError('Invalid rule_type provided')
         
         # Ensure evaluation_method is proper
-        if evaluation_method not in ['v1', 'v2']:
+        if evaluation_method not in PREFERENCES.DEFINED_RULES[rule_type]:
             raise ValueError('Invalid evaluation_method provided')
                 
         # Ensure threshold_value is proper
@@ -359,7 +362,7 @@ class DatabaseManager:
             raise ValueError('Invalid NVR-IP address provided')
         
         # Check if the camera_status is valid or not
-        if camera_status not in ['active', 'inactive']:
+        if camera_status not in PREFERENCES.DEFINED_CAMERA_STATUSES:
             raise ValueError("Invalid camera_status provided. Valid values are 'active' or 'inactive'")
         
         # Check if username and password are provided

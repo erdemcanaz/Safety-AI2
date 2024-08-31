@@ -1,6 +1,18 @@
 import platform
 from pathlib import Path
 
+
+# Constants =============================================================================================================
+DEFINED_RULES = {
+    "hardhat_violation": ["v1"],
+    "restricted_area_violation": ["v1", "v2"]
+}
+DEFINED_DEPARTMENTS = ['ISG', 'KALITE', 'GUVENLIK']
+DEFINED_CAMERA_STATUSES = ['active', 'inactive']
+
+#['hardhat_violation', 'restricted_area_violation']
+
+# ======================================================================================================================
 PARAM_SLEEP_DURATION_PERCENTAGE = 0.0      # The percentage of the total duration that the server will sleep. The server will sleep for this percentage of the total duration and work for the rest of the time. The total duration is calculated as the average evaluation time divided by (1 - PARAM_SLEEP_DURATION_PERCENTAGE)
 PARAM_MAX_SLEEP_DURATION = 5                # The maximum sleep duration in seconds. The server will sleep for this duration if the evaluation time is less than this value
 if PARAM_SLEEP_DURATION_PERCENTAGE < 0 or PARAM_SLEEP_DURATION_PERCENTAGE >= 1:
