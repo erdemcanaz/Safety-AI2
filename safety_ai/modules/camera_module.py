@@ -185,7 +185,7 @@ class StreamManager:
             is_camera_removed = False
 
             fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username
-            fetched_camera_info_dicts = {fetched_camera_info['camera_uuid']: fetched_camera_info for fetched_camera_info_dict in fetched_dicts}
+            fetched_camera_info_dicts = {fetched_camera_info_dict['camera_uuid']: fetched_camera_info_dict for fetched_camera_info_dict in fetched_dicts}
             
             #check for new cameras
             for fetched_camera_uuid in fetched_camera_info_dicts.keys():
