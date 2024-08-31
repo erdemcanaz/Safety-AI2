@@ -44,9 +44,9 @@ class PoseDetector():
         # The detections will be associated with this frame_uuid if needed, for future usecases
         self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"] 
 
-        detections = self.YOLO_OBJECT(frame_info["frame"], task = "pose", verbose= PREFERENCES.MODELS_MODULE_VERBOSES['pose_detection_model_verbose'])[0]
+        detections = self.YOLO_OBJECT(frame_info["cv2_frame"], task = "pose", verbose= PREFERENCES.MODELS_MODULE_VERBOSES['pose_detection_model_verbose'])[0]
         for detection in detections: # Each detection is a single person
-                        
+
             boxes = detection.boxes
             box_cls_no = int(boxes.cls.cpu().numpy()[0])
             box_cls_name = self.YOLO_OBJECT.names[box_cls_no]
