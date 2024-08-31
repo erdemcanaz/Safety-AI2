@@ -334,6 +334,8 @@ class DatabaseManager:
         # Format the camera_description and camera_region
         camera_description = "" if camera_description == None else camera_description
         camera_region = "" if camera_region == None else camera_region
+        print(f" camera description: {camera_description}, camera region: {camera_region}")
+
 
         # Check if the camera_uuid is unique or not
         query = '''
