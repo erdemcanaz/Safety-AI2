@@ -279,7 +279,7 @@ class StreamManager:
 
     def return_all_recent_frames_info_as_list(self) -> List[Dict]:
         recent_frames_info: List[Dict] = [] 
-        for camera in self.self.camera_stream_fetchers:
+        for camera in self.camera_stream_fetchers:
             if camera.get_last_frame_info() is not None:
                 recent_frames_info.append(camera.get_last_frame_info())
         return recent_frames_info
