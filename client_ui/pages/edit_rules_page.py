@@ -229,7 +229,7 @@ class EditRulesPage:
         self.page_frame = self.background.get_background_frame()
         
         self.all_camera_info_list = self.api_dealer.fetch_all_camera_info()[2]['camera_info'] 
-        formatted_cameras_for_list = [ {"COLUMN_0": camera['camera_ip_address'] if camera['camera_region'] == 'Henüz Atanmadı' else camera['camera_region'], "camera_info":camera} for camera in self.all_camera_info_list]
+        formatted_cameras_for_list = [ {"COLUMN_0": camera['camera_ip_address'] if camera['camera_region'] == "" else camera['camera_region'], "camera_info":camera} for camera in self.all_camera_info_list]
         self.cameras_list_item.set_list_items(items = formatted_cameras_for_list)
 
         if self.selected_camera_info is not None:

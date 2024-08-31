@@ -18,7 +18,6 @@ class MouseTracker:
         normalized_y = y / 1080
         if PREFERENCES.PRINT_MOUSE_COORDINATES: print(f"Mouse position: {self.last_position}, ({normalized_x:.3f}, {normalized_y:.3f})")
 
-
         if event == cv2.EVENT_LBUTTONDOWN:
             self.last_left_click = (x, y)  # Update last left-click position
 
