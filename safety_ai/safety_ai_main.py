@@ -17,34 +17,19 @@ sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the sy
 
 import PREFERENCES
 import safety_ai_api_dealer
-
+import camera_module
 #================================================================================================================================================================
 api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
+stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
+#her X'dk da bir kamera eklenip çıkarıldı mı kontrol denemesi yapılacak
+#her X'dk da bir kamera kuralları değişti mi kontrol denemesi yapılacak
 
-r = api_dealer.fetch_all_camera_info()
-pprint.pprint(r)
-camera_uuid = r[2]['camera_info'][0]['camera_uuid']
-
-r = api_dealer.update_count(camera_uuid=camera_uuid, count_type="TRIAL", delta_count=1)
-pprint.pprint(r)
-
-shift_date = datetime.datetime.now().strftime("%d.%m.%Y")
-r = api_dealer.update_shift_count(camera_uuid=camera_uuid, shift_date_ddmmyyyy=shift_date, shift_no="0", count_type="TRIAL", delta_count=1)
-pprint.pprint(r)
-
-width, height = 1920, 1080
-random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
-text = f"Violation: ({width}x{height}) | {'.jpg'}"
-text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 1)[0]
-text_x = (random_frame.shape[1] - text_width) // 2
-text_y = (random_frame.shape[0] + text_height) // 2
-cv2.putText(random_frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
-
-for i in range(500):
-    r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=random_frame, violation_date_ddmmyyy_hhmmss=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"), violation_type="TRIAL_VIOLATION", violation_score=random.uniform(0,1)*100, region_name=random.choice(["Region 1", "Region 2", "Region 3"]))
-    pprint.pprint(r)
+while True:
+    stream_manager.update_cameras(update_interval_seconds = 5)
 
 
+
+#================================================================================================================================================================
 # import server_preferences
 # import camera_module 
 # import evaluation_module
@@ -72,6 +57,31 @@ for i in range(500):
 #         time.sleep(sleep_duration)
 
 
+def test_api_functionality():
+    api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
+
+    r = api_dealer.fetch_all_camera_info()
+    pprint.pprint(r)
+    camera_uuid = r[2]['camera_info'][0]['camera_uuid']
+
+    r = api_dealer.update_count(camera_uuid=camera_uuid, count_type="TRIAL", delta_count=1)
+    pprint.pprint(r)
+
+    shift_date = datetime.datetime.now().strftime("%d.%m.%Y")
+    r = api_dealer.update_shift_count(camera_uuid=camera_uuid, shift_date_ddmmyyyy=shift_date, shift_no="0", count_type="TRIAL", delta_count=1)
+    pprint.pprint(r)
+
+    width, height = 1920, 1080
+    random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
+    text = f"Violation: ({width}x{height}) | {'.jpg'}"
+    text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 1)[0]
+    text_x = (random_frame.shape[1] - text_width) // 2
+    text_y = (random_frame.shape[0] + text_height) // 2
+    cv2.putText(random_frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
+
+
+    r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=random_frame, violation_date_ddmmyyy_hhmmss=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"), violation_type="TRIAL_VIOLATION", violation_score=random.uniform(0,1)*100, region_name=random.choice(["Region 1", "Region 2", "Region 3"]))
+    pprint.pprint(r)
 
   
 
