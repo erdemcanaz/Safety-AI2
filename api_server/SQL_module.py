@@ -847,6 +847,7 @@ class DatabaseManager:
         return {
             "camera_uuid": camera_uuid,
             "count_type": count_type,
+            "previous_value": previous_value,
             "delta_count": delta_count,
         }
         
