@@ -198,9 +198,8 @@ class ReportedViolationsPage:
                         resized_image = cv2.resize(self.last_shown_violation_frame_info['image'], (960, 720), interpolation = cv2.INTER_AREA)
 
                         # Put text on the topleft of the image: kamera uuid, ihlal uuid, vioaltion date, Region name, violation type, Talep eden kişi, talep edilme tarihi
-                        text = f"""
-                            Kamera UUID: {self.fetched_violations[selected_index]['camera_uuid']}
-                            \Resim UUID: {self.last_shown_violation_frame_info  ['image_uuid']}
+                        text = f"""Kamera UUID: {self.fetched_violations[selected_index]['camera_uuid']}
+                            \nResim UUID: {self.last_shown_violation_frame_info  ['image_uuid']}
                             \nIhlal UUID: {self.fetched_violations[selected_index]["violation_uuid"]}
                             \nIhlal Tarihi: {self.fetched_violations[selected_index]['violation_date']}
                             \nBölge Adı: {self.fetched_violations[selected_index]['region_name']}
@@ -208,7 +207,8 @@ class ReportedViolationsPage:
                             \nTelep Eden: {self.api_dealer.PERSONAL_FULLNAME}
                             \nTalep Tarihi: {datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")}
                             """
-                        cv2.putText(resized_image, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+                        
+                        picasso.draw_text_on_frame_with_newlines(frame=resized_image, text = text, pos=(10,20))
                                                     
                         cv2.namedWindow("Violation Image", cv2.WINDOW_NORMAL)
                         cv2.setWindowProperty("Violation Image", cv2.WND_PROP_TOPMOST, 1) # Set the window to always be on top

@@ -104,6 +104,42 @@ def draw_text_on_frame(frame: np.ndarray, text: str, position: tuple, area_size:
     # Draw the text on the frame
     cv2.putText(frame, text, (text_x, text_y), font, font_scale, text_color, thickness, cv2.LINE_AA)
 
+def draw_text_on_frame_with_newlines(frame, text, position=(10, 20), font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=0.5, color=(255, 255, 255), thickness=1, line_type=cv2.LINE_AA):
+    """
+    Draws multi-line text on an OpenCV frame where '\n' is considered.
+
+    Args:
+    - frame: The OpenCV image/frame to draw the text on.
+    - text: The text string to draw, with '\n' representing new lines.
+    - position: Tuple (x, y) where text drawing starts.
+    - font: Font type for the text.
+    - font_scale: Font scale (size).
+    - color: Color of the text (B, G, R).
+    - thickness: Thickness of the text.
+    - line_type: Line type for text rendering.
+    """
+    # Replace Turkish characters with English characters since OpenCV does not support Turkish characters
+    replacements = {
+        "ç": "c", "Ç": "C", "ğ": "g", "Ğ": "G",
+        "ı": "i", "I": "I", "ö": "o", "Ö": "O",
+        "ş": "s", "Ş": "S", "ü": "u", "Ü": "U",
+        "İ": "I"
+    }
+    for old_char, new_char in replacements.items():
+        text = text.replace(old_char, new_char)
+
+    # Split the text into lines
+    lines = text.split('\n')
+
+    # Initial y position
+    y = position[1]
+
+    # Iterate over each line and put it on the frame
+    for line in lines:
+        cv2.putText(frame, line.strip(), (position[0], y), font, font_scale, color, thickness, line_type)
+        # Update y position for the next line
+        y += int(font_scale * 30)  # Adjust the multiplier as necessary for line spacing
+
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):
     global IMAGE_PATHS
     image_path = IMAGE_PATHS[image_name]
