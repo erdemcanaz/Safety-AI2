@@ -10,7 +10,8 @@ from pydantic import BaseModel
 import jwt, cv2
 
 #Custom Imports
-import SQL_module, preferences
+import SQL_module
+from ... import PREFERENCES
 
 # Constants
 SERVER_JWT_KEY = "c56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"
@@ -22,7 +23,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # FastAPI Server
 
 app = FastAPI()
-database_manager = SQL_module.DatabaseManager(db_path = preferences.SQL_DATABASE_PATH)
+database_manager = SQL_module.DatabaseManager(db_path = PREFERENCES.SQL_DATABASE_PATH)
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

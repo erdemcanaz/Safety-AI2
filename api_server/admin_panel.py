@@ -2,8 +2,7 @@ import uuid, os, time, pprint, requests, datetime
 from pathlib import Path
 import cv2, numpy as np
 import SQL_module
-import preferences
-
+from ... import PREFERENCES
 class AdminPanel:       
 
     def __init__(self, db_path:str = None, delete_existing_db:bool = False):
@@ -561,9 +560,9 @@ class AdminPanel:
         input("Press any key to continue...")
       
 if __name__ == "__main__":
-    print("connecting to database ", preferences.SQL_DATABASE_PATH)
+    print("connecting to database ", PREFERENCES.SQL_DATABASE_PATH)
     should_delete_existing_db = True if input("Overwrite existing database? (write 'overwrite'):".ljust(50)) == "overwrite" else False
-    admin_panel = AdminPanel(db_path=preferences.SQL_DATABASE_PATH, delete_existing_db=should_delete_existing_db)
+    admin_panel = AdminPanel(db_path=PREFERENCES.SQL_DATABASE_PATH, delete_existing_db=should_delete_existing_db)
 
     TASKS = {
         "0": "Exit",
@@ -579,7 +578,7 @@ if __name__ == "__main__":
         "10": "Create Admin User"
     }
     while True:
-        os.system(preferences.CLEAR_TERMINAL_COMMAND)
+        os.system(PREFERENCES.CLEAR_TERMINAL_COMMAND)
         for key, value in TASKS.items(): print(f"{key}: {value}")
         chosen_task = input("Please select a table to work with:".ljust(50))
 
