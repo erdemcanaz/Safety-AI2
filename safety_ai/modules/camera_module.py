@@ -210,6 +210,14 @@ class StreamManager:
         is_camera_removed = False
 
         fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username]
+        
+        # Check for camera UUID collisions
+        camera_uuids = [fetched_dict["camera_uuid"] for fetched_dict in fetched_dicts]
+        if len(camera_uuids) != len(set(camera_uuids)):
+            duplicate_uuids = {uuid for uuid in camera_uuids if camera_uuids.count(uuid) > 1}
+            raise ValueError(f"There are cameras with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each camera has a unique UUID")
+        
+        # Knowing Camera UUIDs are unique, create a dictionary where the key is the camera UUID and the value is the camera info
         fetched_camera_info_dicts = {fetched_camera_info_dict['camera_uuid']: fetched_camera_info_dict for fetched_camera_info_dict in fetched_dicts}
         
         #check for new cameras
@@ -253,12 +261,6 @@ class StreamManager:
         if invalid_ip_cameras:
             raise ValueError(f"Invalid IP address format for cameras: {', '.join(invalid_ip_cameras)}. Please ensure that each IP address is in the format XXX.XXX.XXX.XXX where x is a digit between 0-9")
         
-        # Check for camera UUID collisions
-        camera_uuids = [camera_info_dict["camera_uuid"] for camera_info_dict in self.camera_info_dicts.values()]
-        if len(camera_uuids) != len(set(camera_uuids)):
-            duplicate_uuids = {uuid for uuid in camera_uuids if camera_uuids.count(uuid) > 1}
-            raise ValueError(f"There are cameras with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each camera has a unique UUID")
-        
         # Check for camera UUID format
         uuid_regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', re.IGNORECASE)
         invalid_uuid_cameras = [camera_info_dict["camera_uuid"] for camera_info_dict in self.camera_info_dicts.values() if not uuid_regex.match(camera_info_dict["camera_uuid"])]
@@ -293,7 +295,16 @@ class StreamManager:
             self.__print_with_header(text=f"Error in fetching camera rules", pprint_object=response[2])
             return
         
-        pprint.pprint(response[2])
+        fetched_dicts:List = response[2]["rules"] # camera_uuid, date_created, date_updated, evaluation_method, rule_department, rule_polygon, rule_type, rule_uuid
+        active_rule_uuids = [fetched_rule_dict["rule_uuid"] for fetched_rule_dict in fetched_dicts]
+        if len(active_rule_uuids) != len(set(active_rule_uuids)):
+            duplicate_uuids = {uuid for uuid in active_rule_uuids if active_rule_uuids.count(uuid) > 1}
+            raise ValueError(f"There are active rules with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each active rule has a unique UUID")
+        
+        fetched_camera_rules_dicts = {fetched_rule_dict['camera_uuid']: fetched_rule_dict for fetched_rule_dict in fetched_dicts}        
+        pprint.pprint(fetched_camera_rules_dicts) # DEBUG_PRINT
+
+        # Update the camera rules of the CAMERA STREAM FETCHERS =================================================================================
 
 
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
