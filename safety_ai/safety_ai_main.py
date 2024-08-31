@@ -24,38 +24,12 @@ stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 #her X'dk da bir kamera eklenip çıkarıldı mı kontrol denemesi yapılacak
 #her X'dk da bir kamera kuralları değişti mi kontrol denemesi yapılacak
 
+stream_manager.update_cameras(update_interval_seconds = 60)
+stream_manager.update_camera_rules(update_interval_seconds = 5)
+stream_manager.start_cameras_by_uuid([])
 while True:
-    stream_manager.update_cameras(update_interval_seconds = 60)
-    stream_manager.update_camera_rules(update_interval_seconds = 5)
+    stream_manager.__test_show_all_frames()
 
-
-
-#================================================================================================================================================================
-# import server_preferences
-# import camera_module 
-# import evaluation_module
-
-# stream_manager = camera_module.StreamManager()
-# stream_manager.start_cameras_by_uuid(camera_uuids = []) # Start all cameras
-
-# evaluation_manager = evaluation_module.EvaluationManager()
-
-# average_evaluation_time = 0
-# while True:
-#     evaluations_started_time = time.time()
-
-#     # ================== EVALUATION ==================
-#     all_frame_infos = stream_manager.return_all_recent_frames_info_as_list()    # Get all frames from the cameras
-#     evaluation_manager.evaluate_frames_info(all_frame_infos)                    # Evaluate the frames
-#     # ================================================
-
-#     average_evaluation_time = (1 - server_preferences.PARAM_EVALUATION_TIME_UPDATE_FACTOR) * average_evaluation_time + server_preferences.PARAM_EVALUATION_TIME_UPDATE_FACTOR*( time.time() - evaluations_started_time )
-#     total_duration = average_evaluation_time / (1-server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE)
-#     sleep_duration = min(total_duration * server_preferences.PARAM_SLEEP_DURATION_PERCENTAGE, server_preferences.PARAM_MAX_SLEEP_DURATION)
-#     server_preferences.PARAM_MINIMUM_DECODING_DELAY = sleep_duration # The minimum decoding delay is set to the sleep duration since the server will sleep for this duration and it will not be able to evaluate frames more frequently than this duration
-#     if sleep_duration > 0:
-#         print(f"average_evaluation_time: {average_evaluation_time:.2f}, sleep_duration: {sleep_duration:.2f}")
-#         time.sleep(sleep_duration)
 
 
 def test_api_functionality():

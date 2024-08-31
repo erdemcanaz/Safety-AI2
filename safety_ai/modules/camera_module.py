@@ -44,12 +44,15 @@ class CameraStreamFetcher:
     def __repr__(self) -> str:
         return f'CameraStreamFetcher({self.camera_ip_address}, camera_status={self.camera_status}, is_fetching_frames={self.is_fetching_frames})'
     
-    def update_active_rules(self, active_rules:List = []):
-        self.active_rules = active_rules
-
     def __print_wrapper(self, condition:False, message:str = ""):
         if condition: print(f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | CameraStreamFetcher |{message}')
-        
+     
+    def update_active_rules(self, active_rules:List = []):
+        self.active_rules = active_rules
+    
+    def is_camera_status_active(self)->bool:
+        return self.camera_status == "active"
+    
     def get_last_frame_info(self)->Dict:
         with self.lock:
             return copy.deepcopy(self.last_frame_info) # To prevent race conditions. Since the self.last_frame_info is continuously updated by the RTSP thread, it is better to return a deep copy of it
@@ -173,6 +176,9 @@ class StreamManager:
         self.camera_stream_fetchers = [] # A list of CameraStreamFetcher objects
 
     def __print_with_header(self, text:str = "", pprint_object = None):
+        """
+        This function prints the text with the header 'StreamManager' and the current timestamp. If the pprint_object is provided, it is pretty-printed as well with an indentation.
+        """
         print(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {'StreamManager':<{PREFERENCES.SAFETY_AI_VERBOSES['header_class_name_width']}} | {text}")
         if pprint_object is not None:
             formatted_text = pprint.pformat(text)   
@@ -310,99 +316,26 @@ class StreamManager:
                 camera_stream_fetcher.update_active_rules(self.camera_rules_dicts[camera_uuid])
             else:
                 camera_stream_fetcher.update_active_rules([])
-                
-
-
+          
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
+        """
+        This function stops the camera stream fetchers with the specified camera UUIDs. If no camera UUIDs are provided, all cameras are stopped.
+        Since camera fetchers are running in separate threads, the function waits for the threads to join before returning.
+        """
         stop_all_cameras = len(camera_uuids) == 0
         for camera in self.camera_stream_fetchers:
             if stop_all_cameras or camera.camera_uuid in camera_uuids:
                 camera.stop_fetching_frames()  
 
-    def reinitiliaze_cameras_from_camera_configs_file(self, number_of_cameras:int = 24):
-        # Ensure that the cameras are stopped before reinitializing them if they are already fetching frames    
-        for camera in self.cameras:
-            camera.stop_fetching_frames(wait_for_thread_to_join = True)
-        self.cameras = []
-
-        # Read the camera configurations from the camera_configs.json file
-        with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
-                    camera_configs= json.load(f)["cameras"]
-
-        # If the number_of_cameras is specified, only use the first number_of_cameras cameras from the camera_configs
-        if number_of_cameras > 0:
-            camera_configs = camera_configs[:number_of_cameras]
-            
-        # Create the camera objects
-        for camera_config in camera_configs:         
-            self.cameras.append(CameraStreamFetcher(**camera_config)) 
-
-        # Check for IP collisions
-        camera_ip_addresses = [camera.camera_ip_address for camera in self.cameras]
-        if len(camera_ip_addresses) != len(set(camera_ip_addresses)):
-            duplicate_ips = {ip for ip in camera_ip_addresses if camera_ip_addresses.count(ip) > 1}
-            raise ValueError(f"There are cameras with the same IP address: {', '.join(duplicate_ips)}. Please ensure that each camera has a unique IP address")
-
-        # Check for IP format (xxx.xxx.xxx.xxx) where x is a digit between 0-9
-        invalid_ip_cameras = [
-            camera.camera_ip_address for camera in self.cameras
-            if not all(part.isdigit() and 0 <= int(part) <= 255 for part in camera.camera_ip_address.split('.'))
-        ]
-        if invalid_ip_cameras:
-            raise ValueError(f"Invalid IP address format for cameras: {', '.join(invalid_ip_cameras)}. Please ensure that each IP address is in the format XXX.XXX.XXX.XXX where x is a digit between 0-9")
-
-        # Check for camera UUID collisions
-        camera_uuids = [camera.camera_uuid for camera in self.cameras]
-        if len(camera_uuids) != len(set(camera_uuids)):
-            duplicate_uuids = {uuid for uuid in camera_uuids if camera_uuids.count(uuid) > 1}
-            raise ValueError(f"There are cameras with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each camera has a unique UUID")
-
-        # Check for camera UUID format
-        uuid_regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', re.IGNORECASE)
-        invalid_uuid_cameras = [camera.camera_uuid for camera in self.cameras if not uuid_regex.match(camera.camera_uuid)]
-        if invalid_uuid_cameras:
-            raise ValueError(f"Invalid UUID format for cameras: {', '.join(invalid_uuid_cameras)}. Please ensure that each UUID is in the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
-
-        # Check for active rules UUID collisions
-        active_rules_uuids = []
-        for camera in self.cameras:
-            active_rules_uuids.extend([rule.get("rule_uuid") for rule in camera.active_rules])
-        if len(active_rules_uuids) != len(set(active_rules_uuids)):
-            duplicate_uuids = {uuid for uuid in active_rules_uuids if active_rules_uuids.count(uuid) > 1}
-            raise ValueError(f"There are active rules with the same UUID for camera {camera.camera_uuid}: {', '.join(duplicate_uuids)}. Please ensure that each active rule has a unique UUID")
-        
-        # Check for active rules UUID format
-        invalid_uuids = []
-        for camera in self.cameras:
-            active_rules = camera.active_rules
-            for rule in active_rules:
-                rule_uuid = rule.get("rule_uuid")
-                if not uuid_regex.match(rule_uuid):
-                    invalid_uuids.append((camera.camera_uuid, rule_uuid))
-
-        if invalid_uuids:
-            error_messages = [f"Invalid rule UUID format for camera {camera_uuid}: {rule_uuid}" for camera_uuid, rule_uuid in invalid_uuids]
-            raise ValueError("Invalid UUIDs found:\n" + "\n".join(error_messages))
-
-        # Initiliaze the camera fetching delay randomization range considering if the all cameras are fetching frames (worst case scenario)
-        server_preferences.PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras=len(self.cameras))
-            
-    def __optimize_camera_decoding_delays(self):        
-        # Optimize the decoding delays of the cameras. The decoding delay is the delay between decoding frames from the camera stream.
-        # Since decoding is computationally intensive, the decoding delay is used to prevent the cameras from being synchronized.
-        # It aims that each camera has a different decoding delay to prevent bottlenecks.
-        number_of_fetching_cameras = sum(1 for camera in self.cameras if camera.is_fetching_frames and camera.is_alive)
-        server_preferences.PREF_optimize_camera_fetching_delay_randomization_range(number_of_cameras=number_of_fetching_cameras)
-
     def start_cameras_by_uuid(self, camera_uuids:List[str] = []):    
-        # Start fetching frames from the cameras. If camera_uuids is empty, start all cameras, otherwise start only the cameras with the specified uuids    
-        # If camera is not alive, skip it. Alive means that the camera is reachable and the stream is available
+        """
+        This function starts the camera stream fetchers with the specified camera UUIDs. If no camera UUIDs are provided, all cameras are started.  
+        If the camera is already running, it is stopped and restarted.          
+        """
         start_all_alive_cameras = len(camera_uuids) == 0
-        for camera in self.cameras:
-            if camera.is_alive and (start_all_alive_cameras or camera.camera_uuid in camera_uuids):           
-                camera.start_fetching_frames()
-
-        self.__optimize_camera_decoding_delays() # One my use this externally. Yet since its rarely used and not computationally intensive, It is also put here
+        for camera_stream_fetcher in self.camera_stream_fetchers:
+            if camera_stream_fetcher.is_camera_status_active and (start_all_alive_cameras or camera_stream_fetcher.camera_uuid in camera_uuids):           
+                camera_stream_fetcher.start_fetching_frames()
 
     def return_all_recent_frames_info_as_list(self) -> List[Dict]:
         recent_frames_info: List[Dict] = [] 
@@ -411,49 +344,10 @@ class StreamManager:
                 recent_frames_info.append(camera.get_last_frame_info())
         return recent_frames_info
 
-    def update_frame_evaluations(self, evaluated_frame_uuids:List[str]):
-        for camera in self.cameras:
-            camera.set_last_frame_as_evaluated_if_frame_uuid_matches(evaluated_frame_uuids)
-    
-    def return_yolo_models_to_use(self)->List[str]:
-        yolo_model_to_use = []
-        for camera in self.cameras:
-            for rule in camera.active_rules:
-                if rule["yolo_model_to_use"] not in yolo_model_to_use:
-                    yolo_model_to_use.append(rule["yolo_model_to_use"])
-
-        return yolo_model_to_use
-    
-    def __test_get_camera_objects_ram_usage_MB(self)->float:
-        # Calculate the RAM usage of the camera objects in MB
-        try:
-            def get_deep_size(obj, seen=None):
-                size = sys.getsizeof(obj)
-                if seen is None:
-                    seen = set()
-                obj_id = id(obj)
-                if obj_id in seen:
-                    return 0
-                seen.add(obj_id)
-                if isinstance(obj, dict):
-                    size += sum(get_deep_size(v, seen) for v in obj.values())
-                    size += sum(get_deep_size(k, seen) for k in obj.keys())
-                elif hasattr(obj, '__dict__'):
-                    size += get_deep_size(obj.__dict__, seen)
-                elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
-                    size += sum(get_deep_size(i, seen) for i in obj)
-                return size
-
-            camera_objects_ram_usage_bytes = sum(get_deep_size(camera) for camera in self.cameras)
-            return camera_objects_ram_usage_bytes / 1024 / 1024
-        except Exception as e:
-            print(f"Error in calculating the RAM usage of the camera objects: {e}")
-            return 0
-
     def __test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     
-        for camera in self.cameras:
+        for camera in self.camera_stream_fetchers:
             frame = camera.get_last_frame_info()["frame"] if camera.get_last_frame_info() is not None else None
             if frame is not None:
                 frames_to_show.append(frame)            
