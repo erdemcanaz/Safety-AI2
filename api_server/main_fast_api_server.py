@@ -233,11 +233,27 @@ class UpdateCount(BaseModel):
     count_type: str
     delta_count: int
 @app.post("/update_count")
-async def update_count_api(update_count_data: UpdateCount):
+async def update_count_api(update_count_data: UpdateCount, authenticated_user = Depends(authenticate_user_by_token)):
+    #TODO: check if user can update count
     try:
         return {"count":  database_manager.update_count(**update_count_data.dict())}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+class UpdateShiftCount(BaseModel):
+    camera_uuid: str
+    shift_date_ddmmyyyy: str
+    shift_no: str
+    count_type: str
+    delta_count: int
+@app.post("/update_shift_count")
+async def update_shift_count_api(update_shift_count_data: UpdateShiftCount, authenticated_user = Depends(authenticate_user_by_token)):
+    #TODO: check if user can update shift count
+    try:
+        return {"count":  database_manager.update_shift_count(**update_shift_count_data.dict())}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.get("/fetch_all_counts")
 async def fetch_all_counts_api():
