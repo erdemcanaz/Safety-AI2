@@ -258,7 +258,6 @@ class UpdateCamerasPage:
         
         self.camera_info = self.api_dealer.fetch_all_camera_info() # [True, 200, {'camera_info': [{'username':'sdsa', 'password':'sdfsf', date_created': '2024-08-26 08:44:56', 'date_updated': '2024-08-26 08:44:56', 'camera_uuid': '92051d28-3402-46cd-952b-d2ba2782443e', 'camera_ip_address': '1.1.1.1', 'camera_region': "", 'camera_description': "", 'NVR_ip_address': '', 'stream_path': '/asdaf', 'camera_status': 'active'}, ...]]
         self.cameras = [ {"COLUMN_0": camera['camera_ip_address'] if camera['camera_region'] == "" else camera['camera_region'], "camera_info":camera} for camera in self.camera_info[2]['camera_info']]
-        pprint.pprint(self.cameras)
         self.cameras_list_item.set_list_items(items = self.cameras)
 
         # draw last frame 
@@ -357,7 +356,6 @@ class UpdateCamerasPage:
                 return
             elif callback[0] == "item_clicked_callback" and callback[1] == self.cameras_list_item.identifier:
                 selected_index = callback[3]
-                pprint.pprint(self.cameras[selected_index]) #[True, 200, {'camera_info': [{'date_created': '2024-08-26 08:44:56', 'date_updated': '2024-08-26 08:44:56', 'camera_uuid': '92051d28-3402-46cd-952b-d2ba2782443e', 'camera_ip_address': '1.1.1.1', 'camera_region': "", 'camera_description': "", 'NVR_ip_address': '', 'stream_path': '/asdaf', 'camera_status': 'active'}, ...]]
                 self.UUID_text_field.set_text(self.cameras[selected_index]["camera_info"]['camera_uuid'])
                 self.IPV4_input.set_text(self.cameras[selected_index]["camera_info"]['camera_ip_address'])
                 self.region_name.set_text(self.cameras[selected_index]["camera_info"]['camera_region'])
