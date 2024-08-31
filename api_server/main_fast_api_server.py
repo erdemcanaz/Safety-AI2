@@ -165,7 +165,6 @@ async def update_camera_info_attribute_api(update_info: UpdateCameraInfo):
     try:
         return {"camera_info":  database_manager.update_camera_info_attribute(**update_info_dict)}
     except Exception as e:
-        print(e)
         raise HTTPException(status_code=400, detail=str(e))
     
 @app.get("/fetch_all_camera_info")
@@ -333,7 +332,6 @@ async def get_shift_counts_between_dates(start_date: str, end_date: str):
 # Authorizations Table API =================================================================================================
 @app.get("/get_authorizations")
 async def get_authorizations_api(authenticated_user = Depends(authenticate_user_by_token)):
-    print(authenticated_user)
     try:
         return {"authorizations":  database_manager.fetch_user_authorizations(user_uuid=authenticated_user["user_uuid"])}
     except Exception as e:
