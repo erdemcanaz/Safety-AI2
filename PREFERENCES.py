@@ -2,6 +2,11 @@ import os
 from pathlib import Path
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
+# Definitions (Hardcoded)
+DEFINED_CAMERA_STATUSES = ["active", "inactive"]
+DEFINED_DEPARTMENTS = ["ISG", "KALITE", "Logistics"]
+
+#============
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}
 
 if os.name == "nt":  # For Windows (i.e development environment)
