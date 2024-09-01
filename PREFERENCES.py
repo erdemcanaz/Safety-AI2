@@ -42,4 +42,6 @@ SAFETY_AI_VERBOSES = {
 # Models module related parameters
 MODELS_MODULE_VERBOSES = {
    "pose_detection_model_verbose": True,
+   "hardhat_detection_model_verbose": True,
+   "forklift_detection_model_verbose": True,
 }
