@@ -13,9 +13,9 @@ class FrameEvaluator():
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
         
     def evaluate_frame(self, frame_info:np.ndarray):
-        self.pose_detection_evaluation(frame_info)
-        self.hardhat_detection_evaluation(frame_info)
-        self.forklift_detection_evaluation(frame_info)
+        self.pose_detector(frame_info)
+        self.hardhat_detector(frame_info)
+        self.forklift_detector(frame_info)
         self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
     
 
