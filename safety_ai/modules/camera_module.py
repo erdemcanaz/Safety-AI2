@@ -273,7 +273,7 @@ class StreamManager:
         If the camera is already running, it is stopped and restarted.          
         """
         start_all_alive_cameras = len(camera_uuids) == 0
-        for camera_stream_fetcher in self.camera_stream_fetchers:
+        for camera_stream_fetcher in self.camera_stream_fetchers[:PREFERENCES.MAXIMUM_NUMBER_OF_FETCHING_CAMERAS]:
             if camera_stream_fetcher.is_camera_status_active and (start_all_alive_cameras or camera_stream_fetcher.camera_uuid in camera_uuids):           
                 camera_stream_fetcher.start_fetching_frames()
 
