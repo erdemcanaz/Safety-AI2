@@ -22,7 +22,7 @@ import safety_ai_api_dealer_module, camera_module, models_module
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 
-pose_detector = models_module.PoseDetector(model_name="yolov8n-pose")
+pose_detector = models_module.PoseDetector(model_name="yolov8x-pose")
 hardhat_detector = models_module.HardhatDetector(model_name="hardhat_detector")
 forklift_detector = models_module.ForkliftDetector(model_name="forklift_detector")
 
