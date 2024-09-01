@@ -38,6 +38,7 @@ class PoseDetector():
         self.recent_detection_results = {
             "frame_uuid": None,
             "detection_class": "pose", # The class that the detector is detecting
+            "detector_uuid": self.DETECTOR_UUID,
             "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         }
 
