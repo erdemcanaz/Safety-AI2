@@ -4,10 +4,20 @@ PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
 # Definitions (Hardcoded)
 DEFINED_CAMERA_STATUSES = ["active", "inactive"]
-DEFINED_DEPARTMENTS = ["ISG", "KALITE", "Logistics"]
+DEFINED_DEPARTMENTS = ["ISG", "KALITE", "GUVENLIK"]
+DEFINED_RULES = {
+    "hardhat_violation": [
+        "v1", # People are detected via pose detection. Then their head is centered with 320x320 image. Image is then resized to 640x640 and fed to the hardhat detection model.
+    ],
+    "restricted_area_violation": [
+        "v1", # People are detected via pose detection. If their ankle is inside the restricted area, then it is a violation.
+        "v2"  # People are detected via pose detection. If thier bbox is inside the restricted area with a certain threshold, then it is a violation.
+    ],
+}
 
 #============
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}
+#TODO: check image integrity and remove images that are not in the database
 
 if os.name == "nt":  # For Windows (i.e development environment)
     SERVER_IP_ADDRESS = "192.168.0.26"
