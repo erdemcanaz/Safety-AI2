@@ -6,7 +6,7 @@ import numpy as np
 class FrameEvaluator():
 
     def __init__(self):
-        self.pose_detector = models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
+        self.pose_detector= models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
         self.hardhat_detector = models_module.HardhatDetector(model_name=PREFERENCES.USED_MODELS["hardhat_detection_model_name"])
         self.forklift_detector = models_module.ForkliftDetector(model_name=PREFERENCES.USED_MODELS["forklift_detection_model_name"])     
         

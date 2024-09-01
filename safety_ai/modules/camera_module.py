@@ -18,7 +18,7 @@ class CameraStreamFetcher:
             setattr(self, key, value)
 
         self.lock = threading.Lock()                            # A lock to prevent race conditions when deep copying the last_frame_info
-        self.number_of_frames_fetched = 0                       # The number of frames fetched from the camera    
+        self.number_of_frames_decoded = 0                       # The number of frames fetched from the camera    
         self.RTSP_thread = None                                 # The thread that fetches frames from the camera
         self.camera_retrieving_delay_uniform_range = [0, 10]    # The range of uniform distribution for the delay between frame retrievals. Otherwise grab is used where no decoding happens. The delay is calculated as a random number between the range
         self.is_fetching_frames = False                         # A flag to indicate whether the camera is fetching frames or not. If true, the camera is fetching frames. If false, the camera is not fetching frames
@@ -92,10 +92,10 @@ class CameraStreamFetcher:
                             self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
                             self.last_frame_info["frame_timestamp"] = time.time()
                             self.last_frame_info["active_rules"] = self.active_rules
-                            self.number_of_frames_fetched += 1
+                            self.number_of_frames_decoded += 1
 
                             self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
-                            if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_fetched:8d} |: Got a frame from {self.camera_ip_address:<15} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
+                            if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_decoded:8d} |: Got a frame from {self.camera_ip_address:<15} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
                     else:
                         if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed']: self.__print_with_header(text = f'Error in decoding frame from {self.camera_ip_address}')
         except Exception as e:
