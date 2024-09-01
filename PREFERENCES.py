@@ -29,7 +29,8 @@ DEFINED_RULES = {
 
 #============
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}
-#TODO: check image integrity and remove images that are not in the database
+#TODO: set an interval for checking image integrity and remove images that are not in the database
+
 
 if os.name == "nt":  # For Windows (i.e development environment)
     SERVER_IP_ADDRESS = "192.168.0.26"
@@ -71,4 +72,11 @@ MODELS_MODULE_VERBOSES = {
    "pose_detection_model_verbose": True,
    "hardhat_detection_model_verbose": True,
    "forklift_detection_model_verbose": True,
+}
+
+
+USED_MODELS = {
+    "pose_detection_model_name": "yolov8x-pose", # yolov8n-pose, yolov8s-pose, yolov8m-pose, yolov8l-pose, yolov8x-pose
+    "hardhat_detection_model_name": "hardhat_detector", # hardhat_detector
+    "forklift_detection_model_name": "forklift_detector", # forklift_detector
 }

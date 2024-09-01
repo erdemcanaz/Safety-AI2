@@ -16,15 +16,12 @@ sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the syste
 sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
 
 import PREFERENCES
-import safety_ai_api_dealer_module, camera_module, models_module
+import safety_ai_api_dealer_module, camera_module, models_module, frame_evaluator_module
 
 #================================================================================================================================================================
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
-
-pose_detector = models_module.PoseDetector(model_name="yolov8x-pose")
-hardhat_detector = models_module.HardhatDetector(model_name="hardhat_detector")
-forklift_detector = models_module.ForkliftDetector(model_name="forklift_detector")
+frame_evaluator = models_module.FrameEvaluator()
 
 while True:
     stream_manager._StreamManager__test_show_all_frames()
@@ -33,15 +30,7 @@ while True:
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
     for frame_info in recent_frames:
-        pose_detector.detect_frame(frame_info=frame_info)
-        r = pose_detector.get_recent_detection_results()
-        pprint.pprint(r)
-        hardhat_detector.detect_frame(frame_info=frame_info)
-        r = hardhat_detector.get_recent_detection_results()
-        pprint.pprint(r)
-        forklift_detector.detect_frame(frame_info=frame_info)
-        r = forklift_detector.get_recent_detection_results()
-        pprint.pprint(r)
+        frame_evaluator.evaluate_frame(frame_info)
 
 def test_api_functionality():
     api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
