@@ -21,7 +21,7 @@ import safety_ai_api_dealer_module, camera_module, models_module, frame_evaluato
 #================================================================================================================================================================
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
-frame_evaluator = models_module.FrameEvaluator()
+frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
 while True:
     stream_manager._StreamManager__test_show_all_frames()
