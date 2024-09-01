@@ -33,8 +33,6 @@ while True:
     for frame_info in recent_frames:
         pose_detector.process_frame(frame_info=frame_info)
 
-
-
 def test_api_functionality():
     api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
 

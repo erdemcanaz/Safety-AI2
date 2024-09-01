@@ -21,7 +21,6 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
 else:
     raise Exception("Unknown operating system")
 
-
 # Safety-AI related parameters
 CAMERA_UPDATE_INTERVAL_SECONDS = 900 # The interval in seconds for updating the camera information
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
@@ -38,7 +37,6 @@ SAFETY_AI_VERBOSES = {
     "frame_decoding_failed": True,
     "error_raised_rtsp": True,
 }
-
 
 # Models module related parameters
 MODELS_MODULE_VERBOSES = {
