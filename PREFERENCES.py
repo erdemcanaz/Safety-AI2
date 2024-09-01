@@ -5,6 +5,18 @@ PREFERENCES_FILE_PATH = Path(__file__).resolve()
 # Definitions (Hardcoded)
 DEFINED_CAMERA_STATUSES = ["active", "inactive"]
 DEFINED_DEPARTMENTS = ["ISG", "KALITE", "GUVENLIK"]
+DEFINED_AUTHORIZATIONS = [
+            'MENAGE_USERS',
+            'ISG_UI',
+            'QUALITY_UI',
+            'SECURITY_UI',
+            'EDIT_RULES',
+            'REPORTED_VIOLATIONS',
+            'SUMMARY_PAGE',
+            'UPDATE_CAMERAS',
+            'IOT_DEVICES'
+]
+
 DEFINED_RULES = {
     "hardhat_violation": [
         "v1", # People are detected via pose detection. Then their head is centered with 320x320 image. Image is then resized to 640x640 and fed to the hardhat detection model.

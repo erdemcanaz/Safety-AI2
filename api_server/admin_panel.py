@@ -25,21 +25,9 @@ class AdminPanel:
         plain_password = input("Enter plain password".ljust(50))
         personal_fullname = input("Enter personal fullname".ljust(50))
 
-        AUTHORIZATIONS = [
-            'MENAGE_USERS',
-            'ISG_UI',
-            'QUALITY_UI',
-            'SECURITY_UI',
-            'EDIT_RULES',
-            'REPORTED_VIOLATIONS',
-            'SUMMARY_PAGE',
-            'UPDATE_CAMERAS',
-            'IOT_DEVICES'
-        ]
-
         self.database_manager.create_user(username=username, personal_fullname=personal_fullname, plain_password=plain_password)
         user_uuid=self.database_manager.get_user_by_username(username=username)["user_uuid"]
-        for authorization_name in AUTHORIZATIONS:
+        for authorization_name in PREFERENCES.DEFINED_AUTHORIZATIONS:
             self.database_manager.authorize_user(user_uuid=user_uuid, authorization_name=authorization_name)
 
         print("Admin user is created succesfully")

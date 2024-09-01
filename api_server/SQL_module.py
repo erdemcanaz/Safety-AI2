@@ -1107,6 +1107,9 @@ class DatabaseManager:
         if not isinstance(authorization_name, str) or len(authorization_name) == 0:
             raise ValueError('Invalid authorization_name provided')
         
+        if not authorization_name in PREFERENCES.DEFINED_AUTHORIZATIONS:
+            raise ValueError("Invalid 'authorization_name' provided")
+        
         # Ensure user exists
         user_info = self.get_user_by_uuid(uuid=user_uuid)
         if user_info is None:

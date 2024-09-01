@@ -1,3 +1,5 @@
+#TODO: Check user permissions for each API call
+
 #Built-in Imports
 import os, sys, platform, time, json, base64, random, datetime, uuid, secrets, hashlib, pprint, traceback
 from typing import Optional, Dict, List, Any
@@ -119,19 +121,28 @@ async def create_user_api(user_info: UserCreate):
 
 @app.get("/fetch_all_user_info")  #http://<HOST IP>/fetch_all_user_info?start_from=0&user_count=10
 async def fetch_all_user_info_api(start_from: int = 0, user_count: int = 99999 , authenticated_user: User = Depends(authenticate_user_by_token)):
-    return {"users":  database_manager.fetch_all_user_info()[start_from:start_from+user_count]}
+    try:
+        return {"users":  database_manager.fetch_all_user_info()[start_from:start_from+user_count]}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/get_user_by_username/{user_name}")
 async def get_user_by_username_api(user_name: str, authenticated_user = Depends(authenticate_user_by_token)):   
-    user_info = database_manager.get_user_by_username(user_name)
-    if user_info is not None: del user_info["hashed_password"]
-    return {"user_info":  user_info}
+    try:
+        user_info = database_manager.get_user_by_username(user_name)
+        if user_info is not None: del user_info["hashed_password"]
+        return {"user_info":  user_info}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/get_user_by_uuid/{user_uuid}")
 async def get_user_by_uuid_api(user_uuid: str, authenticated_user = Depends(authenticate_user_by_token)):   
-    user_info = database_manager.get_user_by_uuid(user_uuid)
-    if user_info is not None: del user_info["hashed_password"]
-    return {"user_info":  user_info}
+    try:
+        user_info = database_manager.get_user_by_uuid(user_uuid)
+        if user_info is not None: del user_info["hashed_password"]
+        return {"user_info":  user_info}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Camera Info Table API =================================================================================================
 class CreateCameraInfo(BaseModel):
@@ -145,7 +156,6 @@ class CreateCameraInfo(BaseModel):
     camera_description: Optional[str] = None
 @app.post("/create_camera_info")
 async def create_camera_info_api(camera_info: CreateCameraInfo):
-    #TODO: check if user can create camera info
     camera_info_dict = camera_info.dict()
     camera_info_dict.update({"camera_uuid": str(uuid.uuid4())})
     camera_info_dict.update({"stream_path":"profile2/media.smp"})
@@ -160,20 +170,18 @@ class UpdateCameraInfo(BaseModel):
     value: Any
 @app.post("/update_camera_info_attribute")
 async def update_camera_info_attribute_api(update_info: UpdateCameraInfo):
-    #TODO: check if user can update camera info
-    update_info_dict = update_info.dict()
     try:
+        update_info_dict = update_info.dict()
         return {"camera_info":  database_manager.update_camera_info_attribute(**update_info_dict)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
 @app.get("/fetch_all_camera_info")
 async def fetch_all_camera_info_api(authenticated_user: User = Depends(authenticate_user_by_token)):
-    #TODO: check if user can fetch camera info
     try:
         return {"camera_info":  database_manager.fetch_all_camera_info()}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
     
 @app.delete("/delete_camera_info_by_uuid/{camera_uuid}")
 async def delete_camera_info_by_uuid_api(camera_uuid: str):
@@ -185,20 +193,18 @@ async def delete_camera_info_by_uuid_api(camera_uuid: str):
 # Last Frames Table API =================================================================================================
 @app.get("/get_all_last_camera_frame_info_without_BLOB")
 async def get_all_last_camera_frame_info_without_BLOB_api():
-    #TODO: check if user can fetch camera info
     try:
         return {"last_frame_info":  database_manager.get_all_last_camera_frame_info_without_BLOB()}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/get_last_camera_frame_by_camera_uuid/{camera_uuid}")
 async def get_last_camera_frame_by_camera_uuid_api(camera_uuid: str):
-    #TODO: check if user can fetch camera info
     try:
         return {"last_frame_info":  database_manager.get_last_camera_frame_by_camera_uuid(camera_uuid, convert_b64_to_cv2frame = False)}
     except Exception as e:
-        return {"error": str(e)}
-
+        raise HTTPException(status_code=400, detail=str(e))
+    
 # Reported Violations Table API =================================================================================================
 @app.get("/fetch_reported_violations_between_dates", description="Fetches all reported violations between two dates where date format is dd.mm.yyyy as string. startdate-00:00:00 and enddate-23:59:59 will be fethed.")
 async def fetch_reported_violations_between_dates_api(start_date: str, end_date: str):
@@ -228,7 +234,6 @@ async def create_reported_violation_api(report_violation_data: ReportViolation):
 # Image Paths Table API =================================================================================================
 @app.get("/get_encrypted_image_by_uuid")
 async def get_encrypted_image_by_uuid_api(image_uuid: str):
-    #TODO: check if user can fetch image info
     try:
         return {"image_info":  database_manager.get_encrypted_image_by_uuid(image_uuid=image_uuid, get_b64_image_only= True)}
     except Exception as e:
@@ -237,11 +242,10 @@ async def get_encrypted_image_by_uuid_api(image_uuid: str):
 # Counts Table API =================================================================================================
 @app.get("/get_counts_by_camera_uuid/{camera_uuid}")
 async def get_counts_by_camera_uuid_api(camera_uuid: str):
-    #TODO: check if user can fetch camera info
     try:
         return {"counts":  database_manager.get_counts_by_camera_uuid(camera_uuid)}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
     
 class UpdateCount(BaseModel):
     camera_uuid: str
@@ -249,7 +253,6 @@ class UpdateCount(BaseModel):
     delta_count: int
 @app.post("/update_count")
 async def update_count_api(update_count_data: UpdateCount, authenticated_user = Depends(authenticate_user_by_token)):
-    #TODO: check if user can update count
     try:
         return {"count":  database_manager.update_count(**update_count_data.dict())}
     except Exception as e:
@@ -263,20 +266,17 @@ class UpdateShiftCount(BaseModel):
     delta_count: int
 @app.post("/update_shift_count")
 async def update_shift_count_api(update_shift_count_data: UpdateShiftCount, authenticated_user = Depends(authenticate_user_by_token)):
-    #TODO: check if user can update shift count
     try:
         return {"shift_count":  database_manager.update_shift_count(**update_shift_count_data.dict())}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @app.get("/fetch_all_counts")
 async def fetch_all_counts_api():
-    #TODO: check if user can fetch camera info
     try:
         return {"counts":  database_manager.fetch_all_counts()}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
     
 # Rules Info Table API =================================================================================================
 class RuleInfo(BaseModel):
@@ -304,19 +304,17 @@ async def delete_rule_by_uuid_api(rule_uuid: str):
     
 @app.get("/fetch_rules_by_camera_uuid/{camera_uuid}")
 async def fetch_rules_by_camera_uuid_api(camera_uuid: str):
-    #TODO: check if user can fetch camera rules info
     try:
         return {"rules":  database_manager.fetch_rules_by_camera_uuid(camera_uuid)}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
     
 @app.get("/fetch_all_rules")
 async def fetch_all_rules_api():
-    #TODO: check if user can fetch camera rules info
     try:
         return {"rules":  database_manager.fetch_all_rules()}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
     
 # Shift Counts Table API =================================================================================================
 @app.get("/get_shift_counts_between_dates")
@@ -326,8 +324,7 @@ async def get_shift_counts_between_dates(start_date: str, end_date: str):
         end_date = datetime.datetime.strptime(end_date, "%d.%m.%Y") + datetime.timedelta(days=1)
         return {"shift_counts":  database_manager.get_shift_counts_between_dates(start_date, end_date)}
     except Exception as e:
-        return {"error": str(e)}
-    #get_shift_counts_between_dates
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Authorizations Table API =================================================================================================
 @app.get("/get_authorizations")
@@ -335,7 +332,7 @@ async def get_authorizations_api(authenticated_user = Depends(authenticate_user_
     try:
         return {"authorizations":  database_manager.fetch_user_authorizations(user_uuid=authenticated_user["user_uuid"])}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=400, detail=str(e))
 
 
     
