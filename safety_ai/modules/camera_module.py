@@ -23,7 +23,7 @@ class CameraStreamFetcher:
         self.camera_retrieving_delay_uniform_range = [0, 10]    # The range of uniform distribution for the delay between frame retrievals. Otherwise grab is used where no decoding happens. The delay is calculated as a random number between the range
         self.is_fetching_frames = False                         # A flag to indicate whether the camera is fetching frames or not. If true, the camera is fetching frames. If false, the camera is not fetching frames
         self.last_frame_info = None                             # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, active_rules, is_evaluated
-       
+        self.active_rules:List[Dict] = []                       # keys -> # camera_uuid, date_created, date_updated, evaluation_method, rule_department, rule_polygon, rule_type, rule_uuid
         self.__print_with_header(text = f'CameraStreamFetcher object created for {self.camera_ip_address}')
 
     def __repr__(self) -> str:
@@ -248,14 +248,17 @@ class StreamManager:
             raise ValueError(f"There are active rules with the same UUID: {', '.join(duplicate_uuids)}. Please ensure that each active rule has a unique UUID")
         
         # Update the camera rules of the CAMERA STREAM FETCHERS =================================================================================
-        self.camera_rules_dicts = {fetched_rule_dict['camera_uuid']: fetched_rule_dict for fetched_rule_dict in fetched_dicts}    
-
+    
         for camera_stream_fetcher in self.camera_stream_fetchers:
             camera_uuid = camera_stream_fetcher.camera_uuid
-            if camera_uuid in self.camera_rules_dicts:
-                camera_stream_fetcher.update_active_rules(self.camera_rules_dicts[camera_uuid])
-            else:
-                camera_stream_fetcher.update_active_rules([])
+            this_camera_related_rule_dicts:List[Dict] = [fetched_rule_dict for fetched_rule_dict in fetched_dicts if fetched_rule_dict["camera_uuid"] == camera_uuid]
+            for rule_dict in this_camera_related_rule_dicts:
+                rule_polygon_str:str = rule_dict["rule_polygon"].split(",")
+                rule_polygon = [(float(rule_polygon_str[i]), float(rule_polygon_str[i+1])) for i in range(0, len(rule_polygon_str), 2)]
+                rule_dict["rule_polygon"] = rule_polygon          
+            camera_stream_fetcher.update_active_rules(this_camera_related_rule_dicts)
+
+           
           
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
         """
@@ -323,6 +326,24 @@ class StreamManager:
 class CameraModuleTests:
     def __init__(self):
         pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # if __name__ == "__main__":
 

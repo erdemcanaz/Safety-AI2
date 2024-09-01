@@ -69,11 +69,10 @@ SAFETY_AI_VERBOSES = {
 
 # Models module related parameters
 MODELS_MODULE_VERBOSES = {
-   "pose_detection_model_verbose": True,
-   "hardhat_detection_model_verbose": True,
-   "forklift_detection_model_verbose": True,
+   "pose_detection_model_verbose": False,
+   "hardhat_detection_model_verbose": False,
+   "forklift_detection_model_verbose": False,
 }
-
 
 USED_MODELS = {
     "pose_detection_model_name": "yolov8x-pose", # yolov8n-pose, yolov8s-pose, yolov8m-pose, yolov8l-pose, yolov8x-pose
