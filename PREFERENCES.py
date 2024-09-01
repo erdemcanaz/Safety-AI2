@@ -50,7 +50,7 @@ else:
     raise Exception("Unknown operating system")
 
 # Safety-AI related parameters
-MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 15 # The maximum number of camera stream fetchers that is fetching RTSP streams at the same time
+MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 1 # The maximum number of camera stream fetchers that is fetching RTSP streams at the same time
 CAMERA_UPDATE_INTERVAL_SECONDS = 900 # The interval in seconds for updating the camera information
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
 
