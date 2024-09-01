@@ -257,9 +257,7 @@ class StreamManager:
                 rule_polygon = [(float(rule_polygon_str[i]), float(rule_polygon_str[i+1])) for i in range(0, len(rule_polygon_str), 2)]
                 rule_dict["rule_polygon"] = rule_polygon          
             camera_stream_fetcher.update_active_rules(this_camera_related_rule_dicts)
-
-           
-          
+        
     def stop_cameras_by_uuid(self, camera_uuids:List[str]):
         """
         This function stops the camera stream fetchers with the specified camera UUIDs. If no camera UUIDs are provided, all cameras are stopped.

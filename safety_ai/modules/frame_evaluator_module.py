@@ -3,6 +3,7 @@ import PREFERENCES
 import models_module
 import cv2
 import numpy as np
+from typing import List, Dict
 
 class FrameEvaluator():
 
@@ -14,16 +15,17 @@ class FrameEvaluator():
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
         
     def evaluate_frame(self, frame_info:np.ndarray):
-        frame_uuid = frame_info["frame_uuid"]
-        if frame_info["camera_uuid"] in self.recenty_evaluated_frame_uuids_wrt_camera and frame_uuid == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]:
-            return
-        else:
-            frame_info["frame_uuid"] = frame_uuid
-            
+        # Check if the frame is already evaluated, if so, return
+        if frame_info["camera_uuid"] in self.recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: return
+        self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]    
+
         self.pose_detector.detect_frame(frame_info)
         self.hardhat_detector.detect_frame(frame_info)
         self.forklift_detector.detect_frame(frame_info)
         self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
+
+        frame_rules:List[Dict] = frame_info["active_rules"]
+        pprint.pprint(frame_rules)
     
 
 
