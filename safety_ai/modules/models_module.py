@@ -166,7 +166,8 @@ class ForkliftDetector():
             detection_dict = {'bbox_class_name': box_cls_name, "bbox_confidence": box_conf, "normalized_bbox": [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3]], 'keypoints': None}
             self.recent_detection_results["detections"].append(detection_dict)
 
-
+    def get_recent_detection_results(self) -> Dict:
+        return self.recent_detection_results
 
 
 # class ForkliftDetector():
