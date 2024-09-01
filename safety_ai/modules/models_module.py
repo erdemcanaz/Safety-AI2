@@ -33,7 +33,7 @@ class PoseDetector():
     def __repr__(self):
         return f"PoseDetector(model_name={self.MODEL_PATH})"
        
-    def process_frame(self, frame_info:np.ndarray = None):
+    def process_frame(self, frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.5):
         # Clear the recent detection results
         self.recent_detection_results = {
             "frame_uuid": None,
@@ -53,7 +53,7 @@ class PoseDetector():
             box_cls_name = self.YOLO_OBJECT.names[box_cls_no]
             box_conf = boxes.conf.cpu().numpy()[0]
             box_xyxyn = boxes.xyxyn.cpu().numpy()[0]
-            if box_cls_name not in ["person"]: continue
+            if box_cls_name not in ["person"] or box_conf < bbox_threshold_confidence: continue
 
             detection_dict = {'bbox_class_name': box_cls_name, "bbox_confidence": box_conf, "bbox": [box_xyxyn[0], box_xyxyn[1], box_xyxyn[2], box_xyxyn[3]], 'keypoints': None}
 
