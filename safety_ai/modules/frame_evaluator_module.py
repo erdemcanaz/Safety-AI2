@@ -39,6 +39,8 @@ class FrameEvaluator():
         # Check the percentage of the normalized_bbox1 is inside the normalized_bbox2 wrt. the normalized_bbox1
         # The normalized_bbox is in the form of [x1, y1, x2, y2] where x1, y1 is the top-left corner and x2, y2 is the bottom-right corner
         # The percentage is the percentage of the normalized_bbox1 that should be inside the normalized_bbox2
+        # if  bbox_1 = [0.4, 0.4, 0.8, 0.8] and bbox_2 = [0.0, 0.0, 0.6, 0.6], then the intersectio percentage is 0.25
+
         intersection_bbox = [max(normalized_bbox1[0], normalized_bbox2[0]), max(normalized_bbox1[1], normalized_bbox2[1]), min(normalized_bbox1[2], normalized_bbox2[2]), min(normalized_bbox1[3], normalized_bbox2[3])]
         if intersection_bbox[0] >= intersection_bbox[2] or intersection_bbox[1] >= intersection_bbox[3]: return False
         intersection_area = (intersection_bbox[2] - intersection_bbox[0]) * (intersection_bbox[3] - intersection_bbox[1])
@@ -119,26 +121,24 @@ class FrameEvaluator():
         # Get the forklift bboxes so that we can exclude them from the violation detection
         evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
-        pprint.pprint(forklift_bboxes)
-
-        for forklift_bbox in forklift_bboxes:
-            cv2.rectangle(frame_info['cv2_frame'], (int(forklift_bbox[0]*frame_info['cv2_frame'].shape[1]), int(forklift_bbox[1]*frame_info['cv2_frame'].shape[0])), (int(forklift_bbox[2]*frame_info['cv2_frame'].shape[1]), int(forklift_bbox[3]*frame_info['cv2_frame'].shape[0])), (0, 0, 255), 2)
-        if len(forklift_bboxes) > 0:
-            resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
-            cv2.imshow("forklift", resized_frame)
 
         # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         for detection in evaluation_result['pose_detection_results']['detections']:
             bbox = detection['normalized_bbox']
             bbox_center = [(bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2]
-            if self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon):
+
+            is_person_in_restricted_area = self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon)
+            is_person_inside_forklift = False
+            for forklift_bbox in forklift_bboxes:
+                if self.__is_inside_another_bbox(bbox, forklift_bbox, intersection_percentage_threshold = 0.5):
+                    is_person_inside_forklift = True
+                    break
+            
+            if is_person_in_restricted_area and not is_person_inside_forklift:
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
 
-            resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
-            cv2.imshow("frame", resized_frame)
+                resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
+                cv2.imshow("violation", resized_frame)
 
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
-        bbox_1 = [0.4, 0.4, 0.8, 0.8]
-        bbox_2 = [0.0, 0.0, 0.6, 0.6]
-        self.__is_inside_another_bbox(bbox_1, bbox_2, intersection_percentage_threshold = 0.5)
         pass
