@@ -362,6 +362,18 @@ class UpdateCamerasPage:
                 self.username_input.set_text(self.cameras[selected_index]["camera_info"]['username'])
                 self.password_input.set_text(self.cameras[selected_index]["camera_info"]['password'])
                 self.is_active_input.set_text(self.cameras[selected_index]["camera_info"]['camera_status'])
+
+                camera_uuid = self.UUID_text_field.get_text()
+                result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
+                if result[0]:
+                    self.last_camera_frame_info = result[2]["last_frame_info"]
+                    if self.last_camera_frame_info is None:
+                        self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
+                    else:
+                        self.last_camera_frame_info['decoded_last_frame'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.last_camera_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR)
+                else:
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+
                 self.reset_page_frame()
 
                 return

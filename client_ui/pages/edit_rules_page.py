@@ -332,6 +332,19 @@ class EditRulesPage:
                         parsed_rule = rule['rule_polygon'].split(",")
                         rule_polygon = [ [float(parsed_rule[i]), float(parsed_rule[i+1])] for i in range(0,len(parsed_rule),2)]
                         self.selected_camera_active_rule_polygons.append(rule["rule_polygon"])
+                
+                if self.selected_camera_info is not None:
+                    camera_uuid = self.selected_camera_info["camera_uuid"]
+                    result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
+                    if result[0]:
+                        self.selected_camera_last_frame_info = result[2]["last_frame_info"]
+                        if self.selected_camera_last_frame_info is None:
+                            self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
+                        else:
+                            self.selected_camera_last_frame_info['decoded_last_frame'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.selected_camera_last_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR)
+                    else:
+                        self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                
                 self.reset_page_frame()
                 return
             elif callback[0] == "item_clicked_callback" and callback[1] == self.rules_list_item.identifier:
