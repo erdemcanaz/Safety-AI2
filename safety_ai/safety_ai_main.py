@@ -63,11 +63,20 @@ while True:
             if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
             elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
 
-    if time.time() - last_time_violations_reported > 120:
+    if time.time() - last_time_violations_reported > 20:
         last_time_violations_reported = time.time()
         for camera_uuid, violation_result in best_violations_wrt_camera.items():
             print(f"Reporting violation for camera_uuid: {camera_uuid}")
-            r = api_dealer.create_reported_violation(**violation_result)
+            # camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date_ddmmyyy_hhmmss:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None):
+            camera_uuid = violation_result['camera_uuid']
+            violation_date_ddmmyyy_hhmmss = violation_result['violation_date_ddmmyyy_hhmmss']
+            violation_type = violation_result['violation_type']
+            violation_score = violation_result['violation_score']
+            region_name = violation_result['region_name']
+            violation_frame = violation_result['violation_frame']
+
+            print(f"camera_uuid: {camera_uuid}, violation_date_ddmmyyy_hhmmss: {violation_date_ddmmyyy_hhmmss}, violation_type: {violation_type}, violation_score: {violation_score}, region_name: {region_name}")
+            r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date_ddmmyyy_hhmmss=violation_date_ddmmyyy_hhmmss, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
             print(r)
 
         best_violations_wrt_camera = {} # Reset the best violations after reporting them. next time the best violations will be updated again.
