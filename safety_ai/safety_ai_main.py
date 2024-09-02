@@ -24,6 +24,11 @@ stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
 last_time_server_last_frame_updated = 0
+last_time_violations_reported = 0
+best_violations_wrt_camera = {
+
+}
+
 def update_server_last_frames(recent_frames):
     global last_time_server_last_frame_updated
     if time.time() - last_time_server_last_frame_updated < 300: return
@@ -50,8 +55,28 @@ while True:
     evaluation_results = []
     for frame_info in recent_frames:
         evaluation_results.append(frame_evaluator.evaluate_frame(frame_info))
+
+    for evaluation_result in evaluation_results:
+        for violation_result in evaluation_result["violations"]:
+            camera_uuid = evaluation_result['frame_info']['camera_uuid']
+            if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
+            elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
+
+    if time.time() - last_time_violations_reported > 15:
+        last_time_violations_reported = time.time()
+        for camera_uuid, violation_result in best_violations_wrt_camera.items():
+            print(f"Reporting violation for camera_uuid: {camera_uuid}")
+
+        # violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
+        #     "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+        #     "region_name": evaluation_result['frame_info']['region_name'],
+        #     "violation_frame": None, # Will be added after the person blur is applied at the end of the evaluation, all rules share the same frame
+        #     "violation_date_ddmmyyy_hhmmss": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+        #     "violation_type": rule_info['rule_type'],
+        #     "violation_score": None, # will be added if a violation is detected           
+        # }    
     
-    print(f"len(evaluation_results): {len(evaluation_results)}")
+    if len(evaluation_results) > 0: print(f"len(evaluation_results): {len(evaluation_results)}")
 
 def test_api_functionality():
     api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
