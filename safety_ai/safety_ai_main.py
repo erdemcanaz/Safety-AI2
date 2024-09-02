@@ -63,7 +63,7 @@ while True:
             if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
             elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
 
-    if time.time() - last_time_violations_reported > 20:
+    if time.time() - last_time_violations_reported > 600:
         last_time_violations_reported = time.time()
         for camera_uuid, violation_result in best_violations_wrt_camera.items():
             print(f"Reporting violation for camera_uuid: {camera_uuid}")
@@ -71,7 +71,7 @@ while True:
             camera_uuid = violation_result['camera_uuid']
             violation_date_ddmmyyy_hhmmss = violation_result['violation_date_ddmmyyy_hhmmss']
             violation_type = violation_result['violation_type']
-            violation_score = float(violation_result['violation_score'])
+            violation_score = round( float(violation_result['violation_score']) , 2 )
             region_name = violation_result['region_name']
             violation_frame = violation_result['violation_frame']
 
