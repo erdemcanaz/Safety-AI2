@@ -311,7 +311,7 @@ class FrameEvaluator():
                 frame_to_detect_hardhat = frame_info['cv2_frame']
 
             cv2.imshow("hardhat_v1", frame_to_detect_hardhat)
-            evaluation_result['hardhat_detection_results'] = self.hardhat_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE, frame=frame_to_detect_hardhat)
+            evaluation_result['hardhat_detection_results'] = self.hardhat_detector.detect_frame(frame = frame_to_detect_hardhat, frame_info = None, bbox_threshold_confidence = PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
             if len(evaluation_result['hardhat_detection_results']['detections']) == 0:
                 violation_score = detection["bbox_confidence"]
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (no hard hat detection)")

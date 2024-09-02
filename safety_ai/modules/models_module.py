@@ -97,7 +97,8 @@ class HardhatDetector():
     def __repr__(self) -> str:
         return f"HardhatDetector(model_name={self.MODEL_PATH})"
     
-    def detect_frame(self, frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.00) -> None:
+    def detect_frame(self, frame:np.ndarray = None, frame_info:Dict = None, bbox_threshold_confidence:float = 0.00) -> None:
+
         # Clear the recent detection results
         self.recent_detection_results = {
             "detector_uuid": self.DETECTOR_UUID,
@@ -107,9 +108,10 @@ class HardhatDetector():
         }
 
         # The detections will be associated with this frame_uuid if needed, for future usecases
-        self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"] 
+        self.recent_detection_results["frame_uuid"] = frame_info["frame_uuid"] if frame_info is not None else None
 
-        detections = self.YOLO_OBJECT(frame_info["cv2_frame"], task = "detection", verbose= PREFERENCES.MODELS_MODULE_VERBOSES['hardhat_detection_model_verbose'])[0]
+        frame_to_detect = frame if frame is not None else frame_info["cv2_frame"]
+        detections = self.YOLO_OBJECT(frame_to_detect, task = "detection", verbose= PREFERENCES.MODELS_MODULE_VERBOSES['hardhat_detection_model_verbose'])[0]
         for detection in detections: # Each detection is a single person
 
             boxes = detection.boxes
