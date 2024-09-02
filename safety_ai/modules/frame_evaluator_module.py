@@ -121,7 +121,7 @@ class FrameEvaluator():
             else:
                 raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
 
-        # TODO blur the bbox of the persons
+        # Blur the bbox of the persons
         normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
         for normalized_bbox in normalized_person_bboxes_to_blur:
             self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1) # Draw the bbox of the person, very narrow and will be overwritten by the violation rect thickness
@@ -179,10 +179,10 @@ class FrameEvaluator():
 
             # Check if the ankle of the person is inside the restricted area
             normalized_keypoints = detection['normalized_keypoints']
-            left_ankle = normalized_keypoints['left_ankle']
-            right_ankle = normalized_keypoints['right_ankle']
-            is_left_ankle_in_restricted_area = self.__is_normalized_point_inside_polygon(left_ankle, rule_polygon) if left_ankle[2] > 0 else False # negative confidence means that the keypoint is not detected
-            is_right_ankle_in_restricted_area = self.__is_normalized_point_inside_polygon(right_ankle, rule_polygon) if right_ankle[2] > 0 else False # negative confidence means that the keypoint is not detected
+            left_ankle = normalized_keypoints['left_ankle'] # [x, y, confidence]
+            right_ankle = normalized_keypoints['right_ankle'] # [x, y, confidence]
+            is_left_ankle_in_restricted_area = self.__is_normalized_point_inside_polygon(left_ankle[:2], rule_polygon) if left_ankle[2] > 0 else False # negative confidence means that the keypoint is not detected
+            is_right_ankle_in_restricted_area = self.__is_normalized_point_inside_polygon(right_ankle[:2], rule_polygon) if right_ankle[2] > 0 else False # negative confidence means that the keypoint is not detected
         
             if is_left_ankle_in_restricted_area or is_right_ankle_in_restricted_area and not is_person_inside_forklift:
                 violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
