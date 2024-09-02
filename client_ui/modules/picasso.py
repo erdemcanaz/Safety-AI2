@@ -138,7 +138,7 @@ def draw_text_on_frame_with_newlines(frame, text, position=(10, 20), font=cv2.FO
     for line in lines:
         cv2.putText(frame, line.strip(), (position[0], y), font, font_scale, color, thickness, line_type)
         # Update y position for the next line
-        y += int(font_scale * 30)  # Adjust the multiplier as necessary for line spacing
+        y += int(font_scale * 20)  # Adjust the multiplier as necessary for line spacing
 
 def get_image_as_frame(image_name:str=None, width:int=1920, height:int=1080, maintain_aspect_ratio:bool = True):
     global IMAGE_PATHS
