@@ -42,7 +42,7 @@ class FrameEvaluator():
         
         print(f"{frame_info['camera_uuid']} Number of people detected: {len(evaluation_result['pose_detection_results']['detections'])}")#NOTE: DEBUG_PRINT
         
-        pprint.pprint(evaluation_result['active_rules'])
+        pprint.pprint(frame_info['active_rules'])
         # frame_rules:List[Dict] = frame_info["active_rules"]        
         # self.hardhat_detector.detect_frame(frame_info)
         # self.forklift_detector.detect_frame(frame_info)
