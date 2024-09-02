@@ -4,6 +4,7 @@ import models_module
 import cv2
 import numpy as np
 from typing import List, Dict
+import copy
 
 class FrameEvaluator():
 
@@ -72,6 +73,7 @@ class FrameEvaluator():
 
         evaluation_result = {
             "frame_info": frame_info,
+            "processed_frame": copy.deepcopy(frame_info),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)
             "flags":{
                 "is_person_detected": False,
                 "is_violation_detected": False,
@@ -86,7 +88,7 @@ class FrameEvaluator():
         #"detector_uuid": self.DETECTOR_UUID,
         #"detection_class": <> # The class that the detector is detecting
         #"frame_uuid": <> # The UUID of the frame 
-        #"detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        #"detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "normalized_keypoints": {$keypoint_name: [xn, yn, confidence]}}
         #================================================================================================
 
         # No matter what, the pose detection is done for each frame
@@ -110,23 +112,63 @@ class FrameEvaluator():
                     raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
             else:
                 raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
-                
+
+        # TODO blur the bbox of the persons
+        # #self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= frame_info['cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
+
+
     def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
-        # TODO: Implement this function later on
-        return 
-    
-        # If a person ankle (either left OR right) is inside the restricted area, then it is a violation.
+        # ===============================================================================================
+        # evaluation type: restricted_area_violation ||| evaluation method: v1
+        # If a person ankle is inside the restricted area, then it is a violation.
+        # VIOLATION SCORE -> bbox_confidence * (mean of the confidence of the left and right ankle)
+        # Exception: If the person is inside the forklift, then it is not a violation.
+        #================================================================================================
+
+        frame_info = evaluation_result['frame_info']
+        rule_polygon = rule_info['rule_polygon']   
+        
+        # Ensure that the pose detection results are available
         if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the restricted area violation evaluation")
         
-        # Check if a person is detected
-        if len(evaluation_result['pose_detection_results']['detections']) == 0: return # No person is detected, so no violation
+        # Get the forklift bboxes so that we can exclude them from the violation detection
+        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
 
         # Check if the ankle of the person is inside the restricted area
-        # {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        # {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "normalized_keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        for detection in evaluation_result['pose_detection_results']['detections']:
+
+            # Check if the person is inside the forklift, if so, continue
+            normalized_bbox = detection['normalized_bbox']
+            is_person_inside_forklift = False
+            for normalized_forklift_bbox in normalized_forklift_bboxes:
+                if self.__is_inside_another_bbox(normalized_bbox, normalized_forklift_bbox, intersection_percentage_threshold = 0.5):
+                    is_person_inside_forklift = True
+                    break
+            if is_person_inside_forklift: continue
+
+            # Check if the ankle of the person is inside the restricted area
+            normalized_keypoints = detection['normalized_keypoints']
+            left_ankle = normalized_keypoints['left_ankle']
+            right_ankle = normalized_keypoints['right_ankle']
+            is_left_ankle_in_restricted_area = self.__is_normalized_point_inside_polygon(left_ankle, rule_polygon) if left_ankle[2] > 0 else False # negative confidence means that the keypoint is not detected
+            is_right_ankle_in_restricted_area = self.__is_normalized_point_inside_polygon(right_ankle, rule_polygon) if right_ankle[2] > 0 else False # negative confidence means that the keypoint is not detected
+        
+            if is_left_ankle_in_restricted_area or is_right_ankle_in_restricted_area and not is_person_inside_forklift:
+                violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
+                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
+
+                resized_frame = cv2.resize(frame_info['cv2_frame'], (500, 500))
+                cv2.imshow("violation_v1", resized_frame)
+
+            #prepare the frame to be reported: add text, add timestamp, etc.
 
     def __restricted_area_violation_isg_v2(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
+        # evaluation type: restricted_area_violation ||| evaluation method: v2
         # If people bbox-center is inside the restricted area, then it is a violation.
+        # VIOLATION SCORE -> bbox_confidence
         # Exception: If the person is inside the forklift, then it is not a violation.
         #================================================================================================
         frame_info = evaluation_result['frame_info']
@@ -137,32 +179,32 @@ class FrameEvaluator():
         
         # Get the forklift bboxes so that we can exclude them from the violation detection
         evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-        forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
+        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
 
         # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         # Check if the bbox-center of the person is inside the restricted area and not inside the forklift
-        restricted_area_violation_bboxes = []
         for detection in evaluation_result['pose_detection_results']['detections']:            
-            bbox = detection['normalized_bbox']
-            bbox_center = [(bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2]
-            self.__gaussian_blur_bbox(normalized_bbox = bbox, frame= frame_info['cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
-
-            is_person_in_restricted_area = self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon)
+            normalized_bbox = detection['normalized_bbox']
+            normalized_bbox_center = [(normalized_bbox[0]+normalized_bbox[2])/2, (normalized_bbox[1]+normalized_bbox[3])/2]
+            
+            # Check if the person is inside the forklift, if so, continue
             is_person_inside_forklift = False
-            for forklift_bbox in forklift_bboxes:
-                if self.__is_inside_another_bbox(bbox, forklift_bbox, intersection_percentage_threshold = 0.5):
+            for normalized_forklift_bbox in normalized_forklift_bboxes:
+                if self.__is_inside_another_bbox(normalized_bbox, normalized_forklift_bbox, intersection_percentage_threshold = 0.5):
                     is_person_inside_forklift = True
                     break
+            if is_person_inside_forklift: continue
             
-            if is_person_in_restricted_area and not is_person_inside_forklift:
-                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
+            is_person_in_restricted_area = self.__is_normalized_point_inside_polygon(normalized_bbox_center, rule_polygon)
+            if is_person_in_restricted_area:
+                violation_score = detection["bbox_confidence"]
+                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
 
                 resized_frame = cv2.resize(frame_info['cv2_frame'], (500, 500))
-                cv2.imshow("violation", resized_frame)
+                cv2.imshow("violation_v2", resized_frame)
 
                 
-        #prepare the frame to be reported: add blur, add text, add timestamp, etc.
+        #prepare the frame to be reported: add text, add timestamp, etc.
         
-
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         pass

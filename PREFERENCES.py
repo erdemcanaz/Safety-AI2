@@ -51,9 +51,9 @@ else:
 
 # Safety-AI related parameters
 PERSON_BBOX_BLUR_KERNEL_SIZE = 41 # Odd number
-POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.75
+POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.50
 FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.50
-HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.50
+HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
 
 MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 5 #24 is sufficient # The maximum number of camera stream fetchers that is fetching RTSP streams at the same time
 CAMERA_UPDATE_INTERVAL_SECONDS = 900 # The interval in seconds for updating the camera information

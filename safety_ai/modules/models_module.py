@@ -40,7 +40,7 @@ class PoseDetector():
             "frame_uuid": None,
             "detection_class": "pose", # The class that the detector is detecting
             "detector_uuid": self.DETECTOR_UUID,
-            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "normalized_keypoints": {$keypoint_name: [xn, yn, confidence]}}
         }
 
         # The detections will be associated with this frame_uuid if needed, for future usecases
@@ -70,7 +70,7 @@ class PoseDetector():
                 if keypoint_xn == 0 and keypoint_yn == 0: #if the keypoint is not detected, but this is also a prediction. Thus the confidence should not be set to zero. negative values are used to indicate that the keypoint is not detected
                     keypoint_conf = -keypoint_conf
                 normalized_keypoints_dict[keypoint_name] = [keypoint_xn, keypoint_yn, keypoint_conf]
-            detection_dict["keypoints"] = normalized_keypoints_dict
+            detection_dict["normalized_keypoints"] = normalized_keypoints_dict
             
             self.recent_detection_results["detections"].append(detection_dict)
         
@@ -103,7 +103,7 @@ class HardhatDetector():
             "detector_uuid": self.DETECTOR_UUID,
             "detection_class": "hardhat", # The class that the detector is detecting
             "frame_uuid": None,
-            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "normalized_keypoints": {$keypoint_name: [xn, yn, confidence]}}
         }
 
         # The detections will be associated with this frame_uuid if needed, for future usecases
@@ -151,7 +151,7 @@ class ForkliftDetector():
             "detector_uuid": self.DETECTOR_UUID,
             "detection_class": "forklift", # The class that the detector is detecting
             "frame_uuid": None,
-            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "normalized_keypoints": {$keypoint_name: [xn, yn, confidence]}}
         }
 
         # The detections will be associated with this frame_uuid if needed, for future usecases
