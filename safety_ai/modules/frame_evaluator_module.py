@@ -80,7 +80,7 @@ class FrameEvaluator():
 
         evaluation_result = {
             "frame_info": frame_info,
-            "processed_frame": copy.deepcopy(frame_info['cv2_frame']),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)
+            "processed_cv2_frame": copy.deepcopy(frame_info['cv2_frame']),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)
             "flags":{
                 "is_person_detected": False,
                 "is_violation_detected": False,
@@ -123,8 +123,8 @@ class FrameEvaluator():
         # TODO blur the bbox of the persons
         normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
         for normalized_bbox in normalized_person_bboxes_to_blur:
-            self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
-            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_frame'], color=[169, 69, 0], thickness=1)
+            self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
+            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1)
 
     def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
@@ -168,8 +168,8 @@ class FrameEvaluator():
                 violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
 
-                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_frame'], color=[0, 0, 255], thickness=5)
-                resized_frame = cv2.resize(frame_info['processed_frame'], (500, 500))
+                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_cv2_frame'], color=[0, 0, 255], thickness=5)
+                resized_frame = cv2.resize(frame_info['processed_cv2_frame'], (500, 500))
                 cv2.imshow("violation_v1", resized_frame)
 
             #prepare the frame to be reported: add text, add timestamp, etc.
@@ -209,8 +209,8 @@ class FrameEvaluator():
             if is_person_in_restricted_area:
                 violation_score = detection["bbox_confidence"]
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
-                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_frame'], color=[0, 0, 255], thickness=5)
-                resized_frame = cv2.resize(frame_info['processed_frame'], (500, 500))
+                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_cv2_frame'], color=[0, 0, 255], thickness=5)
+                resized_frame = cv2.resize(frame_info['processed_cv2_frame'], (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
 
                 
