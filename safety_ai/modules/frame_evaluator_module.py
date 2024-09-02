@@ -112,6 +112,8 @@ class FrameEvaluator():
 
         for forklift_bbox in forklift_bboxes:
             cv2.rectangle(frame_info['cv2_frame'], (int(forklift_bbox[0]*frame_info['cv2_frame'].shape[1]), int(forklift_bbox[1]*frame_info['cv2_frame'].shape[0])), (int(forklift_bbox[2]*frame_info['cv2_frame'].shape[1]), int(forklift_bbox[3]*frame_info['cv2_frame'].shape[0])), (0, 0, 255), 2)
+        resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
+        cv2.imshow("forklift", resized_frame)
 
         # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         for detection in evaluation_result['pose_detection_results']['detections']:
