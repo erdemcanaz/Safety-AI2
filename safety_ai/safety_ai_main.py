@@ -57,7 +57,7 @@ while True:
         evaluation_results.append(frame_evaluator.evaluate_frame(frame_info))
 
     for evaluation_result in evaluation_results:
-        for violation_result in evaluation_result["violations"]:
+        for violation_result in evaluation_result["violation_results"]:
             camera_uuid = evaluation_result['frame_info']['camera_uuid']
             if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
             elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
