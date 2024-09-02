@@ -199,7 +199,7 @@ class FrameEvaluator():
                 padding = icon_max_size // 3
                 picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent_with_background", x = bbox[2] + padding , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
-                cv2.imshow("violation_v1", resized_frame)
+                #cv2.imshow("violation_v1", resized_frame) #TODO: make this parametric
 
                 if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
                     violation_report_info['violation_score'] = violation_score
@@ -263,7 +263,7 @@ class FrameEvaluator():
                 picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent_with_background", x = bbox[2] + padding , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
                 
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
-                cv2.imshow("violation_v2", resized_frame)
+                #cv2.imshow("violation_v2", resized_frame) #TODO: make this parametric
 
                 evaluation_result['flags']['is_violation_detected'] = True
 
@@ -377,7 +377,8 @@ class FrameEvaluator():
                 # If the bbox can't fit into a 320x320 frame, use the original frame
                 frame_to_detect_hardhat = frame_info['cv2_frame']
 
-            cv2.imshow("hardhat_v1", frame_to_detect_hardhat)
+            #cv2.imshow("hardhat_v1_zoomed_frame", frame_to_detect_hardhat) #TODO: make this parametric
+
             evaluation_result['hardhat_detection_results'] = self.hardhat_detector.detect_frame(frame = frame_to_detect_hardhat, frame_info = None, bbox_threshold_confidence = PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
             if len(evaluation_result['hardhat_detection_results']['detections']) == 0:
                 violation_score = detection["bbox_confidence"]

@@ -47,8 +47,11 @@ while True:
     
     update_server_last_frames(recent_frames)
 
+    evaluation_results = []
     for frame_info in recent_frames:
-        frame_evaluator.evaluate_frame(frame_info)
+        evaluation_results.append(frame_evaluator.evaluate_frame(frame_info))
+    
+    print(f"len(evaluation_results): {len(evaluation_results)}")
 
 def test_api_functionality():
     api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
