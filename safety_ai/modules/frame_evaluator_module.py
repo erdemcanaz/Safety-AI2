@@ -311,3 +311,27 @@ class FrameEvaluator():
                 frame_to_detect_hardhat = frame_info['cv2_frame']
 
             cv2.imshow("hardhat_v1", frame_to_detect_hardhat)
+            evaluation_result['hardhat_detection_results'] = self.hardhat_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE, frame=frame_to_detect_hardhat)
+            if len(evaluation_result['hardhat_detection_results']['detections']) == 0:
+                violation_score = detection["bbox_confidence"]
+                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (no hard hat detection)")
+            else:
+                # find the closest hardhat bbox to the head center
+                min_distance = float("inf")
+                closest_hardhat_detection = None
+                for hardhat_detection in evaluation_result['hardhat_detection_results']['detections']:
+                    normalized_hardhat_bbox = hardhat_detection['normalized_bbox']
+                    normalized_hardhat_bbox_center = [(normalized_hardhat_bbox[0]+normalized_hardhat_bbox[2])/2, (normalized_hardhat_bbox[1]+normalized_hardhat_bbox[3])/2]
+                    normalized_distance = np.linalg.norm(np.array(normalized_head_center) - np.array(normalized_hardhat_bbox_center))
+                    if normalized_distance < min_distance:
+                        min_distance = normalized_distance
+                        closest_hardhat_detection = hardhat_detection
+
+                if closest_hardhat_detection['bbox_class_name'] == 'no_hard_hat':
+                    violation_score = detection["bbox_confidence"]
+                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (no_hardhat bbox)")
+                elif closest_hardhat_detection['bbox_class_name'] == 'hard_hat':
+                    violation_score = 1 - (detection["bbox_confidence"] * closest_hardhat_detection["bbox_confidence"])
+                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (hardhat bbox)")
+                else:
+                    raise Exception(f"Unknown bbox_class_name: {closest_hardhat_detection['bbox_class_name']}")
