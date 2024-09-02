@@ -129,7 +129,7 @@ class FrameEvaluator():
     def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
         # evaluation type: restricted_area_violation ||| evaluation method: v1
-        # If a person ankle is inside the restricted area, then it is a violation.
+        # If a person ankle is inside the restricted area (either right OR left), then it is a violation.
         # VIOLATION SCORE -> bbox_confidence * (mean of the confidence of the left and right ankle)
         # Exception: If the person is inside the forklift, then it is not a violation.
         #================================================================================================
@@ -215,9 +215,99 @@ class FrameEvaluator():
                 self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=5)
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
-
                 
         #prepare the frame to be reported: add text, add timestamp, etc.
         
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
-        pass
+        # ===============================================================================================
+        # evaluation type: hardhat_violation ||| evaluation method: v1
+        # If people head center is inside the defined area and the hardhat is not detected, then it is a violation.
+        # head center is the mean of the head keypoints (left_eye, right_eye, nose, left_ear, right_ear)
+        #
+        # Since hardhat is a small object the image is zoomed . the bbox of the person is checked if it fits inside
+        # 320x320 image. If so, a zoom frame that centers bbox is placed (320x320).
+        # then the image is resized to 640x640 and fed to the hardhat detection model.
+        # otherwise, the original frame is fed to the hardhat detection model.
+        #
+        # VIOLATION SCORE:
+        # -> if the hardhat is detected, then violation_score = 1 - (pose_bbox_confidence * hardhat_bbox_confidence)
+        # -> if the hardhat is not detected, then violation_score = pose_bbox_confidence
+        # Exception: If the person is inside the forklift, then it is not a violation.
+        # Dataset candidate: If a person is detected yet neiter hardhat or no_hardhat is detected, then it is a candidate for the dataset.
+        #================================================================================================
+        frame_info = evaluation_result['frame_info']
+        rule_polygon = rule_info['rule_polygon']
+
+        # Ensure that the pose detection results are available
+        if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the hardhat violation evaluation")
+
+        # Get the forklift bboxes so that we can exclude them from the violation detection
+        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
+
+        for detection in evaluation_result['pose_detection_results']['detections']:
+                normalized_bbox = detection['normalized_bbox']
+                normalized_keypoints = detection['normalized_keypoints']
+
+                # Check if the person is inside the forklift, if so, continue
+                is_person_inside_forklift = False
+                for normalized_forklift_bbox in normalized_forklift_bboxes:
+                    if self.__is_inside_another_bbox(normalized_bbox, normalized_forklift_bbox, intersection_percentage_threshold = 0.5):
+                        is_person_inside_forklift = True
+                        break
+                if is_person_inside_forklift: continue
+
+                # Calculate the head center of the person
+                xyn_total = [0, 0, 0]
+                for keypoint_name in ["left_eye", "right_eye", "nose", "left_ear", "right_ear"]:  
+                    keypoint_info = normalized_keypoints[keypoint_name]
+                    if keypoint_info[2] < 0: continue # Confidence is negative, i.e., the keypoint is not detected
+                    xyn_total[0] += keypoint_info[0]
+                    xyn_total[1] += keypoint_info[1]
+                    xyn_total[2] += 1
+                if xyn_total[2] == 0: continue # No head keypoints are detected
+                normalized_head_center = [xyn_total[0]/xyn_total[2], xyn_total[1]/xyn_total[2]]
+
+                # Check if the head center of the person is inside the rule area
+                is_person_head_center_in_restricted_area = self.__is_normalized_point_inside_polygon(normalized_head_center, rule_polygon)
+                if not is_person_head_center_in_restricted_area: continue
+
+                # Zoom the bbox of the person if it fits inside the 320x320 image
+                frame_to_detect_hardhat = None
+
+                x1, y1, x2, y2 = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, frame_info['cv2_frame'])
+                
+                # Calculate the width and height of the bbox
+                bbox_width = x2 - x1
+                bbox_height = y2 - y1
+
+                can_fit_inside_320x320 =  x2 - x1 <= 320 and y2 - y1 <= 320
+                if can_fit_inside_320x320:
+                    # Calculate the center of the bbox
+                    center_x = x1 + bbox_width // 2
+                    center_y = y1 + bbox_height // 2
+
+                    # Calculate the top-left corner of the 320x320 frame
+                    start_x = max(center_x - 160, 0)  # Ensure x doesn't go below 0
+                    start_y = max(center_y - 160, 0)  # Ensure y doesn't go below 0
+
+                    # Adjust the bottom-right corner if 320x320 goes out of the original frame bounds
+                    end_x = min(start_x + 320, frame_info['cv2_frame'].shape[1])
+                    end_y = min(start_y + 320, frame_info['cv2_frame'].shape[0])
+
+                    # If the adjustment causes the frame to be less than 320x320, adjust start_x and start_y
+                    start_x = end_x - 320 if end_x - start_x < 320 else start_x
+                    start_y = end_y - 320 if end_y - start_y < 320 else start_y
+
+                    # Extract the 320x320 frame
+                    zoom_frame = frame_info['cv2_frame'][start_y:end_y, start_x:end_x]
+                    zoom_frame = cv2.resize(zoom_frame, (320, 320))  # Resize to 320x320 if necessary
+
+                    # Resize the 320x320 frame to 640x640 if needed for further processing
+                    resized_frame = cv2.resize(zoom_frame, (640, 640))
+                    frame_to_detect_hardhat = resized_frame
+                else:
+                    # If the bbox can't fit into a 320x320 frame, use the original frame
+                    frame_to_detect_hardhat = frame_info['cv2_frame']
+
+        cv2.imshow("hardhat_v1", frame_to_detect_hardhat)
