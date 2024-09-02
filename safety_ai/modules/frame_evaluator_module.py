@@ -24,10 +24,10 @@ class FrameEvaluator():
             "flags":{
                 "is_person_detected": False,
                 "is_violation_detected": False,
-            }, 
-            "pose_detection_result": None,      # List of detected people
-            "hardhat_detection_result": None,   # List of detected hardhats
-            "forklift_detection_result": None,  # List of detected forklifts
+            },          
+            "pose_detection_result": None,      # Detect_frame result of the pose detector
+            "hardhat_detection_result": None,   # Detect_frame result of the hardhat detector
+            "forklift_detection_result": None,  # Detect_frame result of the forklift detector
         }   
 
         #============================detect_frame=======================================================
@@ -40,14 +40,11 @@ class FrameEvaluator():
         evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         
-        print(f"{frame_info['camera_uuid']} Number of people detected: {len(evaluation_result['pose_detection_results']['detections'])}")
+        print(f"{frame_info['camera_uuid']} Number of people detected: {len(evaluation_result['pose_detection_results']['detections'])}")#NOTE: DEBUG_PRINT
         
+        pprint.pprint(evaluation_result['active_rules'])
         # frame_rules:List[Dict] = frame_info["active_rules"]        
         # self.hardhat_detector.detect_frame(frame_info)
         # self.forklift_detector.detect_frame(frame_info)
         # self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
     
-
-
-
-
