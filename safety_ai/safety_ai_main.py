@@ -54,9 +54,9 @@ while True:
 
     evaluation_results = []
     for frame_info in recent_frames:
-        evaluation_results.append(frame_evaluator.evaluate_frame(frame_info))
+        r = frame_evaluator.evaluate_frame(frame_info)
+        if r is not None: evaluation_results.append(r)
 
-    pprint.pprint(evaluation_results)
     for evaluation_result in evaluation_results:
         for violation_result in evaluation_result["violation_results"]:
             camera_uuid = evaluation_result['frame_info']['camera_uuid']
