@@ -140,5 +140,5 @@ class FrameEvaluator():
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         bbox_1 = [0.4, 0.4, 0.8, 0.8]
         bbox_2 = [0.0, 0.0, 0.6, 0.6]
-        self.__is_inside_another_bbox(self, bbox_1, bbox_2, intersection_percentage_threshold = 0.5)
+        self.__is_inside_another_bbox(bbox_1, bbox_2, intersection_percentage_threshold = 0.5)
         pass
