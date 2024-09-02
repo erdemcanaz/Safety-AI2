@@ -26,7 +26,7 @@ frame_evaluator = frame_evaluator_module.FrameEvaluator()
 last_time_server_last_frame_updated = 0
 def update_server_last_frames(recent_frames):
     global last_time_server_last_frame_updated
-    if time.time() - last_time_server_last_frame_updated < 20: return
+    if time.time() - last_time_server_last_frame_updated < 300: return
     last_time_server_last_frame_updated = time.time()
 
     for frame_info in recent_frames:
