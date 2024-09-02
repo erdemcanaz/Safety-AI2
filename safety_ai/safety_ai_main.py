@@ -71,7 +71,7 @@ while True:
             camera_uuid = violation_result['camera_uuid']
             violation_date_ddmmyyy_hhmmss = violation_result['violation_date_ddmmyyy_hhmmss']
             violation_type = violation_result['violation_type']
-            violation_score = violation_result['violation_score']
+            violation_score = float(violation_result['violation_score'])
             region_name = violation_result['region_name']
             violation_frame = violation_result['violation_frame']
 
