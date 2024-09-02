@@ -67,7 +67,8 @@ while True:
         last_time_violations_reported = time.time()
         for camera_uuid, violation_result in best_violations_wrt_camera.items():
             print(f"Reporting violation for camera_uuid: {camera_uuid}")
-
+            r = api_dealer.create_reported_violation(**violation_result)
+            print(r)
         # violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
         #     "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
         #     "region_name": evaluation_result['frame_info']['region_name'],
