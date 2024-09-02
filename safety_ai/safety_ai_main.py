@@ -23,16 +23,15 @@ api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
-last_time_server_last_frame_updated = time.time()
+last_time_server_last_frame_updated = 0
 def update_server_last_frames(recent_frames):
     global last_time_server_last_frame_updated
-    if time.time() - last_time_server_last_frame_updated < 30: return
+    if time.time() - last_time_server_last_frame_updated < 60: return
     last_time_server_last_frame_updated = time.time()
 
     for frame_info in recent_frames:
         #def update_camera_last_frame_api(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, base64_encoded_image:str=None):
         camera_uuid = frame_info["camera_uuid"]
-        frame_uuid = frame_info["frame_uuid"]
         is_violation_detected = False
         is_person_detected = False
         frame = frame_info["cv2_frame"]
@@ -47,7 +46,7 @@ while True:
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
     update_server_last_frames(recent_frames)
-    
+
     for frame_info in recent_frames:
         frame_evaluator.evaluate_frame(frame_info)
 

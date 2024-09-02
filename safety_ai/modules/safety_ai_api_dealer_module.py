@@ -178,9 +178,8 @@ class SafetyAIApiDealer():
     def update_camera_last_frame_api(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, frame:np.ndarray=None):
         header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
         try:
-            _, frame_jpg = cv2.imencode('.jpg', frame)  # Encode image as JPEG
-            frame_bytes = frame_jpg.tobytes()  # Convert to bytes
-            base64_encoded_image = base64.b64encode(frame_bytes).decode('utf-8')  # Encode to base64 and convert to string
+            succes, frame_jpg = cv2.imencode('.jpg', frame)  # Encode image as JPEG
+            base64_encoded_image = base64.b64encode(frame_jpg.tobytes())  # Encode to base64 and convert to string
 
             payload = {'camera_uuid': camera_uuid, 'is_violation_detected': is_violation_detected, 'is_person_detected': is_person_detected, 'base64_encoded_image': base64_encoded_image}
             response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_camera_last_frame", headers=header, json=payload, timeout=1)            

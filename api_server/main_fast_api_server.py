@@ -10,6 +10,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 import jwt, cv2
+import numpy as np
 
 # Local imports
 API_SERVER_DIRECTORY = Path(__file__).resolve().parent
@@ -214,8 +215,11 @@ class UpdateCameraLastFrame(BaseModel):
 async def update_camera_last_frame_api(update_frame_info: UpdateCameraLastFrame):
     try:
         update_frame_info_dict = update_frame_info.dict()
-        pprint.pprint(update_frame_info_dict)
-        return {"last_frame_info":  database_manager.update_last_camera_frame_as_b64string_by_camera_uuid_v2(**update_frame_info_dict)}
+        decoded_image = base64.b64decode(update_frame_info_dict["base64_encoded_image"])
+        del update_frame_info_dict["base64_encoded_image"]
+        update_frame_info_dict["last_frame"] = cv2.imdecode(np.frombuffer(decoded_image, np.uint8), cv2.IMREAD_COLOR)
+        
+        return {"last_frame_info":  database_manager.update_last_camera_frame_as_b64string_by_camera_uuid(**update_frame_info_dict)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
