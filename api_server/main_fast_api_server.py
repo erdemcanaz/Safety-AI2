@@ -205,6 +205,19 @@ async def get_last_camera_frame_by_camera_uuid_api(camera_uuid: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+class UpdateCameraLastFrame(BaseModel):
+    camera_uuid: str
+    is_violation_detected: bool = None
+    is_person_detected: bool = None
+    base64_encoded_image: str = None
+@app.post("/update_camera_last_frame")
+async def update_camera_last_frame_api(update_frame_info: UpdateCameraLastFrame):
+    try:
+        update_frame_info_dict = update_frame_info.dict()
+        return {"last_frame_info":  database_manager.update_last_camera_frame_as_b64string_by_camera_uuid_v2(**update_frame_info_dict)}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
 # Reported Violations Table API =================================================================================================
 @app.get("/fetch_reported_violations_between_dates", description="Fetches all reported violations between two dates where date format is dd.mm.yyyy as string. startdate-00:00:00 and enddate-23:59:59 will be fethed.")
 async def fetch_reported_violations_between_dates_api(start_date: str, end_date: str):

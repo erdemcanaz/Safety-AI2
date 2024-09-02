@@ -753,6 +753,37 @@ class DatabaseManager:
             self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base64_encoded_image), camera_uuid))
         self.conn.commit()
 
+    def update_last_camera_frame_as_b64string_by_camera_uuid_v2(self, camera_uuid:str= None, is_violation_detected:bool=None, is_person_detected:bool=None, base64_encoded_image:str=None)-> bool:       
+        # Ensure camera_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        camera_info = self.fetch_camera_info_by_uuid(camera_uuid= camera_uuid)
+        if camera_info is None:
+            raise ValueError('No camera found with the provided camera_uuid')
+        
+        # Save the last frame of the camera to the database as BLOB    
+        query = '''
+        SELECT id FROM last_frames WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            query = '''
+            INSERT INTO last_frames (camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, last_frame_b64)
+            VALUES (?, ?, ?, ?, ?, ?)
+            '''
+            self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], camera_info["camera_region"], int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base64_encoded_image))
+            )
+        else:
+            is_person_detected = 1 if is_person_detected else 0
+            query = '''
+            UPDATE last_frames SET is_violation_detected = ?, is_person_detected = ?, last_frame_b64 = ? WHERE camera_uuid = ?
+            '''
+            self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base64_encoded_image), camera_uuid))
+        self.conn.commit()
+
     def get_last_camera_frame_by_camera_uuid(self, camera_uuid:str = None, convert_b64_to_cv2frame:bool=False)-> np.ndarray:
 
         regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')

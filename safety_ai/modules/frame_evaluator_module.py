@@ -104,5 +104,5 @@ class FrameEvaluator():
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
 
             cv2.imshow("frame", frame_info['cv2_frame'])
-            cv2.waitKey(0)
+            cv2.waitKey(5000)
 

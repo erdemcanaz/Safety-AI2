@@ -175,3 +175,31 @@ class SafetyAIApiDealer():
         except Exception as e:        
             return [False, None, {"detail": str(e)}]
         
+    def update_camera_last_frame_api(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, frame:np.ndarray=None):
+        header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+        try:
+            _, frame_jpg = cv2.imencode('.jpg', frame)  # Encode image as JPEG
+            frame_bytes = frame_jpg.tobytes()  # Convert to bytes
+            base64_encoded_image = base64.b64encode(frame_bytes).decode('utf-8')  # Encode to base64 and convert to string
+
+            payload = {'camera_uuid': camera_uuid, 'is_violation_detected': is_violation_detected, 'is_person_detected': is_person_detected, 'base64_encoded_image': base64_encoded_image}
+            response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_camera_last_frame", headers=header, json=payload, timeout=1)            
+            if response.status_code == 200:
+                return [True, response.status_code, response.json()]
+            
+            # If the response is 401 Unauthorized, refresh the token and retry once with the new token
+            elif response.status_code == 401:
+                self.__update_access_token()
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}  # Update the header with the new token                
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/update_camera_last_frame", headers=header, timeout=1)
+                if response.status_code == 200:
+                    return [True, response.status_code, response.json()]
+                else:
+                    return [False, response.status_code, response.json()]
+                
+            # For other status codes, return the response as is
+            else:
+                return [False, response.status_code, response.json()]
+        except Exception as e:        
+            return [False, None, {"detail": str(e)}]
+                  

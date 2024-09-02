@@ -23,6 +23,23 @@ api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
+last_time_server_last_frame_updated = time.time()
+def update_server_last_frames(recent_frames):
+    global last_time_server_last_frame_updated
+    if time.time() - last_time_server_last_frame_updated < 30: return
+    last_time_server_last_frame_updated = time.time()
+
+    for frame_info in recent_frames:
+        #def update_camera_last_frame_api(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, base64_encoded_image:str=None):
+        camera_uuid = frame_info["camera_uuid"]
+        frame_uuid = frame_info["frame_uuid"]
+        is_violation_detected = False
+        is_person_detected = False
+        frame = frame_info["cv2_frame"]
+        
+        result = api_dealer.update_camera_last_frame_api(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
+        print(f"update_server_last_frames: {result}")
+        
 while True:
     stream_manager._StreamManager__test_show_all_frames()
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
