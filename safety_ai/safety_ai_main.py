@@ -63,7 +63,7 @@ while True:
             if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
             elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
 
-    if time.time() - last_time_violations_reported > 600:
+    if time.time() - last_time_violations_reported > 300:
         last_time_violations_reported = time.time()
         for camera_uuid, violation_result in best_violations_wrt_camera.items():
             print(f"Reporting violation for camera_uuid: {camera_uuid}")
@@ -90,7 +90,7 @@ while True:
         #     "violation_score": None, # will be added if a violation is detected           
         # }    
     
-    if len(evaluation_results) > 0: print(f"len(evaluation_results): {len(evaluation_results)}")
+    if len(evaluation_results) > 0: print(f"len(evaluation_results): {len(evaluation_results)}, remaining time: {600 - (time.time() - last_time_violations_reported):.2f} seconds")
 
 def test_api_functionality():
     api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
