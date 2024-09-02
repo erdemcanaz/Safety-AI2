@@ -57,6 +57,7 @@ CAMERA_UPDATE_INTERVAL_SECONDS = 900 # The interval in seconds for updating the 
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
 
 CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 10] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
+
 SAFETY_AI_VERBOSES = {
     'header_class_name_width': 20, # The width of the class name in the printed header
     "updating_camera_info": True,
@@ -64,7 +65,7 @@ SAFETY_AI_VERBOSES = {
     "CRUD_on_camera_info": True,
     "frame_fetching_starts": True,
     "frame_fetching_stops": True,
-    "frame_decoded": True,
+    "frame_decoded": False,
     "frame_decoding_failed": True,
     "error_raised_rtsp": True,
 }
