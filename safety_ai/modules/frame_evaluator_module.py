@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from typing import List, Dict
 import copy
+import datetime
 
 class FrameEvaluator():
 
@@ -88,7 +89,7 @@ class FrameEvaluator():
             "pose_detection_result": None,      # Detect_frame result of the pose detector List of Dict
             "hardhat_detection_result": None,   # Detect_frame result of the hardhat detector List of Dict
             "forklift_detection_result": None,  # Detect_frame result of the forklift detector List of Dict 
-            "violated_rules": []                # List of violated rules to be reported
+            "violation_results": []             # List of violated rules dicts ready to be reported #{"camera_uuid":str=None, "violation_frame":np.ndarray=None, "violation_date_ddmmyyy_hhmmss":str=None, "violation_type":str=None, "violation_score":float=None, "region_name":str=None}
         }   
 
         #============================detect_frame=======================================================
@@ -123,8 +124,17 @@ class FrameEvaluator():
         # TODO blur the bbox of the persons
         normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
         for normalized_bbox in normalized_person_bboxes_to_blur:
+            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1) # Draw the bbox of the person, very narrow and will be overwritten by the violation rect thickness
             self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
-            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1)
+
+        for violation_result in evaluation_result['violation_results']:
+            # Add the violation frame to the violation result
+            violation_result['violation_frame'] = evaluation_result['processed_cv2_frame']
+
+        if len(evaluation_result['violation_results']) > 0:
+            cv2.imshow("violation image processed", evaluation_result['processed_cv2_frame'])
+
+        return evaluation_result
 
     def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
@@ -133,6 +143,14 @@ class FrameEvaluator():
         # VIOLATION SCORE -> bbox_confidence * (mean of the confidence of the left and right ankle)
         # Exception: If the person is inside the forklift, then it is not a violation.
         #================================================================================================
+        violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
+            "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+            "region_name": evaluation_result['frame_info']['region_name'],
+            "violation_frame": None, # Will be added after the person blur is applied at the end of the evaluation, all rules share the same frame
+            "violation_date_ddmmyyy_hhmmss": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+            "violation_type": rule_info['rule_type'],
+            "violation_score": None, # will be added if a violation is detected           
+        }
 
         frame_info = evaluation_result['frame_info']
         processed_cv2_frame = evaluation_result['processed_cv2_frame']
@@ -168,12 +186,19 @@ class FrameEvaluator():
             if is_left_ankle_in_restricted_area or is_right_ankle_in_restricted_area and not is_person_inside_forklift:
                 violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
+                evaluation_result['flags']['is_violation_detected'] = True
 
-                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=5)
+                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=8)
+                cv2.putText(processed_cv2_frame, f"Violation Score: {violation_score:.2f}", (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v1", resized_frame)
 
-            #prepare the frame to be reported: add text, add timestamp, etc.
+                if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                    violation_report_info['violation_score'] = violation_score
+            
+        if violation_report_info['violation_score'] is not None:
+            evaluation_result['violation_results'].append(violation_report_info)
 
     def __restricted_area_violation_isg_v2(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
@@ -182,6 +207,15 @@ class FrameEvaluator():
         # VIOLATION SCORE -> bbox_confidence
         # Exception: If the person is inside the forklift, then it is not a violation.
         #================================================================================================
+        violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
+            "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+            "region_name": evaluation_result['frame_info']['region_name'],
+            "violation_frame": None, # Will be added after the person blur is applied at the end of the evaluation, all rules share the same frame
+            "violation_date_ddmmyyy_hhmmss": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+            "violation_type": rule_info['rule_type'],
+            "violation_score": None, # will be added if a violation is detected           
+        }
+                
         frame_info = evaluation_result['frame_info']
         processed_cv2_frame = evaluation_result['processed_cv2_frame']
 
@@ -215,6 +249,14 @@ class FrameEvaluator():
                 self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=5)
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
+
+                evaluation_result['flags']['is_violation_detected'] = True
+
+                if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                    violation_report_info['violation_score'] = violation_score
+
+        if violation_report_info['violation_score'] is not None:
+            evaluation_result['violation_results'].append(violation_report_info)
                 
         #prepare the frame to be reported: add text, add timestamp, etc.
         
@@ -235,7 +277,17 @@ class FrameEvaluator():
         # Exception: If the person is inside the forklift, then it is not a violation.
         # Dataset candidate: If a person is detected yet neiter hardhat or no_hardhat is detected, then it is a candidate for the dataset.
         #================================================================================================
+        violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
+            "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+            "region_name": evaluation_result['frame_info']['region_name'],
+            "violation_frame": None, # Will be added after the person blur is applied at the end of the evaluation, all rules share the same frame
+            "violation_date_ddmmyyy_hhmmss": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+            "violation_type": rule_info['rule_type'],
+            "violation_score": None, # will be added if a violation is detected           
+        }            
+        
         frame_info = evaluation_result['frame_info']
+        processed_cv2_frame = evaluation_result['processed_cv2_frame']
         rule_polygon = rule_info['rule_polygon']
 
         # Ensure that the pose detection results are available
@@ -314,7 +366,7 @@ class FrameEvaluator():
             evaluation_result['hardhat_detection_results'] = self.hardhat_detector.detect_frame(frame = frame_to_detect_hardhat, frame_info = None, bbox_threshold_confidence = PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
             if len(evaluation_result['hardhat_detection_results']['detections']) == 0:
                 violation_score = detection["bbox_confidence"]
-                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (no hard hat detection)")
+                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (model detects neither hard_hat nor no_hard_hat detection)")
             else:
                 # find the closest hardhat bbox to the head center
                 min_distance = float("inf")
@@ -335,3 +387,11 @@ class FrameEvaluator():
                     print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (hardhat bbox)")
                 else:
                     raise Exception(f"Unknown bbox_class_name: {closest_hardhat_detection['bbox_class_name']}")
+            
+            evaluation_result['flags']['is_violation_detected'] = True
+            self.__draw_rect_on_frame(normalized_bbox= normalized_bbox, frame= processed_cv2_frame, color=[0, 0, 255], thickness=5)
+            if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                violation_report_info['violation_score'] = violation_score
+
+        if violation_report_info['violation_score'] is not None:
+            evaluation_result['violation_results'].append(violation_report_info)
