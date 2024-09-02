@@ -39,12 +39,14 @@ def update_server_last_frames(recent_frames):
         
         result = api_dealer.update_camera_last_frame_api(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
         print(f"update_server_last_frames: {result}")
-        
+
 while True:
     stream_manager._StreamManager__test_show_all_frames()
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS) # updates the rules for each camera no matter what.
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
+    
+    update_server_last_frames(recent_frames)
     
     for frame_info in recent_frames:
         frame_evaluator.evaluate_frame(frame_info)
