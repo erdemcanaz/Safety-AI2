@@ -752,6 +752,11 @@ class DatabaseManager:
             '''
             self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base64_encoded_image), camera_uuid))
         self.conn.commit()
+        return {
+            "camera_uuid": camera_uuid,
+            "is_violation_detected": is_violation_detected,
+            "is_person_detected": is_person_detected
+        }
 
     def get_last_camera_frame_by_camera_uuid(self, camera_uuid:str = None, convert_b64_to_cv2frame:bool=False)-> np.ndarray:
 
