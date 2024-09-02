@@ -93,11 +93,16 @@ class FrameEvaluator():
         #================================================================================================
         if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the restricted area violation evaluation")
 
-        rule_polygon = rule_info['rule_polygon']        
-        #{"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        frame_info = evaluation_result['frame_info']
+        rule_polygon = rule_info['rule_polygon']    
+
+        # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         for detection in evaluation_result['pose_detection_results']['detections']:
-            bbox = detection['bbox']
+            bbox = detection['normalized_bbox']
             bbox_center = [(bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2]
             if self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon):
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
+
+            cv2.imshow("frame", frame_info['cv2_frame'])
+            cv2.waitKey(0)
 

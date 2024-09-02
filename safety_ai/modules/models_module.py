@@ -151,7 +151,7 @@ class ForkliftDetector():
             "detector_uuid": self.DETECTOR_UUID,
             "detection_class": "forklift", # The class that the detector is detecting
             "frame_uuid": None,
-            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+            "detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         }
 
         # The detections will be associated with this frame_uuid if needed, for future usecases
