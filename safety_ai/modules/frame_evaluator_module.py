@@ -28,10 +28,17 @@ class FrameEvaluator():
             "pose_detection_result": None,      # List of detected people
             "hardhat_detection_result": None,   # List of detected hardhats
             "forklift_detection_result": None,  # List of detected forklifts
-        }
-        
+        }   
+
+        #============================detect_frame=======================================================
+        #"detector_uuid": self.DETECTOR_UUID,
+        #"detection_class": <> # The class that the detector is detecting
+        #"frame_uuid": <> # The UUID of the frame 
+        #"detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        #================================================================================================
+
         evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-        evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']) > 0
+        evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         
         print(f"{frame_info['camera_uuid']} Number of people detected: {len(evaluation_result['pose_detection_results'])}")
         
