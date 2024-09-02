@@ -56,6 +56,13 @@ class FrameEvaluator():
         x1,y1,x2,y2 = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox=normalized_bbox, frame=frame)
         frame[y1:y2, x1:x2] = cv2.GaussianBlur(frame[y1:y2, x1:x2], (kernel_size, kernel_size), 0)
         return frame
+    
+    def __draw_rect_on_frame(self, normalized_bbox:List[int], frame:np.ndarray, color:List[int]=[0, 255, 0], thickness:int=2):
+        # Draw a rectangle on the frame
+        # The normalized bbox is in the form of [x1, y1, x2, y2]
+        # The frame is the numpy array of the frame
+        x1, y1, x2, y2 = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox=normalized_bbox, frame=frame)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color, thickness)
 
     def __translate_normalized_bbox_to_frame_bbox(self, normalized_bbox:List[int], frame:np.ndarray) -> List[int]:
         # Translate the normalized bbox to the frame bbox
@@ -78,10 +85,10 @@ class FrameEvaluator():
                 "is_person_detected": False,
                 "is_violation_detected": False,
             },          
-            "pose_detection_result": None,      # Detect_frame result of the pose detector
-            "hardhat_detection_result": None,   # Detect_frame result of the hardhat detector
-            "forklift_detection_result": None,  # Detect_frame result of the forklift detector   
-            "violated_rules": []                # List of violated rules
+            "pose_detection_result": None,      # Detect_frame result of the pose detector List of Dict
+            "hardhat_detection_result": None,   # Detect_frame result of the hardhat detector List of Dict
+            "forklift_detection_result": None,  # Detect_frame result of the forklift detector List of Dict 
+            "violated_rules": []                # List of violated rules to be reported
         }   
 
         #============================detect_frame=======================================================
@@ -114,8 +121,10 @@ class FrameEvaluator():
                 raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
 
         # TODO blur the bbox of the persons
-        # #self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= frame_info['cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
-
+        normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
+        for normalized_bbox in normalized_person_bboxes_to_blur:
+            self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
+            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_frame'], color=[169, 69, 0], thickness=1)
 
     def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
@@ -159,7 +168,8 @@ class FrameEvaluator():
                 violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
 
-                resized_frame = cv2.resize(frame_info['cv2_frame'], (500, 500))
+                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_frame'], color=[0, 0, 255], thickness=5)
+                resized_frame = cv2.resize(frame_info['processed_frame'], (500, 500))
                 cv2.imshow("violation_v1", resized_frame)
 
             #prepare the frame to be reported: add text, add timestamp, etc.
@@ -199,8 +209,8 @@ class FrameEvaluator():
             if is_person_in_restricted_area:
                 violation_score = detection["bbox_confidence"]
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
-
-                resized_frame = cv2.resize(frame_info['cv2_frame'], (500, 500))
+                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_frame'], color=[0, 0, 255], thickness=5)
+                resized_frame = cv2.resize(frame_info['processed_frame'], (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
 
                 
