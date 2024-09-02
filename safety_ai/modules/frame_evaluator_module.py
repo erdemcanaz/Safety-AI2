@@ -122,8 +122,8 @@ class FrameEvaluator():
             if self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon):
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
 
-            resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
-            cv2.imshow("frame", resized_frame)
+            #resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
+            #cv2.imshow("frame", resized_frame)
 
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         pass
