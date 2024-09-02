@@ -73,7 +73,14 @@ class FrameEvaluator():
                     self.__restricted_area_violation_isg_v2(evaluation_result = evaluation_result, rule_info= active_rule)
                 else:
                     raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
-
+            elif active_rule['rule_type'] == "hardhat_violation":
+                if active_rule['evaluation_method'] == "v1":
+                    self.__hardhat_violation_isg_v1(evaluation_result=  evaluation_result, rule_info = active_rule)
+                else:
+                    raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
+            else:
+                raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
+                
     def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # TODO: Implement this function later on
         return 
@@ -90,8 +97,12 @@ class FrameEvaluator():
     def __restricted_area_violation_isg_v2(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
         # If people bbox-center is inside the restricted area, then it is a violation.
+        # Exception: If the person is inside the forklift, then it is not a violation.
         #================================================================================================
         if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the restricted area violation evaluation")
+        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
+        pprint.pprint(forklift_bboxes)
 
         frame_info = evaluation_result['frame_info']
         rule_polygon = rule_info['rule_polygon']    
@@ -103,6 +114,8 @@ class FrameEvaluator():
             if self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon):
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
 
-            cv2.imshow("frame", frame_info['cv2_frame'])
-            cv2.waitKey(5000)
+            resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
+            cv2.imshow("frame", resized_frame)
 
+    def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
+        pass

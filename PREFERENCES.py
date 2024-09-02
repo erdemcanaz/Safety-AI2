@@ -51,6 +51,8 @@ else:
 
 # Safety-AI related parameters
 POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.75
+FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.50
+HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.50
 
 MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 24 # The maximum number of camera stream fetchers that is fetching RTSP streams at the same time
 CAMERA_UPDATE_INTERVAL_SECONDS = 900 # The interval in seconds for updating the camera information
