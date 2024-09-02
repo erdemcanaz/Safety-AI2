@@ -52,12 +52,19 @@ class FrameEvaluator():
         # Apply the Gaussian blur to the bbox of the frame
         # The bbox is in the form of [x1, y1, x2, y2]
         # The kernel_size is the size of the Gaussian kernel (ODD number)
-        frame_width, frame_height = frame.shape[1], frame.shape[0]
-        x1, y1, x2, y2 = normalized_bbox
-        x1, y1, x2, y2 = int(x1*frame_width), int(y1*frame_height), int(x2*frame_width), int(y2*frame_height)
+        x1,y1,x2,y2 = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox=normalized_bbox, frame=frame)
         frame[y1:y2, x1:x2] = cv2.GaussianBlur(frame[y1:y2, x1:x2], (kernel_size, kernel_size), 0)
         return frame
 
+    def __translate_normalized_bbox_to_frame_bbox(self, normalized_bbox:List[int], frame:np.ndarray) -> List[int]:
+        # Translate the normalized bbox to the frame bbox
+        # The normalized bbox is in the form of [x1, y1, x2, y2]
+        # The frame is the numpy array of the frame
+        frame_width, frame_height = frame.shape[1], frame.shape[0]
+        x1, y1, x2, y2 = normalized_bbox
+        x1, y1, x2, y2 = int(x1*frame_width), int(y1*frame_height), int(x2*frame_width), int(y2*frame_height)
+        return [x1, y1, x2, y2]
+    
     def evaluate_frame(self, frame_info:np.ndarray):
         # Check if the frame is already evaluated, if so, return
         if frame_info["camera_uuid"] in self.recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: return
@@ -133,6 +140,8 @@ class FrameEvaluator():
         forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
 
         # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        # Check if the bbox-center of the person is inside the restricted area and not inside the forklift
+        restricted_area_violation_bboxes = []
         for detection in evaluation_result['pose_detection_results']['detections']:            
             bbox = detection['normalized_bbox']
             bbox_center = [(bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2]
@@ -150,6 +159,10 @@ class FrameEvaluator():
 
                 resized_frame = cv2.resize(frame_info['cv2_frame'], (500, 500))
                 cv2.imshow("violation", resized_frame)
+
+                
+        #prepare the frame to be reported: add blur, add text, add timestamp, etc.
+        
 
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         pass
