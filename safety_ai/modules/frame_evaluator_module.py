@@ -132,7 +132,8 @@ class FrameEvaluator():
             violation_result['violation_frame'] = evaluation_result['processed_cv2_frame']
 
         if len(evaluation_result['violation_results']) > 0:
-            cv2.imshow("violation image processed", evaluation_result['processed_cv2_frame'])
+            resized_frame = cv2.resize(evaluation_result['processed_cv2_frame'], (500, 500))
+            cv2.imshow("violation image combined", resized_frame)
 
         return evaluation_result
 
@@ -188,8 +189,9 @@ class FrameEvaluator():
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
                 evaluation_result['flags']['is_violation_detected'] = True
 
+                # Draw the bbox of the violating person, and the violation_type
                 self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=8)
-                cv2.putText(processed_cv2_frame, f"Violation Score: {violation_score:.2f}", (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                cv2.putText(processed_cv2_frame, rule_info['rule_type'], (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v1", resized_frame)
@@ -246,7 +248,9 @@ class FrameEvaluator():
             if is_person_in_restricted_area:
                 violation_score = detection["bbox_confidence"]
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
-                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=5)
+                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=8)
+                cv2.putText(processed_cv2_frame, rule_info['rule_type'], (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
 
@@ -389,7 +393,9 @@ class FrameEvaluator():
                     raise Exception(f"Unknown bbox_class_name: {closest_hardhat_detection['bbox_class_name']}")
             
             evaluation_result['flags']['is_violation_detected'] = True
-            self.__draw_rect_on_frame(normalized_bbox= normalized_bbox, frame= processed_cv2_frame, color=[0, 0, 255], thickness=5)
+            self.__draw_rect_on_frame(normalized_bbox= normalized_bbox, frame= processed_cv2_frame, color=[0, 0, 255], thickness=8)
+            cv2.putText(processed_cv2_frame, rule_info['rule_type'], (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+
             if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
                 violation_report_info['violation_score'] = violation_score
 
