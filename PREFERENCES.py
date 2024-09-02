@@ -23,7 +23,7 @@ DEFINED_RULES = {
     ],
     "restricted_area_violation": [
         "v1", # People are detected via pose detection. If their ankle is inside the restricted area, then it is a violation.
-        "v2"  # People are detected via pose detection. If thier bbox is inside the restricted area with a certain threshold, then it is a violation.
+        "v2"  # People are detected via pose detection. If thier bbox-center is inside the restricted area, then it is a violation.
     ],
 }
 

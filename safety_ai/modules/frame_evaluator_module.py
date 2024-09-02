@@ -14,6 +14,27 @@ class FrameEvaluator():
         
         self.recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
         
+    def __is_normalized_point_inside_polygon(self, point:List[float], polygon:List[List[float]]) -> bool:
+        # Check if the point is inside the polygon
+        # The polygon is a list of points in the form of [x, y]
+        # The point is a list of points in the form of [x, y]
+        # The polygon is a closed polygon, i.e., the last point is the same as the first point
+        x, y = point
+        n = len(polygon)
+        inside = False
+        p1x, p1y = polygon[0]
+        for i in range(1, n + 1):
+            p2x, p2y = polygon[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                            if p1x == p2x or x <= xinters:
+                                inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+    
     def evaluate_frame(self, frame_info:np.ndarray):
         # Check if the frame is already evaluated, if so, return
         if frame_info["camera_uuid"] in self.recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: return
@@ -27,7 +48,8 @@ class FrameEvaluator():
             },          
             "pose_detection_result": None,      # Detect_frame result of the pose detector
             "hardhat_detection_result": None,   # Detect_frame result of the hardhat detector
-            "forklift_detection_result": None,  # Detect_frame result of the forklift detector
+            "forklift_detection_result": None,  # Detect_frame result of the forklift detector   
+            "violated_rules": []                # List of violated rules
         }   
 
         #============================detect_frame=======================================================
@@ -37,14 +59,45 @@ class FrameEvaluator():
         #"detections": [], # Contains multiple persons: List of dict of detection results for each person: {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         #================================================================================================
 
+        # No matter what, the pose detection is done for each frame
         evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         
-        print(f"{frame_info['camera_uuid']} Number of people detected: {len(evaluation_result['pose_detection_results']['detections'])}")#NOTE: DEBUG_PRINT
-        
-        pprint.pprint(frame_info['active_rules'])
-        # frame_rules:List[Dict] = frame_info["active_rules"]        
-        # self.hardhat_detector.detect_frame(frame_info)
-        # self.forklift_detector.detect_frame(frame_info)
-        # self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]
+        # Evaluate the frame for each active rule
+        for active_rule in frame_info['active_rules']: #rule_uuid, camera_uuid, rule_type, evaluation_method, rule_department, rule_polygon, threshold_value
+            # Restricted area violation
+            if active_rule['rule_type'] == "restricted_area_violation" and active_rule['rule_department'] == "ISG":
+                if active_rule['evaluation_method'] == "v1":
+                    self.__restricted_area_violation_isg_v1(evaluation_result=  evaluation_result, rule_info = active_rule)
+                elif active_rule['evaluation_method'] == "v2":
+                    self.__restricted_area_violation_isg_v2(evaluation_result = evaluation_result, rule_info= active_rule)
+                else:
+                    raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
+
+    def __restricted_area_violation_isg_v1(self, evaluation_result:Dict):
+        # TODO: Implement this function later on
+        return 
     
+        # If a person ankle (either left OR right) is inside the restricted area, then it is a violation.
+        if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the restricted area violation evaluation")
+        
+        # Check if a person is detected
+        if len(evaluation_result['pose_detection_results']['detections']) == 0: return # No person is detected, so no violation
+
+        # Check if the ankle of the person is inside the restricted area
+        # {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+
+    def __restricted_area_violation_isg_v2(self, evaluation_result:Dict, rule_info:Dict):
+        # ===============================================================================================
+        # If people bbox-center is inside the restricted area, then it is a violation.
+        #================================================================================================
+        if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the restricted area violation evaluation")
+
+        rule_polygon = rule_info['rule_polygon']        
+        #{"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
+        for detection in evaluation_result['pose_detection_results']['detections']:
+            bbox = detection['bbox']
+            bbox_center = [(bbox[0]+bbox[2])/2, (bbox[1]+bbox[3])/2]
+            if self.__is_normalized_point_inside_polygon(bbox_center, rule_polygon):
+                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
+
