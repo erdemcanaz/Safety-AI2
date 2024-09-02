@@ -74,7 +74,7 @@ class FrameEvaluator():
                 else:
                     raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
 
-    def __restricted_area_violation_isg_v1(self, evaluation_result:Dict):
+    def __restricted_area_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # TODO: Implement this function later on
         return 
     
