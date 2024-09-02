@@ -135,6 +135,7 @@ class FrameEvaluator():
         #================================================================================================
 
         frame_info = evaluation_result['frame_info']
+        processed_cv2_frame = evaluation_result['processed_cv2_frame']
         rule_polygon = rule_info['rule_polygon']   
         
         # Ensure that the pose detection results are available
@@ -168,8 +169,8 @@ class FrameEvaluator():
                 violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
 
-                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_cv2_frame'], color=[0, 0, 255], thickness=5)
-                resized_frame = cv2.resize(frame_info['processed_cv2_frame'], (500, 500))
+                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=5)
+                resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v1", resized_frame)
 
             #prepare the frame to be reported: add text, add timestamp, etc.
@@ -182,6 +183,8 @@ class FrameEvaluator():
         # Exception: If the person is inside the forklift, then it is not a violation.
         #================================================================================================
         frame_info = evaluation_result['frame_info']
+        processed_cv2_frame = evaluation_result['processed_cv2_frame']
+
         rule_polygon = rule_info['rule_polygon']   
 
         # Ensure that the pose detection results are available
@@ -209,8 +212,8 @@ class FrameEvaluator():
             if is_person_in_restricted_area:
                 violation_score = detection["bbox_confidence"]
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
-                self.__draw_rect_on_frame(normalized_bbox, frame_info['processed_cv2_frame'], color=[0, 0, 255], thickness=5)
-                resized_frame = cv2.resize(frame_info['processed_cv2_frame'], (500, 500))
+                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=5)
+                resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
 
                 
