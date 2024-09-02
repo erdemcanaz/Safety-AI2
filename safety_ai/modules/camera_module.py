@@ -89,7 +89,7 @@ class CameraStreamFetcher:
                             self.last_frame_info = {}
                             self.last_frame_info["cv2_frame"] = frame
                             self.last_frame_info["camera_uuid"] = self.camera_uuid
-                            self.last_frame_info["camera_region"] = self.camera_region
+                            self.last_frame_info["region_name"] = self.camera_region
                             self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
                             self.last_frame_info["frame_timestamp"] = time.time()
                             self.last_frame_info["active_rules"] = self.active_rules
