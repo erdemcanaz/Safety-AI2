@@ -258,6 +258,7 @@ class FrameEvaluator():
                 # put RA icon on the inside top right corner of the bbox
                 bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
                 icon_max_size = (bbox[2]-bbox[0])//3
+                print(f"icon_max_size: {icon_max_size}, bbox: {bbox}, icon_max_size: {icon_max_size}")
                 picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent", x = bbox[2] - icon_max_size , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
                 
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
