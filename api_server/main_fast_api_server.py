@@ -214,6 +214,7 @@ class UpdateCameraLastFrame(BaseModel):
 async def update_camera_last_frame_api(update_frame_info: UpdateCameraLastFrame):
     try:
         update_frame_info_dict = update_frame_info.dict()
+        pprint.pprint(update_frame_info_dict)
         return {"last_frame_info":  database_manager.update_last_camera_frame_as_b64string_by_camera_uuid_v2(**update_frame_info_dict)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
