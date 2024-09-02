@@ -195,8 +195,9 @@ class FrameEvaluator():
                 cv2.putText(processed_cv2_frame, rule_info['rule_type'], (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 # put RA icon on the inside bottom right (outside) corner of the bbox
                 bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
-                icon_max_size = (bbox[2]-bbox[0])//3
-                picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent", x = bbox[2] , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
+                icon_max_size = (bbox[3]-bbox[1])//3 
+                padding = icon_max_size // 3
+                picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent", x = bbox[2] + padding , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v1", resized_frame)
 
@@ -257,8 +258,9 @@ class FrameEvaluator():
                 self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=8)
                 # put RA icon on the bottom right corner (outside) of the bbox
                 bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
-                icon_max_size = (bbox[2]-bbox[0])//3
-                picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent", x = bbox[2] , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
+                icon_max_size = (bbox[3]-bbox[1])//3
+                padding = icon_max_size // 3
+                picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent", x = bbox[2] + padding , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
                 
                 resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
                 cv2.imshow("violation_v2", resized_frame)
@@ -403,11 +405,11 @@ class FrameEvaluator():
             
             evaluation_result['flags']['is_violation_detected'] = True
             self.__draw_rect_on_frame(normalized_bbox= normalized_bbox, frame= processed_cv2_frame, color=[0, 0, 255], thickness=8)
-            cv2.putText(processed_cv2_frame, rule_info['rule_type'], (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-            # put RA icon on the top right (outside) corner of the bbox
+            # put HARDHAT icon on the top right (outside) corner of the bbox
             bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
-            icon_max_size = (bbox[2]-bbox[0])//3
-            picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_hardhat_transparent", x = bbox[2] , y = bbox[1], width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
+            icon_max_size = (bbox[3]-bbox[1])//3
+            padding = icon_max_size // 3
+            picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_hardhat_transparent", x = bbox[2] + padding , y = bbox[1], width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
            
             if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
                 violation_report_info['violation_score'] = violation_score
