@@ -35,6 +35,17 @@ class FrameEvaluator():
             p1x, p1y = p2x, p2y
         return inside
     
+    def __is_inside_another_bbox(self, normalized_bbox1:List[float], normalized_bbox2:List[float], intersection_percentage_threshold:float = 0.5) -> bool:
+        # Check the percentage of the normalized_bbox1 is inside the normalized_bbox2 wrt. the normalized_bbox1
+        # The normalized_bbox is in the form of [x1, y1, x2, y2] where x1, y1 is the top-left corner and x2, y2 is the bottom-right corner
+        # The percentage is the percentage of the normalized_bbox1 that should be inside the normalized_bbox2
+        intersection_bbox = [max(normalized_bbox1[0], normalized_bbox2[0]), max(normalized_bbox1[1], normalized_bbox2[1]), min(normalized_bbox1[2], normalized_bbox2[2]), min(normalized_bbox1[3], normalized_bbox2[3])]
+        if intersection_bbox[0] >= intersection_bbox[2] or intersection_bbox[1] >= intersection_bbox[3]: return False
+        intersection_area = (intersection_bbox[2] - intersection_bbox[0]) * (intersection_bbox[3] - intersection_bbox[1])
+        bbox1_area = (normalized_bbox1[2] - normalized_bbox1[0]) * (normalized_bbox1[3] - normalized_bbox1[1])
+        pprint.pprint(intersection_area/bbox1_area)
+        return intersection_area/bbox1_area >= intersection_percentage_threshold
+
     def evaluate_frame(self, frame_info:np.ndarray):
         # Check if the frame is already evaluated, if so, return
         if frame_info["camera_uuid"] in self.recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: return
@@ -127,4 +138,7 @@ class FrameEvaluator():
             cv2.imshow("frame", resized_frame)
 
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
+        bbox_1 = [0.4, 0.4, 0.8, 0.8]
+        bbox_2 = [0.0, 0.0, 0.6, 0.6]
+        self.__is_inside_another_bbox(self, bbox_1, bbox_2, intersection_percentage_threshold = 0.5)
         pass
