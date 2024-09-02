@@ -8,6 +8,8 @@ SRC_FOLDER_PATH = PICASSO_MODULE_PATH.parent.parent / "src"
 IMAGE_PATHS = {
         "red_hardhat_transparent": str(SRC_FOLDER_PATH / "icons" / "red_hardhat_transparent.png"),
         "red_restricted_area_transparent": str(SRC_FOLDER_PATH / "icons" / "red_restricted_area_transparent.png"),
+        "red_hardhat_transparent_with_background": str(SRC_FOLDER_PATH / "icons" / "red_hardhat_transparent_with_background.png"),
+        "red_restricted_area_transparent_with_background": str(SRC_FOLDER_PATH / "icons" / "red_restricted_area_transparent_with_background.png"),
     }
 
 def create_frame(width: int, height: int, color: tuple = (0, 0, 0)):
