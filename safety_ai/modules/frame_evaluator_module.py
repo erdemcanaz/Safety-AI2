@@ -80,7 +80,7 @@ class FrameEvaluator():
 
         evaluation_result = {
             "frame_info": frame_info,
-            "processed_frame": copy.deepcopy(frame_info),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)
+            "processed_frame": copy.deepcopy(frame_info['cv2_frame']),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)
             "flags":{
                 "is_person_detected": False,
                 "is_violation_detected": False,
