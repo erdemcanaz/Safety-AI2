@@ -148,7 +148,7 @@ class FrameEvaluator():
             if is_person_in_restricted_area and not is_person_inside_forklift:
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}")
 
-                resized_frame = cv2.resize(frame_info['cv2_frame'], (320, 320))
+                resized_frame = cv2.resize(frame_info['cv2_frame'], (500, 500))
                 cv2.imshow("violation", resized_frame)
 
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
