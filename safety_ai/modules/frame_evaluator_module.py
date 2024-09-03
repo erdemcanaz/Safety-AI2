@@ -192,7 +192,6 @@ class FrameEvaluator():
 
                 # Draw the bbox of the violating person, and the violation_type
                 self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=8)
-                cv2.putText(processed_cv2_frame, rule_info['rule_type'], (int(normalized_bbox[0]*processed_cv2_frame.shape[1]), int(normalized_bbox[1]*processed_cv2_frame.shape[0])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
                 # put RA icon on the inside bottom right (outside) corner of the bbox
                 bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
                 icon_max_size = (bbox[3]-bbox[1])//3 
