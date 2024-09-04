@@ -1,0 +1,31 @@
+// pin close to antenna (7) is GND, (1): MO, (2): M1, (3): E32-RX, (4): E32-TX, (5): AUX, (6): VCC, (7): GND
+#define EBYTE_E32_M0_PIN 2 
+#define EBYTE_E32_M1_PIN 3
+#define EBYTE_E32_RX_PIN 5  //Software serial TX
+#define EBYTE_E32_TX_PIN 4  //Software serial RX
+#define EBYTE_E32_AUX_PIN 6
+
+/* TODO: PUT COMMAND PACKAGE INDICATING WHICH BIT IS WHICH*/
+#define UART_PARITY_MODE_8O1 1
+#define UART_PARITY_MODE_8E1 2
+#define UART_PARITY_MODE_8N1 3 // (SUGGESTED) both 0 and 3 can be used
+
+#define UART_BAUD_MODE_1200 0
+#define UART_BAUD_MODE_2400 1
+#define UART_BAUD_MODE_4800 2
+#define UART_BAUD_MODE_9600 3 // (SUGGESTED)
+#define UART_BAUD_MODE_19200 4
+#define UART_BAUD_MODE_38400 5
+#define UART_BAUD_MODE_57600 6
+#define UART_BAUD_MODE_115200 7
+
+#define AIR_DATA_RATE_MODE_2400BPS 2 // (SUGGESTED) all 0, 1 and 2 can be used
+#define AIR_DATA_RATE_MODE_4800BPS 3
+#define AIR_DATA_RATE_MODE_9600BPS 4
+#define AIR_DATA_RATE_MODE_19200BPS 5 // all 5, 6 and 7 can be used
+
+#define TRANSMISSION_MODE_TRANSPARENT 0
+#define TRANSMISSION_MODE_FIXED 1
+
+
+
