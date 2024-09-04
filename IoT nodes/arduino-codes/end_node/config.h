@@ -1,3 +1,9 @@
+//NOTE THAT: 
+// 1) Module can either transmit or receive data
+// 2) Buffer size of the module is 64Byte. Data greater than this will overflow
+
+#define VERBOSE_EBYTE_MODULE true
+#define NUMBER_OF_PACKAGE_BYTES 4 // Please consider that during fixed transmission, first 3 bytes are reserved
 // pin close to antenna (7) is GND, (1): MO, (2): M1, (3): E32-RX, (4): E32-TX, (5): AUX, (6): VCC, (7): GND
 #define EBYTE_E32_M0_PIN 2 
 #define EBYTE_E32_M1_PIN 3
@@ -26,6 +32,27 @@
 
 #define TRANSMISSION_MODE_TRANSPARENT 0
 #define TRANSMISSION_MODE_FIXED 1
+
+#define IO_DRIVE_MODE_OPEN_DRAIN 0 // No pull-up or down by internal resistor
+#define IO_DRIVE_MODE_ACTIVE 1 // (SUGGESTED) TX-RX are pulled-up and down by internal resistor
+
+#define WIRELESS_WAKE_UP_MODE_250_MS 0 //(SUGGESTED)
+#define WIRELESS_WAKE_UP_MODE_500_MS 1 
+#define WIRELESS_WAKE_UP_MODE_750_MS 2
+#define WIRELESS_WAKE_UP_MODE_1000_MS 3 
+#define WIRELESS_WAKE_UP_MODE_1250_MS 4 
+#define WIRELESS_WAKE_UP_MODE_1500_MS 5 
+#define WIRELESS_WAKE_UP_MODE_1750_MS 6 
+#define WIRELESS_WAKE_UP_MODE_2000_MS 7 
+
+#define FEC_MODE_NO 0
+#define FEC_MODE_YES 1 // (SUGGESTED)
+
+#define POWER_MODE_20Dbm 0
+#define POWER_MODE_17Dbm 1
+#define POWER_MODE_14Dbm 2
+#define POWER_MODE_10Dbm 3
+
 
 
 
