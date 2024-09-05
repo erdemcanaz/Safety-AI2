@@ -112,13 +112,16 @@ void set_ebyte_parameters(){
 }
 
 bool transmit_fixed_package(){
+  digitalWrite(EBYTE_E32_M0_PIN, LOW); 
+  digitalWrite(EBYTE_E32_M1_PIN, LOW);
+
   //First 3 bytes are reserved
   BUFFER_TRANSMIT_PACKAGE[0]=DEVICE_ADDRESS>>8;    // HIGH-BYTE
   BUFFER_TRANSMIT_PACKAGE[1]=DEVICE_ADDRESS & 255; // LOW-BYTE
   BUFFER_TRANSMIT_PACKAGE[2]=DEVICE_CHANNEL;
 
   //Set remaining bytes
-  BUFFER_TRANSMIT_PACKAGE[3]= 1;
+  BUFFER_TRANSMIT_PACKAGE[3]= 3;
 
   //TX package to EBYTE buffer so that package can be transmitted
   for(uint8_t i = 0; i < NUMBER_OF_PACKAGE_BYTES;i++){
@@ -130,10 +133,13 @@ bool transmit_fixed_package(){
 
 
 bool listen_package(){
-  if (EBYTESerial.available()<4)return; //packages consists of 4 bytes
-  for(uint8_t i =0; i <4 ; i++){
-    Serial.println(EBYTESerial.read());
-  }
+  digitalWrite(EBYTE_E32_M0_PIN, LOW); 
+  digitalWrite(EBYTE_E32_M1_PIN, LOW);
+
+  if (EBYTESerial.available()==0)return;
+  
+  delay(250);
+  while(EBYTESerial.available()) Serial.println(EBYTESerial.read());
   Serial.println("R");
 }
 

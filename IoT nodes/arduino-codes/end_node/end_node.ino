@@ -8,12 +8,16 @@ void setup() {
   EBYTESerial.begin(9600);  
 
   configure_ebyte_pins();
-  set_ebyte_parameters();  
+  set_ebyte_parameters(); 
+
+  delay(5000); 
 
 }
 
 void loop() {
   //transmit_fixed_package();  
+  //delay(2500);
+
   listen_package();
 }
 
