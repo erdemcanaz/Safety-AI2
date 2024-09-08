@@ -85,3 +85,8 @@ USED_MODELS = {
     "hardhat_detection_model_name": "hardhat_detector", # hardhat_detector
     "forklift_detection_model_name": "forklift_detector", # forklift_detector
 }
+
+SHOW_FRAMES = {
+    "combined_violation_frame": False,
+    "show_all_frames": False,
+}

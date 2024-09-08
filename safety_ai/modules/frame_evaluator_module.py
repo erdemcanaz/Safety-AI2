@@ -134,7 +134,7 @@ class FrameEvaluator():
 
         if len(evaluation_result['violation_results']) > 0:
             resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
-            cv2.imshow("violation image combined", resized_frame)
+            if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
 
         return evaluation_result
 
