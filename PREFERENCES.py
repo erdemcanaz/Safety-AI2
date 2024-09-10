@@ -88,5 +88,5 @@ USED_MODELS = {
 
 SHOW_FRAMES = {
     "combined_violation_frame": False,
-    "show_all_frames": False,
+    "show_all_frames": True,
 }
