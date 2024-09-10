@@ -87,6 +87,6 @@ USED_MODELS = {
 }
 
 SHOW_FRAMES = {
-    "combined_violation_frame": False,
+    "combined_violation_frame": True,
     "show_all_frames": True,
 }
