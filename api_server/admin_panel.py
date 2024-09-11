@@ -592,9 +592,8 @@ class AdminPanel:
 
             image_name = f"{violation_date}_{violation_type}_{region_name}_{violation_score}_{violation_uuid}.jpg"
             print(f"Exporting image: {image_name}")
-
-            cv2.imshow("Reported Violation", image)
-            cv2.waitKey(1000)
+            cv2.imwrite(str(PREFERENCES.EXPORT_IMAGE_FOLDER / image_name), image)
+            print(f"Image {image_name} is exported successfully")
 
 
 
