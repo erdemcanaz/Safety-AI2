@@ -556,6 +556,9 @@ class AdminPanel:
         pprint.pprint(violation_dict)
         input("Press any key to continue...")
       
+    def export_report_images(self):
+        self.__fetch_violations_between_dates()
+
 if __name__ == "__main__":
     print("connecting to database ", PREFERENCES.SQL_DATABASE_PATH)
     should_delete_existing_db = True if input("Overwrite existing database? (write 'overwrite'):".ljust(50)) == "overwrite" else False
@@ -572,7 +575,8 @@ if __name__ == "__main__":
         "7": "Shift Counts Table",
         "8": "Rules Info Table",
         "9": "Reported Violations Table",
-        "10": "Create Admin User"
+        "10": "Create Admin User",
+        "11": "Export reports"
     }
     while True:
         os.system(PREFERENCES.CLEAR_TERMINAL_COMMAND)
@@ -601,6 +605,9 @@ if __name__ == "__main__":
             admin_panel.reported_violations_table()
         elif chosen_task == "10":
             admin_panel.create_admin_user()
+        elif chosen_task == "11":
+            admin_panel.export_report_images()
+
         else:
             print("Invalid choice. Please try again.")
             time.sleep(2)     
