@@ -38,6 +38,7 @@ if os.name == "nt":  # For Windows (i.e development environment)
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent/ "api_server" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = True
     ENCRYPTED_IMAGE_FOLDER = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
+    EXPORT_IMAGE_FOLDER = None
     ENCRYPTED_IMAGE_FOLDER_SSD = None
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SERVER_IP_ADDRESS = "172.17.27.12"
@@ -45,6 +46,7 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = False
     ENCRYPTED_IMAGE_FOLDER = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
+    EXPORT_IMAGE_FOLDER = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "exported_images"
     ENCRYPTED_IMAGE_FOLDER_SSD = None
 else:
     raise Exception("Unknown operating system")

@@ -587,11 +587,16 @@ class AdminPanel:
             image_dict = self.database_manager.get_encrypted_image_by_uuid(image_uuid=image_uuid, get_b64_image_only=False)
             image = image_dict["image"]
 
+            violation_date = violation_date.replace(":", "_").replace(" ", "_").replace("-", "_")
+            violation_score = str(violation_score).replace(".", "n")
+
+            image_name = f"{violation_date}_{violation_type}_{region_name}_{violation_score}_{violation_uuid}.jpg"
+            print(f"Exporting image: {image_name}")
+
             cv2.imshow("Reported Violation", image)
-            cv2.waitKey(0)
+            cv2.waitKey(1000)
 
 
-            input("waiting")
 
 
 if __name__ == "__main__":
