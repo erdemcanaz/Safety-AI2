@@ -127,7 +127,7 @@ class DatabaseManager:
             "image_uuid": image_uuid
         }
         
-    def fetch_reported_violations_between_dates(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None, query_limit: int = 999) -> list:
+    def fetch_reported_violations_between_dates(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None, query_limit: int = 9999) -> list:
         query = '''
         SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid
         FROM reported_violations
