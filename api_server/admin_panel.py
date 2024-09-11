@@ -569,8 +569,26 @@ class AdminPanel:
 
         report_dicts = self.__fetch_violations_between_dates()
         for report_dict in report_dicts:
-            image_uuid = report_dict["report_dict"]
-            print(image_uuid)
+            image_uuid = report_dict["image_uuid"]
+            region_name = report_dict["region_name"]
+            violation_date = report_dict["violation_date"]
+            violation_score = report_dict["violation_score"]
+            violation_type = report_dict["violation_type"]
+            violation_uuid = report_dict["violation_uuid"]
+
+            # {
+            # "image_uuid": retrieved_image_uuid,
+            # "encrypted_image_path": encrypted_image_path,
+            # "image_b64": base64.b64encode(image_data).decode('utf-8'),
+            # "image": image if not get_b64_image_only else None,
+            # "is_deleted": is_deleted,
+            # "image_category": image_category
+            # }
+            image_dict = self.database_manager.get_encrypted_image_by_uuid(image_uuid=image_uuid, get_b64_image_only=False)
+            image = image_dict["image"]
+
+            cv2.imshow("Reported Violation", image)
+
             input("waiting")
 
 
