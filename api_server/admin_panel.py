@@ -550,6 +550,8 @@ class AdminPanel:
         print("\nFetched violations successfully")
         input("Press any key to continue...")
 
+        return list_of_dicts
+
     def __fetch_reported_violation_by_violation_uuid(self):
         violation_uuid = input("Enter Violation UUID:".ljust(50))
         violation_dict = self.database_manager.fetch_reported_violation_by_violation_uuid(violation_uuid=violation_uuid)
@@ -557,7 +559,20 @@ class AdminPanel:
         input("Press any key to continue...")
       
     def export_report_images(self):
-        self.__fetch_violations_between_dates()
+        # {'camera_uuid': '730e5fa8-c257-48fa-b48a-917516d4759d',
+        # 'image_uuid': '611ecff3-127b-4078-a77a-dbc1f6313ab3',
+        # 'region_name': 'koltuk ambari 2',
+        # 'violation_date': '2024-09-09 11:23:13',
+        # 'violation_score': 0.63,
+        # 'violation_type': 'hardhat_violation',
+        # 'violation_uuid': 'b52fbb6c-a142-49ba-a13e-234a46f5e7c5'}
+
+        report_dicts = self.__fetch_violations_between_dates()
+        for report_dict in report_dicts:
+            image_uuid = report_dict["report_dict"]
+            print(image_uuid)
+            input("waiting")
+
 
 if __name__ == "__main__":
     print("connecting to database ", PREFERENCES.SQL_DATABASE_PATH)
