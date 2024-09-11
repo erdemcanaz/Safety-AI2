@@ -587,8 +587,8 @@ class AdminPanel:
             image_dict = self.database_manager.get_encrypted_image_by_uuid(image_uuid=image_uuid, get_b64_image_only=False)
             image = image_dict["image"]
 
-            save_folder = Path(__file__).resolve().parent / f"images/violations/{violation_date.strftime('%Y_%m_%d')}"
             cv2.imshow("Reported Violation", image)
+            cv2.waitKey(0)
 
 
             input("waiting")
