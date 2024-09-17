@@ -151,7 +151,7 @@ for image_path in image_paths:
     # Split the filename into parts
     parts = filename.split('_')
 
-    # Extract date and time
+   # Extract date and time
     date = f"{parts[0]}-{parts[1]}-{parts[2]}"
     time = f"{parts[3]}:{parts[4]}:{parts[5]}"
 
@@ -171,14 +171,20 @@ for image_path in image_paths:
     # Extract additional info (ID and UUID)
     additional_info = location_info[1]
 
+    # Extract the floating point number (e.g., "0n65" -> 0.65)
+    match = re.search(r'_(\d+)n(\d+)_', filename)
+    if match:
+        float_value = float(f"{match.group(1)}.{match.group(2)}")
+    else:
+        float_value = None
+
     # Display extracted information
-    print()
     print("Date:", date)
     print("Time:", time)
     print("Event Type:", event_type.replace('_', ' '))
     print("Location:", location)
     print("Additional Info:", additional_info)
-
+    print("Floating Value:", float_value)
 
 
 # Save the PDF
