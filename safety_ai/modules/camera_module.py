@@ -1,4 +1,5 @@
-if __name__ != "__main__":
+if __name__ == "__main__":
+    # by doing this, we can run tests
     SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent.parent
     SAFETY_AI2_DIRECTORY = SAFETY_AI_DIRECTORY.parent
     MODULES_DIRECTORY = SAFETY_AI_DIRECTORY / "modules"
