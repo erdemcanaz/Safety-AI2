@@ -34,6 +34,7 @@ class CameraStreamFetcher:
         self.is_fetching_frames = False                         # A flag to indicate whether the camera is fetching frames or not. If true, the camera is fetching frames. If false, the camera is not fetching frames
         self.last_frame_info = None                             # keys -> frame, camera_uuid, frame_uuid, frame_timestamp, active_rules, is_evaluated
         self.active_rules:List[Dict] = []                       # keys -> # camera_uuid, date_created, date_updated, evaluation_method, rule_department, rule_polygon, rule_type, rule_uuid
+        self.last_frame_infos = []                              # A list of the last frame info fetched from the camera. It is used to keep track of the last few frames fetched from the camera
         self.__print_with_header(text = f'CameraStreamFetcher object created for {self.camera_ip_address}')
 
     def __repr__(self) -> str:
@@ -62,6 +63,13 @@ class CameraStreamFetcher:
         with self.lock:
             return copy.deepcopy(self.last_frame_info) # To prevent race conditions. Since the self.last_frame_info is continuously updated by the RTSP thread, it is better to return a deep copy of it
     
+    def get_last_frame_infos(self)->List[Dict]:
+        """
+        This function is thread-safe. It returns the last few frame infos fetched from the camera. If no frame is fetched yet, it returns an empty list.
+        """
+        with self.lock:
+            return copy.deepcopy(self.last_frame_infos) # To prevent race conditions. Since the self.last_frame_infos is continuously updated by the RTSP thread, it is better to return a deep copy of it
+                                 
     def start_fetching_frames(self):
         if self.RTSP_thread is not None: self.stop_fetching_frames(wait_for_thread_to_join = True)  # Stop the thread if it is already running
         
@@ -104,6 +112,9 @@ class CameraStreamFetcher:
                             self.last_frame_info["frame_timestamp"] = time.time()
                             self.last_frame_info["active_rules"] = self.active_rules
                             self.number_of_frames_decoded += 1
+
+                            self.last_frame_infos.insert(0, self.last_frame_info) 
+                            if len(self.last_frame_infos) > PREFERENCES.MAXIMUM_NUMBER_OF_STORED_FRAMES: self.last_frame_infos.pop(-1) # Keep the last few frames fetched from the camera
 
                             self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
                             if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_decoded:8d} |: Got a frame from {self.camera_ip_address:<15} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
@@ -335,7 +346,7 @@ class StreamManager:
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
 
-    def test_overwrite_CameraStreamFetchers(self, camera_stream_fetchers):
+    def __test_overwrite_CameraStreamFetchers(self, camera_stream_fetchers):
         self.camera_stream_fetchers = camera_stream_fetchers
 
 class CameraModuleTests:
@@ -454,7 +465,7 @@ if __name__ == "__main__":
 
     camera_stream_fetchers = camera_module_tests.test_create_CameraStreamFetchers()
     camera_manager = StreamManager()
-    camera_manager.test_overwrite_CameraStreamFetchers(camera_stream_fetchers)
+    camera_manager._StreamManager__test_overwrite_CameraStreamFetchers(camera_stream_fetchers)
 
     max_number_of_cameras = int(input("Enter the maximum number of cameras to start fetching frames from: "))
     camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=max_number_of_cameras)
@@ -491,7 +502,14 @@ if __name__ == "__main__":
         print("Number of frames evaluated for each camera:")
         pprint.pprint(frame_evaluation_counts_wrt_camera)
 
-    cv2.destroyAllWindows()
+        print("###Showing the last frames fatched by the first stream fetcher")
+        for frame_info in camera_manager.camera_stream_fetchers[0].get_last_frame_infos():
+            frame = frame_info["cv2_frame"]
+            cv2.putText(frame, f"{frame_info['frame_timestamp']}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            cv2.imshow('Frame', frame_info["cv2_frame"])
+            cv2.waitKey(0) 
+
+    cv2.destroyAllWindows()   
     print("Stopping all cameras")
     camera_manager.stop_cameras_by_uuid(camera_uuids=[])
     print("Test is completed")
