@@ -198,6 +198,7 @@ batch_size = 8
 page_count = 1
 for i in range(0, len(image_paths), batch_size):
     batch = image_paths[i:i + batch_size]
+    print(f"Processing batch {i // batch_size + 1} with {len(batch)} images")
     if i>50:
         break
     if len(batch) == 0:
