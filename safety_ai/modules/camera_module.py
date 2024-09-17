@@ -279,15 +279,18 @@ class StreamManager:
             if stop_all_cameras or camera.camera_uuid in camera_uuids:
                 camera.stop_fetching_frames()  
 
-    def start_cameras_by_uuid(self, camera_uuids:List[str] = []):    
+    def start_cameras_by_uuid(self, camera_uuids:List[str] = [], max_number_of_cameras:int = PREFERENCES.MAXIMUM_NUMBER_OF_FETCHING_CAMERAS):    
         """
         This function starts the camera stream fetchers with the specified camera UUIDs. If no camera UUIDs are provided, all cameras are started.  
         If the camera is already running, it is stopped and restarted.          
         """
         start_all_alive_cameras = len(camera_uuids) == 0
-        for camera_stream_fetcher in self.camera_stream_fetchers[:PREFERENCES.MAXIMUM_NUMBER_OF_FETCHING_CAMERAS]:
+        started_camera_count = 0
+        for camera_stream_fetcher in self.camera_stream_fetchers:
+            if started_camera_count >= max_number_of_cameras: break
             if camera_stream_fetcher.is_camera_status_active and (start_all_alive_cameras or camera_stream_fetcher.camera_uuid in camera_uuids):           
                 camera_stream_fetcher.start_fetching_frames()
+                started_camera_count += 1
 
     def return_all_recent_frames_info_as_list(self) -> List[Dict]:
         recent_frames_info: List[Dict] = [] 
@@ -433,7 +436,7 @@ if __name__ == "__main__":
     camera_manager = StreamManager()
     camera_manager.test_overwrite_CameraStreamFetchers(camera_stream_fetchers)
 
-    camera_manager.start_cameras_by_uuid(camera_uuids=[])
+    camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=32)
     start_time = time.time()
     while time.time() - start_time < 30:
         camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
