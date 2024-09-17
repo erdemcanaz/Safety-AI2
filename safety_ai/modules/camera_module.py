@@ -436,7 +436,7 @@ if __name__ == "__main__":
     camera_manager.start_cameras_by_uuid(camera_uuids=[])
     start_time = time.time()
     while time.time() - start_time < 30:
-        camera_manager.__test_show_all_frames(window_size=(1280, 720))
+        camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
 
 
 
