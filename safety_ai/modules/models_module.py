@@ -149,6 +149,7 @@ class ForkliftDetector():
     
     def detect_frame(self, frame = None,  frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.00) -> None:
         # Clear the recent detection results
+        #TODO: implement frame = None logic
         self.recent_detection_results = {
             "detector_uuid": self.DETECTOR_UUID,
             "detection_class": "forklift", # The class that the detector is detecting
