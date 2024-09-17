@@ -73,7 +73,7 @@ class CameraStreamFetcher:
 
     def stop_fetching_frames(self, wait_for_thread_to_join:bool = True):
         self.is_fetching_frames = False  
-        if wait_for_thread_to_join: self.RTSP_thread.join()
+        if wait_for_thread_to_join and self.RTSP_thread is not None: self.RTSP_thread.join()
         self.RTSP_thread = None
         if PREFERENCES.SAFETY_AI_VERBOSES['frame_fetching_stops']: self.__print_with_header(text = f'Stopped fetching frames from {self.camera_ip_address}')
 
