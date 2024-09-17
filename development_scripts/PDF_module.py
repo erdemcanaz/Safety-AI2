@@ -201,13 +201,13 @@ def regex_file_name(image_path:str):
     else:
         float_value = None
 
-    # Display extracted information
-    print("Date:", date)
-    print("Time:", time)
-    print("Event Type:", event_type.replace('_', ' '))
-    print("Location:", location)
-    print("Additional Info:", additional_info)
-    print("Floating Value:", float_value)
+    # # Display extracted information
+    # print("Date:", date)
+    # print("Time:", time)
+    # print("Event Type:", event_type.replace('_', ' '))
+    # print("Location:", location)
+    # print("Additional Info:", additional_info)
+    # print("Floating Value:", float_value)
 
     return {
         "date": date,
@@ -228,8 +228,6 @@ page_count = 1
 for i in range(0, len(image_paths), batch_size):
     batch = image_paths[i:i + batch_size]
     print(f"Processing batch {i // batch_size + 1} with {len(batch)} images")
-    if i>15:
-        break
     if len(batch) == 0:
         break
     
