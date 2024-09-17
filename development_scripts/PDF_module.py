@@ -143,7 +143,41 @@ from pathlib import Path
 report_images_folder = Path("/home/external_ssd/report_images")
 image_paths = [ str(filepath) for filepath in report_images_folder.rglob('*') if filepath.is_file() ]
 
-print(f"image_paths: {image_paths}")
+import re
+for image_path in image_paths:
+    filename = Path(image_path).stem 
+
+
+    # Split the filename into parts
+    parts = filename.split('_')
+
+    # Extract date and time
+    date = f"{parts[0]}-{parts[1]}-{parts[2]}"
+    time = f"{parts[3]}:{parts[4]}:{parts[5]}"
+
+    # Detect event type (either "restricted_area_violation" or "hardhat_violation")
+    if "restricted_area_violation" in filename:
+        event_type = "restricted_area_violation"
+    elif "hardhat_violation" in filename:
+        event_type = "hardhat_violation"
+    else:
+        event_type = "Unknown"
+
+    # Extract location (handles spaces in location name)
+    location_parts = filename.split(f"{event_type}_")
+    location_info = location_parts[1].split('_', 1)
+    location = location_info[0]
+
+    # Extract additional info (ID and UUID)
+    additional_info = location_info[1]
+
+    # Display extracted information
+    print()
+    print("Date:", date)
+    print("Time:", time)
+    print("Event Type:", event_type.replace('_', ' '))
+    print("Location:", location)
+    print("Additional Info:", additional_info)
 
 
 
