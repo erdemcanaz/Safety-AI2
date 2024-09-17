@@ -426,6 +426,25 @@ class CameraModuleTests:
         return camera_stream_fetchers
 
 if __name__ == "__main__":
+    PREFERENCES.SAFETY_AI_VERBOSES = {
+        'header_class_name_width': 20, # The width of the class name in the printed header
+        "updating_camera_info": True,
+        "camera_initialization": True,
+        "CRUD_on_camera_info": True,
+        "frame_fetching_starts": True,
+        "frame_fetching_stops": True,
+        "frame_decoded": False,
+        "frame_decoding_failed": True,
+        "error_raised_rtsp": True,
+    }
+
+    # Models module related parameters
+    MODELS_MODULE_VERBOSES = {
+    "pose_detection_model_verbose": True,
+    "hardhat_detection_model_verbose": True,
+    "forklift_detection_model_verbose": True,
+    }
+
     camera_module_tests = CameraModuleTests()
     camera_module_tests.init_secret_variables()
 
@@ -439,8 +458,42 @@ if __name__ == "__main__":
     max_number_of_cameras = int(input("Enter the maximum number of cameras to start fetching frames from: "))
     camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=max_number_of_cameras)
     start_time = time.time()
-    while time.time() - start_time < 600:
+    print("Press 'q' to stop the test")
+    while True:
         camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'): 
+            cv2.destroyAllWindows()
+            break
+
+    is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames? (y/n): ")
+    if(is_apply_pose_detection == 'y'):        
+        import models_module
+        pose_detector= models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
+        hardhat_detector = models_module.HardhatDetector(model_name=PREFERENCES.USED_MODELS["hardhat_detection_model_name"])
+        forklift_detector = models_module.ForkliftDetector(model_name=PREFERENCES.USED_MODELS["forklift_detection_model_name"])     
+        
+        recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
+
+        while True:
+            frames = camera_manager.return_all_recent_frames_info_as_list()
+            for frame_info in frames:
+                if frame_info["camera_uuid"] in recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: continue
+                recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]    
+
+                pose_detection_result = pose_detector.detect_poses(frame_info["cv2_frame"])
+                hardhat_detection_result = hardhat_detector.detect_hardhats(frame_info["cv2_frame"])
+                forklift_detection_result = forklift_detector.detect_forklifts(frame_info["cv2_frame"])
+
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                cv2.destroyAllWindows()
+                break
+            
+
+
+
+
 
 
 
