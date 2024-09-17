@@ -345,9 +345,9 @@ class CameraModuleTests:
         self.password = input("Enter the camera password: ")
 
         for camera_ip_address in self.defined_camera_ip_addresses:
+            camera_ip_address = camera_ip_address.strip()
             if not all(part.isdigit() and 0 <= int(part) <= 255 for part in camera_ip_address.split('.')):
                 raise ValueError(f"Invalid IP address format for camera: {camera_ip_address}. Please ensure that each IP address is in the format XXX.XXX.XXX.XXX where x is a digit between 0-9")
-            camera_ip_address = camera_ip_address.strip()
 
         print(f"Number of defined cameras: {len(self.defined_camera_ip_addresses)}")
         print(f"Username: {self.username}")
