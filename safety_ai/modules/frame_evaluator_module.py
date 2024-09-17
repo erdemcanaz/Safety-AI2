@@ -79,7 +79,7 @@ class FrameEvaluator():
         # Check if the frame is already evaluated, if so, return
         if frame_info["camera_uuid"] in self.recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: return
         self.recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]    
-
+    
         evaluation_result = {
             "frame_info": frame_info,
             "processed_cv2_frame": copy.deepcopy(frame_info['cv2_frame']),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)

@@ -444,6 +444,7 @@ if __name__ == "__main__":
     "hardhat_detection_model_verbose": True,
     "forklift_detection_model_verbose": True,
     }
+    
 
     camera_module_tests = CameraModuleTests()
     camera_module_tests.init_secret_variables()
@@ -465,26 +466,34 @@ if __name__ == "__main__":
 
     is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames for 60 seconds? (y/n): ")
     if(is_apply_pose_detection == 'y'):  
-        is_show_frames = input("Do you want to show the frames fetched from the cameras for 60 seconds? (y/n): ")
         import models_module
         pose_detector= models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
         hardhat_detector = models_module.HardhatDetector(model_name=PREFERENCES.USED_MODELS["hardhat_detection_model_name"])
         forklift_detector = models_module.ForkliftDetector(model_name=PREFERENCES.USED_MODELS["forklift_detection_model_name"])     
         
         recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
-
+        frame_evaluation_counts_wrt_camera = {} # Keep track of the number of frames evaluated for each camera
         start_time = time.time()
         while time.time() - start_time < 60:
             frames = camera_manager.return_all_recent_frames_info_as_list()
             for frame_info in frames:
+
+                if frame_info["camera_uuid"] in recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: continue
+                recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]    
+                
                 pose_detection_result = pose_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
                 hardhat_detection_result = hardhat_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
                 forklift_detection_result = forklift_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-            if is_show_frames == 'y': camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
+
+                if frame_info["camera_uuid"] not in frame_evaluation_counts_wrt_camera: frame_evaluation_counts_wrt_camera[frame_info["camera_uuid"]] = 0
+                frame_evaluation_counts_wrt_camera[frame_info["camera_uuid"]] += 1
+
+        print("Number of frames evaluated for each camera:")
+        pprint.pprint(frame_evaluation_counts_wrt_camera)
 
     cv2.destroyAllWindows()
     print("Stopping all cameras")
-    camera_manager.stop_cameras_by_uuid([])
+    camera_manager.stop_cameras_by_uuid(camera_uuids=[])
     print("Test is completed")
                 
 
