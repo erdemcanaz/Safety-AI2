@@ -3,17 +3,6 @@ from pathlib import Path
 from typing import Dict, List
 import cv2
 import numpy as np
-
-if __name__ == "__main__":
-    print("Running the camera_module.py file")
-    # by doing this, we can import the modules from the safety_ai directory and run the tests
-    SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent.parent
-    SAFETY_AI2_DIRECTORY = SAFETY_AI_DIRECTORY.parent
-    MODULES_DIRECTORY = SAFETY_AI_DIRECTORY / "modules"
-    sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the system path so that imports work
-    sys.path.append(str(SAFETY_AI_DIRECTORY)) # Add the modules directory to the system path so that imports work
-    sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
-
 import PREFERENCES
 import safety_ai_api_dealer_module
 
@@ -135,7 +124,9 @@ class StreamManager:
         self.camera_rules_dicts = {} # A dict where the key is the camera UUID and the value is the camera rules
         self.last_time_camera_rules_dict_updated = 0 # The time when the camera rules dictionary was last updated
         self.camera_stream_fetchers = [] # A list of CameraStreamFetcher objects
-
+        
+        self.last_time_server_last_frames_updated = time.time() # The time when the server last frames were updated, not pleasing to update the server last frames immediately since the frames are not fetched yet
+        
     def __print_with_header(self, text:str = "", pprint_object = None):
         """
         This function prints the text with the header 'StreamManager' and the current timestamp. If the pprint_object is provided, it is pretty-printed as well with an indentation.
@@ -316,7 +307,11 @@ class StreamManager:
                 return camera.get_last_frame_infos()
         return []
     
-    def __test_show_all_frames(self, window_size=(1280, 720)):
+    def update_update_server_last_frames(self, most_recent_evaluation_results:Dict = {}, time_interval_seconds:float = 60):
+        #TODO: Implement the update_server_last_frames function
+        pass
+
+    def show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     
         for camera in self.camera_stream_fetchers:
@@ -354,276 +349,6 @@ class StreamManager:
 
     def __test_overwrite_CameraStreamFetchers(self, camera_stream_fetchers):
         self.camera_stream_fetchers = camera_stream_fetchers
-
-class CameraModuleTests:
-    
-    def __init__(self):
-        self.stream_path = "profile2/media.smp"
-
-    def init_secret_variables(self):
-        print("\n#### Initializing the secret variables")
-        
-        self.defined_camera_ip_addresses = input("Enter the defined camera IP addresses separated by commas (i.e. x.x.x.x,y.y.y.y,z.z.z.z): ").split(",")
-        self.username = input("Enter the camera username: ")
-        self.password = input("Enter the camera password: ")
-
-        for camera_ip_address in self.defined_camera_ip_addresses:
-            camera_ip_address = camera_ip_address.strip()
-            if not all(part.isdigit() and 0 <= int(part) <= 255 for part in camera_ip_address.split('.')):
-                raise ValueError(f"Invalid IP address format for camera: {camera_ip_address}. Please ensure that each IP address is in the format XXX.XXX.XXX.XXX where x is a digit between 0-9")
-
-        print(f"Number of defined cameras: {len(self.defined_camera_ip_addresses)}")
-        print(f"Username: {self.username}")
-        print(f"Password: {self.password}")
-
-    def test_rtsp_fetch_frame_from_cameras(self):
-        print("\n#### Testing the CameraStreamFetcher class with the defined camera IP addresses")
-
-        test_result_dict = {} # camera_ip_address: {is_fetched_properly (bool), resolution (tuple)}
-        counter = 0
-        for camera_ip_address in self.defined_camera_ip_addresses: 
-            
-            test_result_dict[camera_ip_address] = {"is_fetched_properly": False, "resolution": (0,0), "test_duration": 0}
-            cap = None # cv2 capture object to capture the frames from the camera rtsp stream
-
-            start_time = time.time()
-            try:
-                url = f'rtsp://{self.username}:{self.password}@{camera_ip_address}/{self.stream_path}'
-                cap = cv2.VideoCapture(url)
-                buffer_size_in_frames = 1
-                cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
-
-                ret, frame = cap.read()
-                if ret:
-                    test_result_dict[camera_ip_address]["is_fetched_properly"] = True
-                    test_result_dict[camera_ip_address]["resolution"] = frame.shape[:2]                    
-            except Exception as e:
-                print(f"Error in fetching frames from {camera_ip_address}: {e}")
-                continue            
-            end_time = time.time()
-
-            test_result_dict[camera_ip_address]["test_duration"] = end_time - start_time
-            print(f"{counter:<4} | Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result_dict[camera_ip_address]['is_fetched_properly']} | Resolution: {str(test_result_dict[camera_ip_address]['resolution']):<16} | test_duration time: {test_result_dict[camera_ip_address]['test_duration']:.2f} seconds")
-            if cap is not None: cap.release()
-
-            counter += 1
-    
-        succesful_counter = 0
-        for camera_ip_address, test_result in test_result_dict.items():
-            if test_result['is_fetched_properly']: succesful_counter += 1
-        print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
-
-    def test_create_CameraStreamFetchers(self):
-        print("\n#### Testing the creation of CameraStreamFetcher objects with the defined camera IP addresses")
-
-        # for key in ['camera_uuid', 'camera_region',
-        #              'camera_description', 
-        #              'camera_status',
-        #                'NVR_ip_address',
-        #                  'camera_ip_address', 
-        #                  'username', 'password', 
-        #                  'stream_path']: # Check if all the required arguments are provided
-
-        camera_stream_fetchers = []
-        for camera_no, camera_ip_address in enumerate(self.defined_camera_ip_addresses):
-            camera_init_dict = {
-                'camera_uuid': str(uuid.uuid4()),
-                'camera_region': f'Test Region {camera_no}',
-                'camera_description': f'Test Camera {camera_no}',
-                'camera_status': 'active',
-                'NVR_ip_address': '172.0.0.0',
-                'camera_ip_address': camera_ip_address,
-                'username': self.username,
-                'password': self.password,
-                'stream_path': self.stream_path
-            }
-            camera_stream_fetchers.append(CameraStreamFetcher(**camera_init_dict))
-
-        print(f"Number of camera stream fetchers created: {len(camera_stream_fetchers)}")
-        return camera_stream_fetchers
-
-if __name__ == "__main__":
-    PREFERENCES.SAFETY_AI_VERBOSES = {
-        'header_class_name_width': 20, # The width of the class name in the printed header
-        "updating_camera_info": True,
-        "camera_initialization": True,
-        "CRUD_on_camera_info": True,
-        "frame_fetching_starts": True,
-        "frame_fetching_stops": True,
-        "frame_decoded": False,
-        "frame_decoding_failed": True,
-        "error_raised_rtsp": True,
-    }
-
-    # Models module related parameters
-    PREFERENCES.MODELS_MODULE_VERBOSES = {
-    "pose_detection_model_verbose": True,
-    "hardhat_detection_model_verbose": True,
-    "forklift_detection_model_verbose": True,
-    }
-    
-
-    camera_module_tests = CameraModuleTests()
-    camera_module_tests.init_secret_variables()
-
-    is_test_rtsp_fetch_frame_from_cameras = input("Do you want to test the RTSP frame fetching from the cameras one by one? (y/n): ")
-    if(is_test_rtsp_fetch_frame_from_cameras == 'y'): camera_module_tests.test_rtsp_fetch_frame_from_cameras()
-
-    camera_stream_fetchers = camera_module_tests.test_create_CameraStreamFetchers()
-    camera_manager = StreamManager()
-    camera_manager._StreamManager__test_overwrite_CameraStreamFetchers(camera_stream_fetchers)
-
-    max_number_of_cameras = int(input("Enter the maximum number of cameras to start fetching frames from: "))
-    camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=max_number_of_cameras)
-    start_time = time.time()
-    is_show_frames = input("Do you want to show the frames fetched from the cameras for 60 seconds? (y/n): ")
-    while time.time() - start_time < 60 and is_show_frames == 'y':
-        camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
-    cv2.destroyAllWindows()
-
-    is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames for 120 seconds? (y/n): ")
-    if(is_apply_pose_detection == 'y'):  
-        import models_module
-        pose_detector= models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
-        hardhat_detector = models_module.HardhatDetector(model_name=PREFERENCES.USED_MODELS["hardhat_detection_model_name"])
-        forklift_detector = models_module.ForkliftDetector(model_name=PREFERENCES.USED_MODELS["forklift_detection_model_name"])     
-        
-        recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
-        frame_evaluation_counts_wrt_camera = {} # Keep track of the number of frames evaluated for each camera
-        start_time = time.time()
-        while time.time() - start_time < 120:
-            frames = camera_manager.return_all_recent_frames_info_as_list()
-            for frame_info in frames:
-
-                if frame_info["camera_uuid"] in recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: continue
-                recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]    
-                
-                pose_detection_result = pose_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-                hardhat_detection_result = hardhat_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-                forklift_detection_result = forklift_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-
-                if frame_info["camera_uuid"] not in frame_evaluation_counts_wrt_camera: frame_evaluation_counts_wrt_camera[frame_info["camera_uuid"]] = 0
-                frame_evaluation_counts_wrt_camera[frame_info["camera_uuid"]] += 1
-
-        print("Number of frames evaluated for each camera:")
-        pprint.pprint(frame_evaluation_counts_wrt_camera)
-
-        print("###Showing the last frames fatched by the first stream fetcher")
-        camera_uuid = camera_manager.camera_stream_fetchers[0].camera_uuid
-        for frame_info in camera_manager.return_last_frame_infos_by_camera_uuid(camera_uuid):
-            frame = cv2.resize(frame_info["cv2_frame"], (1280, 720))
-            cv2.putText(frame, f"{frame_info['frame_timestamp']}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-            cv2.imshow('Frame', frame_info["cv2_frame"])
-            cv2.waitKey(0) 
-
-    cv2.destroyAllWindows()   
-    print("Stopping all cameras")
-    camera_manager.stop_cameras_by_uuid(camera_uuids=[])
-    print("Test is completed")
-                
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# if __name__ == "__main__":
-
-#     server_preferences.PARAM_CAMERA_VERBOSE = False
-
-#     # Fetch and show a single frame from the camera for all cameras
-#     print("Printing the camera configurations")
-#     with open(server_preferences.PATH_CAMERA_CONFIGS_JSON, "r") as f:
-#             camera_configs = json.load(f)["cameras"]    
-#     pprint.pprint(camera_configs)
-#     time.sleep(10)   
-
-#     print("Testing the CameraStreamFetcher class")
-#     cameras = []   
-#     for camera_config in camera_configs:         
-#         cameras.append(CameraStreamFetcher(**camera_config)) 
-
-#     for camera_index, camera in enumerate(cameras):
-#         is_fetched_properly, resolution, frame = camera.test_try_fetching_single_frame_and_show("Test Frame")
-#         save_path = f"{server_preferences.PATH_VOLUME}/camera_{str(camera.camera_ip_address).replace('.', '_')}.jpg"
-#         cv2.imwrite(save_path, frame)
-#         print(f"    {camera_index+1:<3}/ {len(cameras):<3} | {camera.camera_ip_address:<16} | {str(resolution[0])+'x'+str(resolution[1]):<10} -> {'Success' if is_fetched_properly else 'An error occurred'}")
-#         print(f"     -----> Saving sample frame to {save_path}")
-
-#     print("Test is completed")
-#     cv2.destroyAllWindows()
-#     time.sleep(5)
-
-#     # Test the StreamManager class
-#     print("\nTesting the StreamManager class")
-#     server_preferences.PARAM_CAMERA_VERBOSE = True
-#     print("Creating the StreamManager object, which will create the CameraStreamFetcher objects")
-#     time.sleep(1)
-#     stream_manager = StreamManager()
-
-#     print(f"\n Decoding delay before starting the cameras : {server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE}")
-#     print(server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE)
-#     time.sleep(1)   
-
-#     print("\nStarting all cameras")
-#     stream_manager.start_cameras_by_uuid()
-#     print(f"\n Decoding delay before aftar starting the cameras : {server_preferences.PARAM_CAMERA_FETCHING_DELAY_RANDOMIZATION_RANGE}")
-    
-#     print("\nShowing the frames fetched from the cameras for 20 seconds")
-#     start_time = time.time()
-#     while time.time() - start_time < 35:
-#         stream_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
-
-#     memory_usage = stream_manager._StreamManager__test_get_camera_objects_ram_usage_MB()
-        
-#     print("\nStopping all cameras and waiting for 20 seconds")
-#     stream_manager.stop_cameras_by_uuid([])
-#     time.sleep(20)
-    
-#     print("\n"+"="*50)
-#     print(f"\nMemory usage of the camera objects: {memory_usage:.2f} MB")
-#     print("="*50)
-
-#     time.sleep(10)
-
-#     print("\nStarting all cameras again")
-#     stream_manager.start_cameras_by_uuid()
-
-#     print("\nShowing the frames fetched from the cameras for 20 seconds")
-#     start_time = time.time()
-#     while time.time() - start_time < 20:
-#         stream_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
-    
-#     print("\nStopping all cameras and waiting for the threads to join")
-#     stream_manager.stop_cameras_by_uuid([])
-    
-#     print("Test is completed")
-
-#     exit()
-
-
-
-
-
 
 
 

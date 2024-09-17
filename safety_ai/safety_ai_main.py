@@ -45,12 +45,18 @@ def update_server_last_frames(recent_frames):
         print(f"update_server_last_frames: {result}")
 
 while True:
-    if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager._StreamManager__test_show_all_frames()
+    if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
+    
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS) # updates the rules for each camera no matter what.
+    
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
-    update_server_last_frames(recent_frames)
+    #TODO:frame_evaluator: evaluate the recent frames 
+    #TODO:frame_evaluator: update counts
+
+    #TODO:stream_manager: below function is not implemented yet
+    stream_manager.update_update_server_last_frames(most_recent_evaluation_results = {}, time_interval_seconds = 60.0)
 
     evaluation_results = []
     for frame_info in recent_frames:
