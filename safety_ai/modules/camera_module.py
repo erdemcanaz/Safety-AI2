@@ -374,7 +374,7 @@ class CameraModuleTests:
             end_time = time.time()
 
             test_result_dict[camera_ip_address]["test_duration"] = end_time - start_time
-            print(f"{counter:<4} | Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result_dict[camera_ip_address]['is_fetched_properly']} | Resolution: {test_result_dict[camera_ip_address]['resolution']} | test_duration time: {test_result_dict[camera_ip_address]['test_duration']:.2f} seconds")
+            print(f"{counter:<4} | Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result_dict[camera_ip_address]['is_fetched_properly']} | Resolution: {str(test_result_dict[camera_ip_address]['resolution']):<16} | test_duration time: {test_result_dict[camera_ip_address]['test_duration']:.2f} seconds")
             if cap is not None: cap.release()
 
             counter += 1
