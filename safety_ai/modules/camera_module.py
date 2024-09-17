@@ -436,7 +436,8 @@ if __name__ == "__main__":
     camera_manager = StreamManager()
     camera_manager.test_overwrite_CameraStreamFetchers(camera_stream_fetchers)
 
-    camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=32)
+    max_number_of_cameras = int(input("Enter the maximum number of cameras to start fetching frames from: "))
+    camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=max_number_of_cameras)
     start_time = time.time()
     while time.time() - start_time < 30:
         camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
