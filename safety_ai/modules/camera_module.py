@@ -332,6 +332,9 @@ class StreamManager:
         cv2.imshow('Fetched CCTV Frames', canvas)
         cv2.waitKey(1)
 
+    def test_overwrite_CameraStreamFetchers(self, camera_stream_fetchers):
+        self.camera_stream_fetchers = camera_stream_fetchers
+
 class CameraModuleTests:
     
     def __init__(self):
@@ -391,7 +394,7 @@ class CameraModuleTests:
         print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
 
     def test_create_CameraStreamFetchers(self):
-        print("\n#### Testing the CameraStreamFetcher class with the defined camera IP addresses")
+        print("\n#### Testing the creation of CameraStreamFetcher objects with the defined camera IP addresses")
 
         # for key in ['camera_uuid', 'camera_region',
         #              'camera_description', 
@@ -423,16 +426,21 @@ if __name__ == "__main__":
     camera_module_tests = CameraModuleTests()
     camera_module_tests.init_secret_variables()
 
-    is_test_rtsp_fetch_frame_from_cameras = input("Do you want to test the RTSP frame fetching from the cameras? (y/n): ")
+    is_test_rtsp_fetch_frame_from_cameras = input("Do you want to test the RTSP frame fetching from the cameras one by one? (y/n): ")
     if(is_test_rtsp_fetch_frame_from_cameras == 'y'): camera_module_tests.test_rtsp_fetch_frame_from_cameras()
 
-    is_test_create_CameraStreamFetchers = input("Do you want to test the creation of CameraStreamFetcher objects? (y/n): ")
-    if(is_test_create_CameraStreamFetchers == 'y'):        
-        camera_stream_fetchers = camera_module_tests.test_create_CameraStreamFetchers()
+    camera_stream_fetchers = camera_module_tests.test_create_CameraStreamFetchers()
+    camera_manager = StreamManager()
+    camera_manager.test_overwrite_CameraStreamFetchers(camera_stream_fetchers)
+
+    camera_manager.start_cameras_by_uuid(camera_uuids=[])
+    start_time = time.time()
+    while time.time() - start_time < 30:
+        camera_manager.__test_show_all_frames(window_size=(1280, 720))
 
 
 
-    exit()
+    
 
 
 
