@@ -366,9 +366,10 @@ class CameraModuleTests:
                     test_result_dict[camera_ip_address]["is_fetched_properly"] = True
                     test_result_dict[camera_ip_address]["resolution"] = frame.shape[:2]
             except Exception as e:
+                print(f"Error in fetching frames from {camera_ip_address}: {e}")
                 continue
             end_time = time.time()
-            test_result_dict[camera_ip_address]["initialization_time"] = end_time - start_time
+            test_result_dict[camera_ip_address]["test_duration"] = end_time - start_time
 
         counter = 0
         succesful_counter = 0
