@@ -439,7 +439,7 @@ if __name__ == "__main__":
     }
 
     # Models module related parameters
-    MODELS_MODULE_VERBOSES = {
+    PREFERENCES.MODELS_MODULE_VERBOSES = {
     "pose_detection_model_verbose": True,
     "hardhat_detection_model_verbose": True,
     "forklift_detection_model_verbose": True,
@@ -479,10 +479,7 @@ if __name__ == "__main__":
                 r1 = pose_detection_result = pose_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
                 r2 = hardhat_detection_result = hardhat_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
                 r3 = forklift_detection_result = forklift_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-                pprint.pprint(r1)
-                pprint.pprint(r2)
-                pprint.pprint(r3)
-                
+
     print("Stopping all cameras")
     camera_manager.stop_cameras_by_uuid([])
     print("Test is completed")
