@@ -1,4 +1,5 @@
 if __name__ == "__main__":
+    print("Running the camera_module.py file")
     # by doing this, we can run tests
     SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent.parent
     SAFETY_AI2_DIRECTORY = SAFETY_AI_DIRECTORY.parent
