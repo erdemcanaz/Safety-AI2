@@ -323,11 +323,121 @@ class StreamManager:
         cv2.waitKey(1)
 
 class CameraModuleTests:
+    
     def __init__(self):
-        pass
+        self.stream_path = "profile2/media.smp"
+
+    def init_secret_variables(self):
+        print("\n#### Initializing the secret variables")
+        
+        self.defined_camera_ip_addresses = input("Enter the defined camera IP addresses separated by commas (i.e. x.x.x.x,y.y.y.y,z.z.z.z): ").split(",")
+        self.username = input("Enter the camera username: ")
+        self.password = input("Enter the camera password: ")
+        print(f"Number of defined cameras: {len(self.defined_camera_ip_addresses)}")
+        print(f"Username: {self.username}")
+        print(f"Password: {self.password}")
+
+    def test_rtsp_fetch_frame_from_cameras(self):
+        print("\n#### Testing the CameraStreamFetcher class with the defined camera IP addresses")
+
+        test_result_dict = {} # camera_ip_address: {is_fetched_properly (bool), resolution (tuple)}
+        for camera_ip_address in self.defined_camera_ip_addresses:    
+            start_time = time.time()
+            test_result_dict[camera_ip_address] = {"is_fetched_properly": False, "resolution": None, "test_duration": None}
+            cap = None # cv2 capture object to capture the frames from the camera rtsp stream
+            try:
+                url = f'rtsp://{self.username}:{self.password}@{camera_ip_address}/{self.stream_path}'
+                buffer_size_in_frames = 1
+                cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
+
+                cap = cv2.VideoCapture(url)
+                ret, frame = cap.read()
+                if ret:
+                    test_result_dict[camera_ip_address]["is_fetched_properly"] = True
+                    test_result_dict[camera_ip_address]["resolution"] = frame.shape[:2]
+            except Exception as e:
+                continue
+            end_time = time.time()
+            test_result_dict[camera_ip_address]["initialization_time"] = end_time - start_time
+
+        counter = 0
+        succesful_counter = 0
+        for camera_ip_address, test_result in test_result_dict.items():
+            print(f"{counter+1:<4} |Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result['is_fetched_properly']} | Resolution: {test_result['resolution']} | Initialization time: {test_result['initialization_time']:.2f} seconds")
+            counter += 1
+            if test_result['is_fetched_properly']: succesful_counter += 1
+        print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
+
+
+        
 
 
 
+        #     cap = None # cv2 capture object to capture the frames from the camera rtsp stream
+
+        # try:
+        #     # Open the camera RTSP stream which takes about 2 seconds
+        #     url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
+        #     cap = cv2.VideoCapture(url)
+        #     buffer_size_in_frames = 1
+        #     cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
+
+        #     while self.is_fetching_frames:   
+        #         # Use grab() to capture the frame without decoding it. This is faster than retrieve() which decodes the frame 
+        #         if not cap.grab():                             
+        #             continue                                                                  
+        #         # Decode the frame by calling retrive() on the grabbed frame if enough time has passed since the last frame was decoded
+        #         if self.last_frame_info == None or (time.time() - self.last_frame_info["frame_timestamp"] > self.camera_fetching_delay):
+        #             ret, frame = cap.retrieve() # Use retrieve() to decode the frame 
+        #             if ret:
+        #                 with self.lock:
+        #                     self.last_frame_info = {}
+        #                     self.last_frame_info["cv2_frame"] = frame
+        #                     self.last_frame_info["camera_uuid"] = self.camera_uuid
+        #                     self.last_frame_info["region_name"] = self.camera_region
+        #                     self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
+        #                     self.last_frame_info["frame_timestamp"] = time.time()
+        #                     self.last_frame_info["active_rules"] = self.active_rules
+        #                     self.number_of_frames_decoded += 1
+
+        #                     self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
+        #                     if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_decoded:8d} |: Got a frame from {self.camera_ip_address:<15} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
+        #             else:
+        #                 if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed']: self.__print_with_header(text = f'Error in decoding frame from {self.camera_ip_address}')
+        # except Exception as e:
+        #     if PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp']: self.__print_with_header(text = f'Error in fetching frames from {self.camera_ip_address}: {e}')
+        # finally:
+        #     if cap is not None: cap.release()
+        #     self.is_fetching_frames = False
+   
+
+
+
+    # def test_fetch_frame_from_camera(self):
+    #     print("\nFetching a single frame from the camera")
+    #     camera_uuid = str(uuid.uuid4())
+    #     camera_region = input("Enter the camera region: ")
+    #     camera_description = input("Enter the camera description: ")
+    #     camera_status = "active"
+    #     NVR_ip_address = input("Enter the NVR IP address: ")
+    #     camera_ip_address = input("Enter the camera IP address: ")
+    #     username = input("Enter the camera username: ")
+    #     password = input("Enter the camera password: ")
+    #     stream_path = input("Enter the camera stream path: ")
+
+    #     print(f"Testing the CameraStreamFetcher class with camera_uuid: {camera_uuid}")
+
+    #     camera = CameraStreamFetcher(camera_uuid="test_camera", camera_region="test_region", camera_description="test_description", camera_status="active", NVR_ip_address="
+                                     
+
+
+if __name__ == "__main__":
+    camera_module_tests = CameraModuleTests()
+    camera_module_tests.init_secret_variables()
+    
+    camera_module_tests.test_rtsp_fetch_frame_from_cameras()
+
+    exit()
 
 
 
