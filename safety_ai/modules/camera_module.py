@@ -356,11 +356,11 @@ class CameraModuleTests:
             test_result_dict[camera_ip_address] = {"is_fetched_properly": False, "resolution": (0,0), "test_duration": 0}
             cap = None # cv2 capture object to capture the frames from the camera rtsp stream
             try:
+                cap = cv2.VideoCapture(url)
                 url = f'rtsp://{self.username}:{self.password}@{camera_ip_address}/{self.stream_path}'
                 buffer_size_in_frames = 1
                 cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
 
-                cap = cv2.VideoCapture(url)
                 ret, frame = cap.read()
                 if ret:
                     test_result_dict[camera_ip_address]["is_fetched_properly"] = True
@@ -370,6 +370,7 @@ class CameraModuleTests:
                 continue
             end_time = time.time()
             test_result_dict[camera_ip_address]["test_duration"] = end_time - start_time
+            if cap is not None: cap.release()
 
         counter = 0
         succesful_counter = 0
