@@ -135,6 +135,13 @@ def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = Non
     for i, image in enumerate(import_images):
         x, y = image_topleft_coordinates[i]
         page.add_image_from_cv2(image_cv2 = image, x=x, y=y, width=image_size[0], height=image_size[1])
+        image_info = regex_file_name(image_path=image_paths[i])
+        page.add_text(x=x, y=y-20, text=f"Tarih      : {image_info['date']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y-30, text=f"Saat       : {image_info['time']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y-40, text=f"İhlal tipi : {image_info['event_type']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y-50, text=f"Konum      : {image_info['location']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y-60, text=f"Ek bilgi   : {image_info['additional_info']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y-70, text=f"Skor       : {image_info['float_value']}", font='Helvetica', size=8)
 
     return page
  
