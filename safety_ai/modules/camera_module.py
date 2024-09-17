@@ -7,7 +7,9 @@ if __name__ == "__main__":
     sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the system path so that imports work
     sys.path.append(str(SAFETY_AI_DIRECTORY)) # Add the modules directory to the system path so that imports work
     sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
-    
+
+print(__name__)
+
 import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys, copy
 from pathlib import Path
 from typing import Dict, List
