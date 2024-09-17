@@ -310,6 +310,12 @@ class StreamManager:
                 recent_frames_info.append(camera.get_last_frame_info())
         return recent_frames_info
 
+    def return_last_frame_infos_by_camera_uuid(self, camera_uuid:str) -> List[Dict]:
+        for camera in self.camera_stream_fetchers:
+            if camera.camera_uuid == camera_uuid:
+                return camera.get_last_frame_infos()
+        return []
+    
     def __test_show_all_frames(self, window_size=(1280, 720)):
         frames_to_show = []
     
@@ -475,7 +481,7 @@ if __name__ == "__main__":
         camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
     cv2.destroyAllWindows()
 
-    is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames for 60 seconds? (y/n): ")
+    is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames for 120 seconds? (y/n): ")
     if(is_apply_pose_detection == 'y'):  
         import models_module
         pose_detector= models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
@@ -485,7 +491,7 @@ if __name__ == "__main__":
         recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
         frame_evaluation_counts_wrt_camera = {} # Keep track of the number of frames evaluated for each camera
         start_time = time.time()
-        while time.time() - start_time < 60:
+        while time.time() - start_time < 120:
             frames = camera_manager.return_all_recent_frames_info_as_list()
             for frame_info in frames:
 
@@ -503,8 +509,9 @@ if __name__ == "__main__":
         pprint.pprint(frame_evaluation_counts_wrt_camera)
 
         print("###Showing the last frames fatched by the first stream fetcher")
-        for frame_info in camera_manager.camera_stream_fetchers[0].get_last_frame_infos():
-            frame = frame_info["cv2_frame"]
+        camera_uuid = camera_manager.camera_stream_fetchers[0].camera_uuid
+        for frame_info in camera_manager.return_last_frame_infos_by_camera_uuid(camera_uuid):
+            frame = cv2.resize(frame_info["cv2_frame"], (1280, 720))
             cv2.putText(frame, f"{frame_info['frame_timestamp']}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
             cv2.imshow('Frame', frame_info["cv2_frame"])
             cv2.waitKey(0) 
