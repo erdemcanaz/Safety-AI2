@@ -476,10 +476,13 @@ if __name__ == "__main__":
         while time.time() - start_time < 60:
             frames = camera_manager.return_all_recent_frames_info_as_list()
             for frame_info in frames:
-                pose_detection_result = pose_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-                hardhat_detection_result = hardhat_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-                forklift_detection_result = forklift_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
-
+                r1 = pose_detection_result = pose_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
+                r2 = hardhat_detection_result = hardhat_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
+                r3 = forklift_detection_result = forklift_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
+                pprint.pprint(r1)
+                pprint.pprint(r2)
+                pprint.pprint(r3)
+                
     print("Stopping all cameras")
     camera_manager.stop_cameras_by_uuid([])
     print("Test is completed")
