@@ -458,14 +458,9 @@ if __name__ == "__main__":
     max_number_of_cameras = int(input("Enter the maximum number of cameras to start fetching frames from: "))
     camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=max_number_of_cameras)
     start_time = time.time()
-    print("Press 'q' to stop the test")
-    while True:
+    while time.time() - start_time < 60:
         camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('q'): 
-            cv2.destroyAllWindows()
-            break
-
+   
     is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames? (y/n): ")
     if(is_apply_pose_detection == 'y'):        
         import models_module
@@ -475,7 +470,8 @@ if __name__ == "__main__":
         
         recenty_evaluated_frame_uuids_wrt_camera = {} # Keep track of the  UUID of the last frame that is evaluated for each camera
 
-        while True:
+        start_time = time.time()
+        while time.time() - start_time < 60:
             frames = camera_manager.return_all_recent_frames_info_as_list()
             for frame_info in frames:
                 if frame_info["camera_uuid"] in recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: continue
@@ -485,11 +481,10 @@ if __name__ == "__main__":
                 hardhat_detection_result = hardhat_detector.detect_hardhats(frame_info["cv2_frame"])
                 forklift_detection_result = forklift_detector.detect_forklifts(frame_info["cv2_frame"])
 
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
-                cv2.destroyAllWindows()
-                break
-            
+    print("Test is completed")
+    cv2.destroyAllWindows()
+                
+
 
 
 
