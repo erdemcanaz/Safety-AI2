@@ -142,9 +142,9 @@ def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = Non
     time_hour = time_datetime.hour
     shift_no = time_hour // 8 
     shift_names = [
-        [f"{date_datetime.strftime('%d.%m.%Y')} 00:00 - 08:00", "1. Vardiya"],
-        [f"{date_datetime.strftime('%d.%m.%Y')} 08:00 - 16:00", "2. Vardiya"],
-        [f"{date_datetime.strftime('%d.%m.%Y')} 16:00 - 00:00", "3. Vardiya"]
+        f"{date_datetime.strftime('%d.%m.%Y')} 00:00 - 08:00", "1. Vardiya",
+        f"{date_datetime.strftime('%d.%m.%Y')} 08:00 - 16:00", "2. Vardiya",
+        f"{date_datetime.strftime('%d.%m.%Y')} 16:00 - 00:00", "3. Vardiya"
     ]
 
     page.add_text(x=50, y=790, text=shift_names[shift_no], font='Helvetica', size=20)
