@@ -151,7 +151,7 @@ def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = Non
     page.add_text(x=545, y=805, text=f"{page_no}", font='Helvetica', size=20)
 
     import_images = [ cv2.imread(image_path) for image_path in image_paths ]
-    image_no = (page_no-1) * 8
+    image_no = (int(page_no)-1) * 8
     for i, image in enumerate(import_images):
         x, y = image_topleft_coordinates[i]
         resized_image = cv2.resize(image, image_size)
