@@ -458,10 +458,12 @@ if __name__ == "__main__":
     max_number_of_cameras = int(input("Enter the maximum number of cameras to start fetching frames from: "))
     camera_manager.start_cameras_by_uuid(camera_uuids=[], max_number_of_cameras=max_number_of_cameras)
     start_time = time.time()
-    while time.time() - start_time < 60:
+    is_show_frames = input("Do you want to show the frames fetched from the cameras for 60 seconds? (y/n): ")
+    while time.time() - start_time < 60 and is_show_frames == 'y':
         camera_manager._StreamManager__test_show_all_frames(window_size=(1280, 720))
-   
-    is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames? (y/n): ")
+    cv2.destroyAllWindows()
+
+    is_apply_pose_detection = input("Do you want to apply the models (pose detection, hardhat detection, forklift detection) on the frames for 60 seconds? (y/n): ")
     if(is_apply_pose_detection == 'y'):        
         import models_module
         pose_detector= models_module.PoseDetector(model_name=PREFERENCES.USED_MODELS["pose_detection_model_name"])
@@ -477,12 +479,11 @@ if __name__ == "__main__":
                 if frame_info["camera_uuid"] in recenty_evaluated_frame_uuids_wrt_camera and frame_info["frame_uuid"] == recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]]: continue
                 recenty_evaluated_frame_uuids_wrt_camera[frame_info["camera_uuid"]] = frame_info["frame_uuid"]    
 
-                pose_detection_result = pose_detector.detect_poses(frame_info["cv2_frame"])
-                hardhat_detection_result = hardhat_detector.detect_hardhats(frame_info["cv2_frame"])
-                forklift_detection_result = forklift_detector.detect_forklifts(frame_info["cv2_frame"])
+                pose_detection_result = pose_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
+                hardhat_detection_result = hardhat_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
+                forklift_detection_result = forklift_detector.detect_frame(frame=None, frame_info=frame_info, bbox_threshold_confidence=0.5)
 
     print("Test is completed")
-    cv2.destroyAllWindows()
                 
 
 
