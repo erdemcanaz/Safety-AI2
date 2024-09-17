@@ -1,7 +1,7 @@
 import PyPDF2
 from reportlab.pdfgen import canvas
 from io import BytesIO
-from typing import List
+from typing import List, Dict
 import cv2
 import numpy as np
 from reportlab.lib.utils import ImageReader
@@ -114,8 +114,42 @@ class PDF:
 
 # Example Usage:
 
-# # Create first page with a template
-# random_image = np.random.randint(0, 255, (200, 200, 3), dtype=np.uint8)
+pdf = PDF()
+pages = []
+
+def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = None, page_no:str = None):
+    page = Page(template_pdf_path = 'template.pdf')
+    image_size = (180, 120)
+    image_topleft_coordinates = [
+        (55,640),
+        (55,455),
+        (55,270),
+        (55,85),
+        (365,640),
+        (365,455),
+        (365,270),
+        (365,85)
+    ]
+
+    import_images = [ cv2.imread(image_path) for image_path in image_paths ]
+    for i, image in enumerate(import_images):
+        x, y = image_topleft_coordinates[i]
+        page.add_image_from_cv2(image_cv2 = image, x=x, y=y, width=image_size[0], height=image_size[1])
+
+    return page.get_merged_page()
+ 
+# Get image paths 
+from pathlib import Path
+report_images_folder = Path("/home/external_ssd/report_images")
+image_paths = [ str(filepath) for filepath in report_images_folder.rglob('*') if filepath.is_file() ]
+
+print(f"image_paths: {image_paths}")
+
+
+
+# Save the PDF
+# pdf.save('image_output.pdf')
+
 
 # page1 = Page('template.pdf')
 # page1.add_text(100, 500, "Hello World!", font='Helvetica-Bold', size=16)
@@ -132,12 +166,13 @@ class PDF:
 # pdf.add_page(page2)
 # pdf.save('combined_output.pdf')
 
-from pathlib import Path
-ssd_path = Path("/home/external_ssd")
+# from pathlib import Path
+# ssd_path = Path("/home/external_ssd")
 
-# List all files in the SSD path
-for filepath in ssd_path.rglob('*'):
-    if filepath.is_file():
-        print(filepath)
+# # List all files in the SSD path
+# for filepath in ssd_path.rglob('*'):
+#     if filepath.is_file():
+#         print(filepath)
+
 
 
