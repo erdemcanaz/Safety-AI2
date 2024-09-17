@@ -1,7 +1,12 @@
+import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys, copy
 from pathlib import Path
+from typing import Dict, List
+import cv2
+import numpy as np
+
 if __name__ == "__main__":
     print("Running the camera_module.py file")
-    # by doing this, we can run tests
+    # by doing this, we can import the modules from the safety_ai directory and run the tests
     SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent.parent
     SAFETY_AI2_DIRECTORY = SAFETY_AI_DIRECTORY.parent
     MODULES_DIRECTORY = SAFETY_AI_DIRECTORY / "modules"
@@ -9,10 +14,6 @@ if __name__ == "__main__":
     sys.path.append(str(SAFETY_AI_DIRECTORY)) # Add the modules directory to the system path so that imports work
     sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
 
-import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys, copy
-from typing import Dict, List
-import cv2
-import numpy as np
 import PREFERENCES
 import safety_ai_api_dealer_module
 
