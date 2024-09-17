@@ -195,16 +195,22 @@ report_images_folder = Path("/home/external_ssd/report_images")
 image_paths = [ str(filepath) for filepath in report_images_folder.rglob('*') if filepath.is_file() ]
 
 batch_size = 8
+page_count = 1
 for i in range(0, len(image_paths), batch_size):
     batch = image_paths[i:i + batch_size]
-
+    if i>50:
+        break
     if len(batch) == 0:
         break
-
-    print(batch)
     
-  
-
+    page = add_image_and_return_page(image_paths=batch, shift_info="shift_info", page_no=str(page_count))
+    pages.append(page)
+    page_count += 1
+    
+pdf = PDF()
+for page in pages:
+    pdf.add_page(page)
+pdf.save('output.pdf')
 
 
 # Save the PDF
