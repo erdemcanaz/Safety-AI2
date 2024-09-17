@@ -1,8 +1,10 @@
-if __name__ == "__main__":
+if __name__ != "__main__":
     SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent.parent
+    SAFETY_AI2_DIRECTORY = SAFETY_AI_DIRECTORY.parent
     MODULES_DIRECTORY = SAFETY_AI_DIRECTORY / "modules"
     sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the system path so that imports work
     sys.path.append(str(SAFETY_AI_DIRECTORY)) # Add the modules directory to the system path so that imports work
+    sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
     
 import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys, copy
 from pathlib import Path
