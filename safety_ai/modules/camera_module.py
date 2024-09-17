@@ -343,6 +343,12 @@ class CameraModuleTests:
         self.defined_camera_ip_addresses = input("Enter the defined camera IP addresses separated by commas (i.e. x.x.x.x,y.y.y.y,z.z.z.z): ").split(",")
         self.username = input("Enter the camera username: ")
         self.password = input("Enter the camera password: ")
+
+        for camera_ip_address in self.defined_camera_ip_addresses:
+            if not all(part.isdigit() and 0 <= int(part) <= 255 for part in camera_ip_address.split('.')):
+                raise ValueError(f"Invalid IP address format for camera: {camera_ip_address}. Please ensure that each IP address is in the format XXX.XXX.XXX.XXX where x is a digit between 0-9")
+            camera_ip_address = camera_ip_address.strip()
+
         print(f"Number of defined cameras: {len(self.defined_camera_ip_addresses)}")
         print(f"Username: {self.username}")
         print(f"Password: {self.password}")
@@ -353,7 +359,7 @@ class CameraModuleTests:
         test_result_dict = {} # camera_ip_address: {is_fetched_properly (bool), resolution (tuple)}
         counter = 0
         for camera_ip_address in self.defined_camera_ip_addresses: 
-
+            
             test_result_dict[camera_ip_address] = {"is_fetched_properly": False, "resolution": (0,0), "test_duration": 0}
             cap = None # cv2 capture object to capture the frames from the camera rtsp stream
 
@@ -383,12 +389,48 @@ class CameraModuleTests:
         for camera_ip_address, test_result in test_result_dict.items():
             if test_result['is_fetched_properly']: succesful_counter += 1
         print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
-             
+
+    def test_create_CameraStreamFetchers(self):
+        print("\n#### Testing the CameraStreamFetcher class with the defined camera IP addresses")
+
+        # for key in ['camera_uuid', 'camera_region',
+        #              'camera_description', 
+        #              'camera_status',
+        #                'NVR_ip_address',
+        #                  'camera_ip_address', 
+        #                  'username', 'password', 
+        #                  'stream_path']: # Check if all the required arguments are provided
+
+        camera_stream_fetchers = []
+        for camera_no, camera_ip_address in enumerate(self.defined_camera_ip_addresses):
+            camera_init_dict = {
+                'camera_uuid': str(uuid.uuid4()),
+                'camera_region': f'Test Region {camera_no}',
+                'camera_description': f'Test Camera {camera_no}',
+                'camera_status': 'active',
+                'NVR_ip_address': '172.0.0.0',
+                'camera_ip_address': camera_ip_address,
+                'username': self.username,
+                'password': self.password,
+                'stream_path': self.stream_path
+            }
+            camera_stream_fetchers.append(CameraStreamFetcher(**camera_init_dict))
+
+        print(f"Number of camera stream fetchers created: {len(camera_stream_fetchers)}")
+        return camera_stream_fetchers
+
 if __name__ == "__main__":
     camera_module_tests = CameraModuleTests()
     camera_module_tests.init_secret_variables()
 
-    camera_module_tests.test_rtsp_fetch_frame_from_cameras()
+    is_test_rtsp_fetch_frame_from_cameras = input("Do you want to test the RTSP frame fetching from the cameras? (y/n): ")
+    if(is_test_rtsp_fetch_frame_from_cameras == 'y'): camera_module_tests.test_rtsp_fetch_frame_from_cameras()
+
+    is_test_create_CameraStreamFetchers = input("Do you want to test the creation of CameraStreamFetcher objects? (y/n): ")
+    if(is_test_create_CameraStreamFetchers == 'y'):        
+        camera_stream_fetchers = camera_module_tests.test_create_CameraStreamFetchers()
+
+
 
     exit()
 
