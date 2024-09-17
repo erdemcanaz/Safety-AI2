@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import List, Dict
 import cv2
 import numpy as np
+import datetime
 from reportlab.lib.utils import ImageReader
 
 class Page:
@@ -131,17 +132,35 @@ def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = Non
         (365,85)
     ]
 
+    image_info = regex_file_name(image_path=image_paths[0])
+    date = image_info['date'] # 2024-01-01
+    time = image_info['time'] # 18:00:00
+
+    date_datetime = datetime.datetime.strptime(date, '%Y-%m-%d')
+    time_datetime = datetime.datetime.strptime(time, '%H:%M:%S')
+
+    time_hour = time_datetime.hour
+    shift_no = time_hour // 8 
+    shift_names = [
+        [f"{date_datetime.strftime('%d.%m.%Y')} 00:00 - 08:00", "1. Vardiya"],
+        [f"{date_datetime.strftime('%d.%m.%Y')} 08:00 - 16:00", "2. Vardiya"],
+        [f"{date_datetime.strftime('%d.%m.%Y')} 16:00 - 00:00", "3. Vardiya"]
+    ]
+
+    page.add_text(x=50, y=790, text=shift_names[shift_no], font='Helvetica', size=20)
+    page.add_text(x=545, y=770, text=f"Sayfa No: {page_no}", font='Helvetica', size=20)
+
     import_images = [ cv2.imread(image_path) for image_path in image_paths ]
     for i, image in enumerate(import_images):
         x, y = image_topleft_coordinates[i]
-        page.add_image_from_cv2(image_cv2 = image, x=x, y=y, width=image_size[0], height=image_size[1])
+        resized_image = cv2.resize(image, image_size)
+        page.add_image_from_cv2(image_cv2 = resized_image, x=x, y=y, width=image_size[0], height=image_size[1])
         image_info = regex_file_name(image_path=image_paths[i])
-        page.add_text(x=x, y=y-20, text=f"Tarih      : {image_info['date']}", font='Helvetica', size=8)
-        page.add_text(x=x, y=y-30, text=f"Saat       : {image_info['time']}", font='Helvetica', size=8)
-        page.add_text(x=x, y=y-40, text=f"İhlal tipi : {image_info['event_type']}", font='Helvetica', size=8)
-        page.add_text(x=x, y=y-50, text=f"Konum      : {image_info['location']}", font='Helvetica', size=8)
-        page.add_text(x=x, y=y-60, text=f"Ek bilgi   : {image_info['additional_info']}", font='Helvetica', size=8)
-        page.add_text(x=x, y=y-70, text=f"Skor       : {image_info['float_value']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y+100, text=f"Tarih      : {image_info['date']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y+90,  text=f"Saat       : {image_info['time']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y+80,  text=f"Ihlal tipi : {image_info['event_type']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y+70,  text=f"Konum      : {image_info['location']}", font='Helvetica', size=8)
+        page.add_text(x=x, y=y+70,  text=f"Skor       : {image_info['float_value']}", font='Helvetica', size=8)
 
     return page
  
