@@ -374,7 +374,7 @@ class CameraModuleTests:
         counter = 0
         succesful_counter = 0
         for camera_ip_address, test_result in test_result_dict.items():
-            print(f"{counter+1:<4} |Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result['is_fetched_properly']} | Resolution: {test_result['resolution']} | Initialization time: {test_result['initialization_time']:.2f} seconds")
+            print(f"{counter+1:<4} |Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result['is_fetched_properly']} | Resolution: {test_result['resolution']} | test_duration time: {test_result['test_duration']:.2f} seconds")
             counter += 1
             if test_result['is_fetched_properly']: succesful_counter += 1
         print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
