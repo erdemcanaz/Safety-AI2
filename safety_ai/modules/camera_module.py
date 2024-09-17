@@ -351,6 +351,7 @@ class CameraModuleTests:
         print("\n#### Testing the CameraStreamFetcher class with the defined camera IP addresses")
 
         test_result_dict = {} # camera_ip_address: {is_fetched_properly (bool), resolution (tuple)}
+        counter = 0
         for camera_ip_address in self.defined_camera_ip_addresses: 
 
             test_result_dict[camera_ip_address] = {"is_fetched_properly": False, "resolution": (0,0), "test_duration": 0}
@@ -373,13 +374,13 @@ class CameraModuleTests:
             end_time = time.time()
 
             test_result_dict[camera_ip_address]["test_duration"] = end_time - start_time
+            print(f"{counter:<4} | Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result_dict[camera_ip_address]['is_fetched_properly']} | Resolution: {test_result_dict[camera_ip_address]['resolution']} | test_duration time: {test_result_dict[camera_ip_address]['test_duration']:.2f} seconds")
             if cap is not None: cap.release()
 
-        counter = 0
+            counter += 1
+    
         succesful_counter = 0
         for camera_ip_address, test_result in test_result_dict.items():
-            print(f"{counter+1:<4} |Camera IP: {camera_ip_address:<16} | Is fetched properly: {test_result['is_fetched_properly']} | Resolution: {test_result['resolution']} | test_duration time: {test_result['test_duration']:.2f} seconds")
-            counter += 1
             if test_result['is_fetched_properly']: succesful_counter += 1
         print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
              
@@ -388,7 +389,7 @@ if __name__ == "__main__":
     camera_module_tests.init_secret_variables()
 
     camera_module_tests.test_rtsp_fetch_frame_from_cameras()
-    
+
     exit()
 
 
