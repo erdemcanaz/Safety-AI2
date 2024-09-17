@@ -351,24 +351,27 @@ class CameraModuleTests:
         print("\n#### Testing the CameraStreamFetcher class with the defined camera IP addresses")
 
         test_result_dict = {} # camera_ip_address: {is_fetched_properly (bool), resolution (tuple)}
-        for camera_ip_address in self.defined_camera_ip_addresses:    
-            start_time = time.time()
+        for camera_ip_address in self.defined_camera_ip_addresses: 
+
             test_result_dict[camera_ip_address] = {"is_fetched_properly": False, "resolution": (0,0), "test_duration": 0}
             cap = None # cv2 capture object to capture the frames from the camera rtsp stream
+
+            start_time = time.time()
             try:
-                cap = cv2.VideoCapture(url)
                 url = f'rtsp://{self.username}:{self.password}@{camera_ip_address}/{self.stream_path}'
+                cap = cv2.VideoCapture(url)
                 buffer_size_in_frames = 1
                 cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
 
                 ret, frame = cap.read()
                 if ret:
                     test_result_dict[camera_ip_address]["is_fetched_properly"] = True
-                    test_result_dict[camera_ip_address]["resolution"] = frame.shape[:2]
+                    test_result_dict[camera_ip_address]["resolution"] = frame.shape[:2]                    
             except Exception as e:
                 print(f"Error in fetching frames from {camera_ip_address}: {e}")
-                continue
+                continue            
             end_time = time.time()
+
             test_result_dict[camera_ip_address]["test_duration"] = end_time - start_time
             if cap is not None: cap.release()
 
@@ -379,74 +382,13 @@ class CameraModuleTests:
             counter += 1
             if test_result['is_fetched_properly']: succesful_counter += 1
         print(f"Number of successful camera fetches: {succesful_counter}/{len(test_result_dict)}")
-
-
-        
-
-
-
-        #     cap = None # cv2 capture object to capture the frames from the camera rtsp stream
-
-        # try:
-        #     # Open the camera RTSP stream which takes about 2 seconds
-        #     url = f'rtsp://{self.username}:{self.password}@{self.camera_ip_address}/{self.stream_path}'
-        #     cap = cv2.VideoCapture(url)
-        #     buffer_size_in_frames = 1
-        #     cap.set(cv2.CAP_PROP_BUFFERSIZE, buffer_size_in_frames)
-
-        #     while self.is_fetching_frames:   
-        #         # Use grab() to capture the frame without decoding it. This is faster than retrieve() which decodes the frame 
-        #         if not cap.grab():                             
-        #             continue                                                                  
-        #         # Decode the frame by calling retrive() on the grabbed frame if enough time has passed since the last frame was decoded
-        #         if self.last_frame_info == None or (time.time() - self.last_frame_info["frame_timestamp"] > self.camera_fetching_delay):
-        #             ret, frame = cap.retrieve() # Use retrieve() to decode the frame 
-        #             if ret:
-        #                 with self.lock:
-        #                     self.last_frame_info = {}
-        #                     self.last_frame_info["cv2_frame"] = frame
-        #                     self.last_frame_info["camera_uuid"] = self.camera_uuid
-        #                     self.last_frame_info["region_name"] = self.camera_region
-        #                     self.last_frame_info["frame_uuid"] = str(uuid.uuid4())
-        #                     self.last_frame_info["frame_timestamp"] = time.time()
-        #                     self.last_frame_info["active_rules"] = self.active_rules
-        #                     self.number_of_frames_decoded += 1
-
-        #                     self.camera_fetching_delay = random.uniform(PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[0], PREFERENCES.CAMERA_DECODING_RANDOMIZATION_RANGE[1]) # Randomize the fetching delay a little bit so that the cameras are not synchronized which may cause a bottleneck
-        #                     if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoded']: self.__print_with_header(text = f'Frames fetched: {self.number_of_frames_decoded:8d} |: Got a frame from {self.camera_ip_address:<15} | Delay before next decode: {self.camera_fetching_delay:.2f} seconds')
-        #             else:
-        #                 if PREFERENCES.SAFETY_AI_VERBOSES['frame_decoding_failed']: self.__print_with_header(text = f'Error in decoding frame from {self.camera_ip_address}')
-        # except Exception as e:
-        #     if PREFERENCES.SAFETY_AI_VERBOSES['error_raised_rtsp']: self.__print_with_header(text = f'Error in fetching frames from {self.camera_ip_address}: {e}')
-        # finally:
-        #     if cap is not None: cap.release()
-        #     self.is_fetching_frames = False
-   
-
-
-
-    # def test_fetch_frame_from_camera(self):
-    #     print("\nFetching a single frame from the camera")
-    #     camera_uuid = str(uuid.uuid4())
-    #     camera_region = input("Enter the camera region: ")
-    #     camera_description = input("Enter the camera description: ")
-    #     camera_status = "active"
-    #     NVR_ip_address = input("Enter the NVR IP address: ")
-    #     camera_ip_address = input("Enter the camera IP address: ")
-    #     username = input("Enter the camera username: ")
-    #     password = input("Enter the camera password: ")
-    #     stream_path = input("Enter the camera stream path: ")
-
-    #     print(f"Testing the CameraStreamFetcher class with camera_uuid: {camera_uuid}")
-
-    #     camera = CameraStreamFetcher(camera_uuid="test_camera", camera_region="test_region", camera_description="test_description", camera_status="active", NVR_ip_address="
-                                     
+             
 if __name__ == "__main__":
     camera_module_tests = CameraModuleTests()
     camera_module_tests.init_secret_variables()
 
     camera_module_tests.test_rtsp_fetch_frame_from_cameras()
-
+    
     exit()
 
 
