@@ -1,9 +1,14 @@
+if __name__ == "__main__":
+    SAFETY_AI_DIRECTORY = Path(__file__).resolve().parent.parent
+    MODULES_DIRECTORY = SAFETY_AI_DIRECTORY / "modules"
+    sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the system path so that imports work
+    sys.path.append(str(SAFETY_AI_DIRECTORY)) # Add the modules directory to the system path so that imports work
+    
 import random, threading, time, json, math, uuid, platform, pprint, datetime, re, sys, copy
 from pathlib import Path
 from typing import Dict, List
 import cv2
 import numpy as np
-
 import PREFERENCES
 import safety_ai_api_dealer_module
 
@@ -429,12 +434,10 @@ class CameraModuleTests:
 
     #     camera = CameraStreamFetcher(camera_uuid="test_camera", camera_region="test_region", camera_description="test_description", camera_status="active", NVR_ip_address="
                                      
-
-
 if __name__ == "__main__":
     camera_module_tests = CameraModuleTests()
     camera_module_tests.init_secret_variables()
-    
+
     camera_module_tests.test_rtsp_fetch_frame_from_cameras()
 
     exit()
