@@ -136,7 +136,7 @@ def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = Non
         x, y = image_topleft_coordinates[i]
         page.add_image_from_cv2(image_cv2 = image, x=x, y=y, width=image_size[0], height=image_size[1])
 
-    return page.get_merged_page()
+    return page
  
 import re
 def regex_file_name(image_path:str):
@@ -199,7 +199,7 @@ page_count = 1
 for i in range(0, len(image_paths), batch_size):
     batch = image_paths[i:i + batch_size]
     print(f"Processing batch {i // batch_size + 1} with {len(batch)} images")
-    if i>50:
+    if i>15:
         break
     if len(batch) == 0:
         break
