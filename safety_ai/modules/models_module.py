@@ -34,7 +34,8 @@ class PoseDetector():
     def __repr__(self) -> str:
         return f"PoseDetector(model_name={self.MODEL_PATH})"
        
-    def detect_frame(self, frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.00) -> None:
+    def detect_frame(self,frame = None, frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.00) -> None:
+        #TODO: implement frame = None logic
         # Clear the recent detection results
         self.recent_detection_results = {
             "frame_uuid": None,
