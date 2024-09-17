@@ -147,7 +147,7 @@ class ForkliftDetector():
     def __repr__(self) -> str:
         return f"ForkliftDetector(model_name={self.MODEL_PATH})"
     
-    def detect_frame(self, frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.00) -> None:
+    def detect_frame(self, frame = None,  frame_info:np.ndarray = None, bbox_threshold_confidence:float = 0.00) -> None:
         # Clear the recent detection results
         self.recent_detection_results = {
             "detector_uuid": self.DETECTOR_UUID,
