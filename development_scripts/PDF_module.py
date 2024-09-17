@@ -138,15 +138,9 @@ def add_image_and_return_page(image_paths:List[str] = None, shift_info:str = Non
 
     return page.get_merged_page()
  
-# Get image paths 
-from pathlib import Path
-report_images_folder = Path("/home/external_ssd/report_images")
-image_paths = [ str(filepath) for filepath in report_images_folder.rglob('*') if filepath.is_file() ]
-
 import re
-for image_path in image_paths:
+def regex_file_name(image_path:str):
     filename = Path(image_path).stem 
-
 
     # Split the filename into parts
     parts = filename.split('_')
@@ -185,6 +179,32 @@ for image_path in image_paths:
     print("Location:", location)
     print("Additional Info:", additional_info)
     print("Floating Value:", float_value)
+
+    return {
+        "date": date,
+        "time": time,
+        "event_type": event_type,
+        "location": location,
+        "additional_info": additional_info,
+        "float_value": float_value
+    }
+
+# Get image paths 
+from pathlib import Path
+report_images_folder = Path("/home/external_ssd/report_images")
+image_paths = [ str(filepath) for filepath in report_images_folder.rglob('*') if filepath.is_file() ]
+
+batch_size = 8
+for i in range(0, len(image_paths), batch_size):
+    batch = image_paths[i:i + batch_size]
+
+    if len(batch) == 0:
+        break
+
+    print(batch)
+    
+  
+
 
 
 # Save the PDF
