@@ -11,15 +11,16 @@ if __name__ == "__main__":
     sys.path.append(str(SAFETY_AI2_DIRECTORY))     
 import PREFERENCES
 
-# (+ 1)     camera_info_table
 # (+ 1.1)   last_frames table
 # (+ 1.2)   reported_violations
 # (+ 1.2.1) image_paths table
 # (+ 1.3)   counts_table
 # (+ 1.4)   rules_info_table
 # (+ 1.5)   shift_counts_table
-# (+++++++++++++++ 2)     user_info_table
-# (+ 2.1)   authorizations_table
+
+# (+ 1)     camera_info_table
+# (2)     user_info_table
+# (2.1)   authorizations_table
 
 class SQLManager:
     DEVICE_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
@@ -31,24 +32,29 @@ class SQLManager:
         #check if the database exists and delete it if it does before creating a new one
         if overwrite_existing_db and os.path.exists(db_path):
             os.remove(db_path) if os.path.exists(db_path) else None
+            if self.VERBOSE: print(f"Deleted and recreated database at '{db_path}'")
 
         #check if the path folder exists, if not, create it 
         if not os.path.exists(os.path.dirname(db_path)):
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            if self.VERBOSE: print(f"Created the parent folder(s) for the database at '{os.path.dirname(db_path)}'")
 
         #NOTE: creates a new database if it doesn't exist
         self.conn = sqlite3.connect(self.DB_PATH) 
 
         #Ensure required tables exist
-        self.ensure_user_info_table_exists()
+        self.__ensure_user_info_table_exists()
+        self.__ensure_authorization_table_exists()
+        self.__ensure_camera_info_table_exists()
 
-        #Ensure the SAFETY_AI_USER_INFO is created, if not, create it
+        #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
+   
     def close(self):
         self.conn.close()
 
     # ========================================= user_info =================================================
-    def ensure_user_info_table_exists(self):
+    def __ensure_user_info_table_exists(self):
         # =========================================user_info=====================================================
         # A table to store user information
         # ====================================== TABLE STRUCTURE =================================================
@@ -120,7 +126,7 @@ class SQLManager:
         self.create_user(username=PREFERENCES.SAFETY_AI_USER_INFO['username'], personal_fullname=PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], plain_password=PREFERENCES.SAFETY_AI_USER_INFO['password'])
         if(self.VERBOSE): print(f"Safety AI user created successfully")
 
-    def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> bool:
+    def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> dict:
         # Ensure username is proper
         if not isinstance(username, str) or len(username) == 0:
             raise ValueError('Invalid username provided')
@@ -208,7 +214,7 @@ class SQLManager:
             "hashed_password": row[3]
         }
 
-    def is_authenticated_user(self, username:str=None, plain_password:str=None)->bool:
+    def is_authenticated_user(self, username:str=None, plain_password:str=None)->dict:
         if not isinstance(username, str) or len(username) == 0:
             raise ValueError('Invalid username provided')
         
@@ -219,13 +225,13 @@ class SQLManager:
         try:
             user_dict = self.get_user_by_username(username=username)          
             if user_dict["hashed_password"] == hashed_password_candidate:
-                return True
+                return {'is_authenticated' : True}
             else:
-                return False
+                return {'is_authenticated' : False}
         except Exception as e:
-            return False
+            return {'is_authenticated' : False}
     
-    def delete_user_by_username(self, username:str=None)->bool:
+    def delete_user_by_username(self, username:str=None)->dict:
         if not isinstance(username, str) or len(username) == 0:
             raise ValueError('Invalid username provided')
         
@@ -244,9 +250,9 @@ class SQLManager:
         '''
         self.conn.execute(query, (username,))
         self.conn.commit()
-        return True
+        return {'is_deleted' : True}
     
-    def delete_user_by_user_uuid(self, user_uuid:str=None)->bool:
+    def delete_user_by_user_uuid(self, user_uuid:str=None)->dict:
         if not isinstance(user_uuid, str) or len(user_uuid) == 0:
             raise ValueError('Invalid user_uuid provided')
         
@@ -265,96 +271,397 @@ class SQLManager:
         '''
         self.conn.execute(query, (user_uuid,))
         self.conn.commit()
-        return True
+        return {'is_deleted' : True}
     
-    def get_all_users(self)->list:
+    def get_all_users(self)->dict:
         query = '''
         SELECT user_uuid, username, personal_fullname, hashed_password
         FROM user_info
         '''
         cursor = self.conn.execute(query)
         rows = cursor.fetchall()
-        return [{
+        return {'users': [{
             "user_uuid": row[0],
             "username": row[1],
             "personal_fullname": row[2],
             "hashed_password": row[3]
         } for row in rows]
+        }
+    
+    # ========================================= authorization_table ========================================
+    def __ensure_authorization_table_exists(self):
+        # ===========================================authorization_table==========================================
+        # A table to store the authorizations of the users. One user can be linked to multiple authorizations
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # user_uuid             :(str) is a unique identifier for the user
+        # authorization_uuid    :(str) is a unique identifier for the authorization
+        # authorization_name    :(str) is the name of the authorization
+        # ========================================================================================================
+        query = '''
+        CREATE TABLE IF NOT EXISTS authorization_table (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            user_uuid TEXT NOT NULL,
+            authorization_uuid TEXT NOT NULL,
+            authorization_name TEXT NOT NULL
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_authorization_table
+            AFTER UPDATE ON authorization_table
+            FOR EACH ROW
+            BEGIN
+                UPDATE authorization_table 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+        '''
+        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'authorization_table' table exists")
+    
+    def add_authorization(self, user_uuid:str=None, authorization_name:str=None)-> dict:
+        # Ensure user_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(user_uuid, str) or len(user_uuid) == 0 or not regex.match(user_uuid):
+            raise ValueError('Invalid user_uuid provided')
+        
+        # Ensure authorization_name is proper
+        if not isinstance(authorization_name, str) or authorization_name not in PREFERENCES.DEFINED_AUTHORIZATIONS:
+            raise ValueError('Invalid authorization_name provided')
+        
+        # Ensure the user exists
+        query = '''
+        SELECT id FROM user_info WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Generate a UUID for the authorization
+        authorization_uuid = str(uuid.uuid4())
+        
+        query = '''
+        INSERT INTO authorization_table (user_uuid, authorization_uuid, authorization_name)
+        VALUES (?, ?, ?)
+        '''
+        self.conn.execute(query, (user_uuid, authorization_uuid, authorization_name))
+        self.conn.commit()
+        
+        return {
+            "user_uuid": user_uuid,
+            "authorization_uuid": authorization_uuid,
+            "authorization_name": authorization_name
+        }
 
-if __name__ == "__main__":
-    print(f"{'='*100}\nTesting the SQLManager class for proper functionality\n{'='*100}")
-    # Update the database path to the test database path
-    PREFERENCES.SQL_DATABASE_PATH = str(Path(PREFERENCES.SQL_DATABASE_PATH).with_name('test_database.db'))
-    print(f"Creating a test database at the '{PREFERENCES.SQL_DATABASE_PATH}' path")
-    sql_manager = SQLManager(db_path=PREFERENCES.SQL_DATABASE_PATH, verbose = True, overwrite_existing_db=True)
+    def remove_authorization(self, authorization_uuid:str = None)->dict:
+        # Ensure authorization_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(authorization_uuid, str) or len(authorization_uuid) == 0 or not regex.match(authorization_uuid):
+            raise ValueError('Invalid authorization_uuid provided')
+        
+        # Check if the authorization exists
+        query = '''
+        SELECT id FROM authorization_table WHERE authorization_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (authorization_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Authorization not found')
+        
+        # Delete the authorization
+        query = '''
+        DELETE FROM authorization_table WHERE authorization_uuid = ?
+        '''
+        self.conn.execute(query, (authorization_uuid,))
+        self.conn.commit()
+        return {'is_authorization_removed': True}
 
-    #================================= Testing 'user_info' table functionality =================================
-    print(f"\nTesting 'user_info' table functionality {'='*50}")
-    test_user_info = {
-        "username": "test_user",
-        "personal_fullname": "Dummy Dum",
-        "plain_password": "test_password_123"
-    }
-    print(f"(1) Creating a user with \n\tusername:'{test_user_info['username']}'\n\tpersonal_fullname:'{test_user_info['personal_fullname']}'\n\tplain_password:'{test_user_info['plain_password']}'")
-    user_dict_create_user = sql_manager.create_user(username=test_user_info['username'], personal_fullname=test_user_info['personal_fullname'], plain_password=test_user_info['plain_password'])
-    print(f"User created:")
-    pprint.pprint(user_dict_create_user)
+    def get_user_authorizations_by_user_uuid(self, user_uuid:str=None)->dict:
+        # Ensure user_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(user_uuid, str) or len(user_uuid) == 0 or not regex.match(user_uuid):
+            raise ValueError('Invalid user_uuid provided')
+        
+        # Ensure user exists
+        query = '''
+        SELECT id FROM user_info WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Get the authorizations
+        query = '''
+        SELECT authorization_uuid, authorization_name
+        FROM authorization_table
+        WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        rows = cursor.fetchall()
+        return {'user_authorizations':[{
+            "authorization_uuid": row[0],
+            "authorization_name": row[1]
+        } for row in rows]
+        }
+    
+    def get_user_authorizations_by_username(self, username:str=None)->dict:
+        # Ensure username is proper
+        if not isinstance(username, str) or len(username) == 0:
+            raise ValueError('Invalid username provided')
+        
+        # Ensure user exists
+        query = '''
+        SELECT id FROM user_info WHERE username = ?
+        '''
+        cursor = self.conn.execute(query, (username,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Get the authorizations
+        query = '''
+        SELECT authorization_uuid, authorization_name
+        FROM authorization_table
+        WHERE user_uuid = (SELECT user_uuid FROM user_info WHERE username = ?)
+        '''
+        cursor = self.conn.execute(query, (username,))
+        rows = cursor.fetchall()
+        return {'user_authorizations':[{
+            "authorization_uuid": row[0],
+            "authorization_name": row[1]
+        } for row in rows]
+        }
+    # ========================================= camera_info_table ========================================
+    
+    def __ensure_camera_info_table_exists(self):
+        # ========================================camera_info_table================================================
+        # A table to store the information of the cameras
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # camera_ip_address     :(str) is the IP address of the camera
+        # camera_region         :(str) is the region of the camera
+        # camera_description    :(str) is the description of the camera
+        # username              :(str) is the username to access the camera
+        # password              :(str) is the password to access the camera
+        # stream_path           :(str) is the path to the video stream
+        # camera_status         :(str) is the status of the camera. Defined at PREFERENCES.DEFINED_CAMERA_STATUSES (probably 'active' or 'inactive' but should check)
+        # ========================================================================================================
+        query = '''
+        CREATE TABLE IF NOT EXISTS camera_info_table (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            camera_uuid TEXT NOT NULL,
+            camera_ip_address TEXT NOT NULL,
+            camera_region TEXT NOT NULL,
+            camera_description TEXT NOT NULL,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            stream_path TEXT NOT NULL,
+            camera_status TEXT NOT NULL
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_camera_info_table
+            AFTER UPDATE ON camera_info_table
+            FOR EACH ROW
+            BEGIN
+                UPDATE camera_info_table 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+        '''
+        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'camera_info_table' table exists")
 
-    print(f"\n(2) Getting the user by username:'{user_dict_create_user['username']}'")
-    user_dict_by_username = sql_manager.get_user_by_username(username=user_dict_create_user['username'])
-    print(f"User retrieved by username:")
-    pprint.pprint(user_dict_by_username)
+    def create_camera_info(self, camera_ip_address:str=None, camera_region:str=None, camera_description:str=None, username:str=None, password:str=None, stream_path:str=None, camera_status:str=None)-> dict:
+        # Check if the camera_ip_address is provided
+        if camera_ip_address is None or not isinstance(camera_ip_address, str) or len(camera_ip_address) == 0:
+            raise ValueError('Invalid camera_ip_address provided')
+        
+        # Check if camera_stream_path is provided
+        if stream_path is None or not isinstance(stream_path, str) or len(stream_path) == 0:
+            raise ValueError('Invalid stream_path provided')
+        
+        # Check IP is valid or not
+        if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', camera_ip_address):
+            raise ValueError('Invalid IP address provided')
+                
+        # Check if the camera_status is valid or not
+        if camera_status not in PREFERENCES.DEFINED_CAMERA_STATUSES:
+            raise ValueError(f"Invalid camera_status provided. Valid values are {PREFERENCES.DEFINED_CAMERA_STATUSES}")
+        
+        # Check if username and password are provided
+        if username is None or password is None:
+            raise ValueError('Username and password are required')
+                
+        # Format the camera_description and camera_region
+        if camera_description is not None and not isinstance(camera_description, str):
+            raise ValueError('Invalid camera_description provided')
+        
+        if camera_region is not None and not isinstance(camera_region, str):
+            raise ValueError('Invalid camera_region provided')
 
-    print(f"\n(3) Getting the user by wrong username:'non_existing_username'")
-    try:
-        user_dict_by_username = sql_manager.get_user_by_username(username='non_existing_username')
-    except Exception as e:
-        print(f"Error raised: {e}")
+        # Check if the camera_ip_address is unique or not
+        query = '''
+        SELECT id FROM camera_info_table WHERE camera_ip_address = ?
+        '''
+        cursor = self.conn.execute(query, (camera_ip_address,))
+        row = cursor.fetchone()
+        if row is not None:
+            raise ValueError('camera_ip_address already exists')
+        
+        # Create camera 
+        camera_uuid = str(uuid.uuid4())
+        camera_description = "" if camera_description == None else camera_description
+        camera_region = "" if camera_region == None else camera_region
 
-    print(f"\n(4) Getting the user by user_uuid:'{user_dict_create_user['user_uuid']}'")
-    user_dict_by_uuid = sql_manager.get_user_by_user_uuid(user_uuid=user_dict_create_user['user_uuid'])
-    print(f"User retrieved by UUID")
-    pprint.pprint(user_dict_by_uuid)
+        query = '''
+        INSERT INTO camera_info_table (camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        '''    
+        self.conn.execute(query, (camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status))       
+        self.conn.commit()
 
-    print(f"\n(5) Getting the user by wrong user_uuid:'non_existing_user_uuid'")
-    try:
-        user_dict_by_uuid = sql_manager.get_user_by_user_uuid(user_uuid='non_existing_user_uuid')
-    except Exception as e:
-        print(f"Error raised: {e}")
+        return {
+            "camera_uuid": camera_uuid,
+            "camera_ip_address": camera_ip_address,
+            "camera_region": camera_region,
+            "camera_description": camera_description,
+            "username": username,
+            "password": password,
+            "stream_path": stream_path,
+            "camera_status": camera_status
+        }
 
-    print(f"\n(6- Correct) Authenticating the user with \n\tusername:'test_user'\n\tplain_password:'test_password_123'")
-    is_authenticated = sql_manager.is_authenticated_user(username= test_user_info['username'], plain_password= test_user_info['plain_password'])
-    print(f"\t Is user authenticated: {is_authenticated}")
+    def update_camera_info_attribute(self, camera_uuid:str=None, attribute_name:str=None, attribute_value:str=None)-> dict:
+        # Check if the camera_uuid is valid or not
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        # Check if the attribute is provided
+        if attribute_name is None or not isinstance(attribute_name, str): 
+            raise ValueError('Invalid attribute provided')
+        
+        # Check if the attribute is valid or not
+        if attribute_name not in ['camera_ip_address', 'camera_region', 'camera_description', 'username', 'password', 'stream_path', 'camera_status']:
+            raise ValueError(f'Invalid attribute provided {attribute_name}')
+        
+        # Check whether camera_region attribute is properly formatted
+        if not isinstance(attribute_value, str):
+            raise ValueError('Attribute value must be a string')
 
-    print(f"\n(6- Incorrect) Authenticating the user with \n\tusername:'test_user'\n\tplain_password:'wrong_password'")
-    is_authenticated = sql_manager.is_authenticated_user(username='test_user', plain_password='wrong_password')
-    print(f"\tIs user authenticated: {is_authenticated}")
+        # Check if attribute is too long
+        if len(attribute_value) > 256:
+            raise ValueError('Attribute value is too long')
+        
+        if attribute_name == 'camera_ip_address':
+            if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', attribute_value):
+                raise ValueError('Invalid IP address provided')
+            
+            # Check if the camera_ip_address is unique or not
+            query = '''
+            SELECT id FROM camera_info_table WHERE camera_ip_address = ?
+            '''
+            cursor = self.conn.execute(query, (attribute_value,))
+            row = cursor.fetchone()
+            if row is not None:
+                raise ValueError('camera_ip_address already exists')
+        
+        if attribute_name == 'camera_status' and attribute_value not in PREFERENCES.DEFINED_CAMERA_STATUSES:
+            raise ValueError("Invalid camera_status provided. Valid values are 'active' or 'inactive'")
+        
+        query = f'''
+        UPDATE camera_info_table 
+        SET {attribute_name} = ?, date_updated = CURRENT_TIMESTAMP 
+        WHERE camera_uuid = ?
+        '''
+        self.conn.execute(query, (attribute_value, camera_uuid))
+        self.conn.commit()
 
-    print(f"\n(6- Non-existing) Authenticating the user with \n\tusername:'non_existing_user'\n\tplain_password:'test_password_123'")
-    is_authenticated = sql_manager.is_authenticated_user(username='non_existing_user', plain_password='test_password_123')
-    print(f"\tIs user authenticated: {is_authenticated}")
+        return {
+            "camera_uuid": camera_uuid,
+            attribute_name: attribute_value
+        }
 
-    print(f"\n(7) Deleting the user by username:'{user_dict_create_user['username']}'")
-    is_deleted = sql_manager.delete_user_by_username(username=user_dict_create_user['username'])
-    print(f"\tIs user deleted: {is_deleted}")
+    def delete_camera_info_by_uuid(self, camera_uuid:str=None)-> dict:
+        # Check if the camera_uuid is valid or not
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        query = '''
+        DELETE FROM camera_info_table WHERE camera_uuid = ?
+        '''
+        self.conn.execute(query, (camera_uuid,))
+        self.conn.commit()
 
-    print(f"Fetching all users")
-    all_users = sql_manager.get_all_users()
-    pprint.pprint(all_users)
+        return {
+            "camera_uuid": camera_uuid
+        }
+    
+    def fetch_all_camera_info(self)-> dict:
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status FROM camera_info_table
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        
+        # Get column names from cursor description
+        column_names = [description[0] for description in cursor.description]
+        
+        # Convert each row to a dictionary
+        result = [dict(zip(column_names, row)) for row in rows]
+        
+        keys_to_delete = []
+        for d in result:
+            for key in keys_to_delete:
+                d.pop(key, None)  # Use pop with default to avoid KeyError if key is not present
+                
+        return {'all_camera_info':result}
 
-    print(f"\n(8) Deleting the user by user_uuid:")
-    print(f"Creating a user with \n\tusername:'{test_user_info['username']}'\n\tpersonal_fullname:'{test_user_info['personal_fullname']}'\n\tplain_password:'{test_user_info['plain_password']}'")
-    user_dict_create_user_2 = sql_manager.create_user(username=test_user_info['username'], personal_fullname=test_user_info['personal_fullname'], plain_password=test_user_info['plain_password'])
-    pprint.pprint(user_dict_create_user_2)
-
-    print(f"\n(9)Deleting the user by user_uuid:'{user_dict_create_user_2['user_uuid']}'")
-    is_deleted = sql_manager.delete_user_by_user_uuid(user_uuid=user_dict_create_user_2['user_uuid'])
-    print(f"\tIs user deleted: {is_deleted}")
-
-    print(f"\n(10) Fetching all users")   
-    all_users = sql_manager.get_all_users()
-    pprint.pprint(all_users)
-
-
-
-    sql_manager.close()
+    def fetch_camera_info_by_uuid(self, camera_uuid:str = None) -> dict:
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status FROM camera_info_table WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        row = cursor.fetchone()
+        
+        if row is None:
+            raise ValueError('Camera not found')
+        else:
+            # Get column names from cursor description
+            column_names = [description[0] for description in cursor.description]
+            
+            # Create a dictionary using the column names and row data
+            return {'camera_info':dict(zip(column_names, row))}
+           
