@@ -2,7 +2,7 @@ import sqlite3, base64, numpy as np, cv2, pprint, uuid, datetime
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
-import os, re, hashlib, time, sys, pprint
+import os, re, hashlib, time, sys, pprint, random
 from pathlib import Path
 
 # To import below modules, paths must be appended to the sys.path
@@ -137,12 +137,15 @@ print(f"\n(1) Creating a camera with \n\tcamera_ip_address:'{test_camera_info['c
 camera_dict_create_camera = sql_manager.create_camera_info(camera_ip_address=test_camera_info['camera_ip_address'], camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
 pprint.pprint(camera_dict_create_camera)
 
-print(f"\n(2) Creating second camera with same IP address")
+print(f"\n(2) Fetching the camera by camera_uuid by camera_ip_address:'{test_camera_info['camera_ip_address']}'")
+camera_dict_by_ip_address = sql_manager.fetch_camera_uuid_by_camera_ip_address(camera_ip_address=test_camera_info['camera_ip_address'])
+pprint.pprint(camera_dict_by_ip_address)
+
+print(f"\n(3) Creating second camera with same IP address")
 try:
     camera_dict_create_camera_2 = sql_manager.create_camera_info(camera_ip_address=test_camera_info['camera_ip_address'], camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
 except Exception as e:
     print(f"Error raised: {e}")
-
 
 update_map = {
     "camera_ip_address": "172.0.0.1",
@@ -153,26 +156,63 @@ update_map = {
     "stream_path": "/updated_rtsp_stream",
     "camera_status": "inactive",
 }
-print(f"\n(3) This camera will be updated \n\tcamera_uuid:{camera_dict_create_camera['camera_uuid']}\n\tcamera_ip_address:'{test_camera_info['camera_ip_address']}'\n\tcamera_region:'{test_camera_info['camera_region']}'\n\tcamera_description:'{test_camera_info['camera_description']}'\n\tusername:'{test_camera_info['username']}'\n\tpassword:'{test_camera_info['password']}'\n\tstream_path:'{test_camera_info['stream_path']}'\n\tcamera_status:'{test_camera_info['camera_status']}'")
+print(f"\n(4) This camera will be updated \n\tcamera_uuid:{camera_dict_create_camera['camera_uuid']}\n\tcamera_ip_address:'{test_camera_info['camera_ip_address']}'\n\tcamera_region:'{test_camera_info['camera_region']}'\n\tcamera_description:'{test_camera_info['camera_description']}'\n\tusername:'{test_camera_info['username']}'\n\tpassword:'{test_camera_info['password']}'\n\tstream_path:'{test_camera_info['stream_path']}'\n\tcamera_status:'{test_camera_info['camera_status']}'")
 for key, value in update_map.items():
     print(f"Updating {key} to {value}")
     response = camera_dict_update_camera = sql_manager.update_camera_info_attribute(camera_uuid=camera_dict_create_camera['camera_uuid'], attribute_name=key, attribute_value=value)
     pprint.pprint(response)
 
-print(f"\n(4) Fetching the camera by camera_uuid:'{camera_dict_create_camera['camera_uuid']}'")
+print(f"\n(5) Fetching the camera by camera_uuid:'{camera_dict_create_camera['camera_uuid']}'")
 camera_dict_by_uuid = sql_manager.fetch_camera_info_by_uuid(camera_uuid=camera_dict_create_camera['camera_uuid'])
 pprint.pprint(camera_dict_by_uuid)
 
-print(f"\n(5) fetching all cameras")
+print(f"\n(6) fetching all cameras")
 all_cameras = sql_manager.fetch_all_camera_info()
 pprint.pprint(all_cameras)
 
-print(f"\n(6) Deleting the camera by camera_uuid:'{camera_dict_create_camera['camera_uuid']}'")
+print(f"\n(7) Deleting the camera by camera_uuid:'{camera_dict_create_camera['camera_uuid']}'")
 is_deleted = sql_manager.delete_camera_info_by_uuid(camera_uuid=camera_dict_create_camera['camera_uuid'])
 print(f"\tIs camera deleted: {is_deleted}")
 print("Fetching all cameras")
 all_cameras = sql_manager.fetch_all_camera_info()
 pprint.pprint(all_cameras)
+
+#================================Testing 'counts_table' table functionality======================================================
+print(f"{'='*100}\nTesting 'counts_table' table functionality\n{'='*100}")
+
+test_count_key = "test_count_key"
+test_count_subkeys = ["test_subkey_1", "test_subkey_2", "test_subkey_3"]
+print(f"\n(1) Creating counts with \n\tcount_key:'{test_count_key}'\n\tcount_subkeys:'{test_count_subkeys}'")
+for subkey in test_count_subkeys:
+    count_dict_create_count = sql_manager.update_count(count_key=test_count_key, count_subkey=subkey, delta_count=random.uniform(-100, 100))
+    pprint.pprint(count_dict_create_count)
+
+print(f"\n(2) Fetching the count by count_key:'{test_count_key}'")
+count_dict_by_key = sql_manager.get_counts_by_count_key(count_key=test_count_key)
+pprint.pprint(count_dict_by_key)
+
+print(f"\n(3) Fetching subkey counts by count_key:'{test_count_key}'")
+for subkey in test_count_subkeys:
+    count_dict_by_subkey = sql_manager.get_total_count_by_count_key_and_count_subkey(count_key=test_count_key, count_subkey=subkey)
+    print(f"Subkey: {subkey}")
+    pprint.pprint(count_dict_by_subkey)
+
+print(f"\n(4) Updating the subkey {test_count_subkeys[0]} with a new count")
+count_dict_update_count = sql_manager.update_count(count_key=test_count_key, count_subkey=test_count_subkeys[0], delta_count=random.uniform(-100, 100))
+pprint.pprint(count_dict_update_count)
+
+print(f"\nAdding new count keys and subkeys")
+new_count_key =  [f"new_key_{i}" for i in range(1, 5)]
+new_count_subkeys = [f"new_subkey_{i}" for i in range(1, 3)]
+print(f"\n(5) Creating counts with \n\tcount_key:'{new_count_key}'\n\tcount_subkeys:'{new_count_subkeys}'")
+for key in new_count_key:
+    for subkey in new_count_subkeys:
+        count_dict_create_count = sql_manager.update_count(count_key=key, count_subkey=subkey, delta_count=random.uniform(-100, 100))
+        pprint.pprint(count_dict_create_count)
+
+print(f"\n(6) Fetching all counts")
+all_counts = sql_manager.fetch_all_counts()
+pprint.pprint(all_counts)
 
 # TODO: print test results
 # TODO: delete the test database

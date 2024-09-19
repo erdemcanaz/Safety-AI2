@@ -11,13 +11,14 @@ if __name__ == "__main__":
     sys.path.append(str(SAFETY_AI2_DIRECTORY))     
 import PREFERENCES
 
+# (-) Last time rule triggered table
 # (+ 1.1)   last_frames table
 # (+ 1.2)   reported_violations
 # (+ 1.2.1) image_paths table
-# (+ 1.3)   counts_table
 # (+ 1.4)   rules_info_table
 # (+ 1.5)   shift_counts_table
 
+# (+ 1.3)   counts_table
 # (+ 1)     camera_info_table
 # (2)     user_info_table
 # (2.1)   authorizations_table
@@ -46,12 +47,139 @@ class SQLManager:
         self.__ensure_user_info_table_exists()
         self.__ensure_authorization_table_exists()
         self.__ensure_camera_info_table_exists()
+        self.__ensure_counts_table_exists()
 
         #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
    
     def close(self):
         self.conn.close()
+
+    # ========================================= counts_table ==============================================
+    def __ensure_counts_table_exists(self):
+        # ======================================== counts_table ====================================================
+        # A table to store the integer counts of anything useful. It can be people, violations, processed images etc.
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # count_key             :(str) - how count will be fetched. Can be any arbitrary string but if used for camera, using (camera_uuid_key) is recommended
+        # count_subkey          :(str) is the type of count. It can be 'people' or 'violations' etc.
+        # total_count           :(str) is the total count of the type of count (considered as float during calculations)
+        # ========================================================================================================
+        query = '''
+        CREATE TABLE IF NOT EXISTS counts_table (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            count_key TEXT NOT NULL,
+            count_subkey TEXT NOT NULL,
+            total_count TEXT NOT NULL
+        )
+        '''
+
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_counts_table
+            AFTER UPDATE ON counts_table
+            FOR EACH ROW
+            BEGIN
+                UPDATE counts_table 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+            '''
+        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'counts_table' table exists")
+
+    def update_count(self, count_key:str = None, count_subkey:str = None, delta_count:float = None)-> dict:               
+        # Ensure delta_count is proper
+        if not isinstance(delta_count, int) and not isinstance(delta_count, float):
+            raise ValueError('Invalid delta_count provided')
+        
+        # If count_key is not provided, raise an error
+        if count_key is None or not isinstance(count_key, str) or len(count_key) == 0:
+            raise ValueError('Invalid count_key provided')
+        
+        # If count_subkey is not provided, raise an error
+        if count_subkey is None or not isinstance(count_subkey, str) or len(count_subkey) == 0:
+            raise ValueError('Invalid count_subkey provided')
+        
+        # Check if the count_key and count_subkey combination exists, else create it by setting the total_count to 0
+        query = '''
+        SELECT total_count FROM counts_table WHERE count_key = ? AND count_subkey = ?
+        '''
+        cursor = self.conn.execute(query, (count_key, count_subkey))
+        row = cursor.fetchone()
+        previous_value = None       
+        if row is not None:
+            previous_value = float(row[0])
+            query = '''
+            UPDATE counts_table SET total_count = ? WHERE count_key = ? AND count_subkey = ?
+            '''
+            self.conn.execute(query, (str(previous_value + delta_count), count_key, count_subkey))
+
+        else:
+            previous_value = 0
+            query = '''
+            INSERT INTO counts_table (count_key, count_subkey, total_count)
+            VALUES (?, ?, ?)
+            '''
+            self.conn.execute(query, (count_key, count_subkey, str(delta_count)))
+
+        self.conn.commit()
+        return {
+            'count_key': count_key, 
+            'count_subkey': count_subkey,
+            'previous_count': previous_value,
+            'delta_count': delta_count,
+            'total_count': previous_value + delta_count
+        }
+            
+    def get_counts_by_count_key(self, count_key:str = None)-> dict:
+        # Ensure count_key is proper
+        if count_key is None or not isinstance(count_key, str) or len(count_key) == 0:
+            raise ValueError('Invalid count_key provided')
+        
+        query = '''
+        SELECT count_subkey, total_count FROM counts_table WHERE count_key = ?
+        '''
+        cursor = self.conn.execute(query, (count_key,))
+        rows = cursor.fetchall()
+        return {'counts': 
+                [{row[0]: float(row[1])} for row in rows]
+        }
+    
+    def get_total_count_by_count_key_and_count_subkey(self, count_key:str = None, count_subkey:str = None)-> dict:
+        # Ensure count_key is proper
+        if count_key is None or not isinstance(count_key, str) or len(count_key) == 0:
+            raise ValueError('Invalid count_key provided')
+        
+        # Ensure count_subkey is proper
+        if count_subkey is None or not isinstance(count_subkey, str) or len(count_subkey) == 0:
+            raise ValueError('Invalid count_subkey provided')
+        
+        query = '''
+        SELECT total_count FROM counts_table WHERE count_key = ? AND count_subkey = ?
+        '''
+        cursor = self.conn.execute(query, (count_key, count_subkey))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Could not found')
+        
+        return {'total_count': float(row[0])}
+    
+    def fetch_all_counts(self)-> dict:
+        query = '''
+        SELECT count_key, count_subkey, total_count FROM counts_table
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        return {'all_counts': 
+                [{row[0]: {row[1]: float(row[2])}} for row in rows]
+        }
 
     # ========================================= user_info =================================================
     def __ensure_user_info_table_exists(self):
@@ -664,4 +792,19 @@ class SQLManager:
             
             # Create a dictionary using the column names and row data
             return {'camera_info':dict(zip(column_names, row))}
-           
+    
+    def fetch_camera_uuid_by_camera_ip_address(self, camera_ip_address:str=None)-> dict:
+        if camera_ip_address is None or not isinstance(camera_ip_address, str) or len(camera_ip_address) == 0:
+            raise ValueError('Invalid camera_ip_address provided')
+        
+        query = '''
+        SELECT camera_uuid FROM camera_info_table WHERE camera_ip_address = ?
+        '''
+        cursor = self.conn.execute(query, (camera_ip_address,))
+        row = cursor.fetchone()
+        
+        if row is None:
+            raise ValueError('Camera not found')
+        else:
+            return {'camera_uuid': row[0]}
+    

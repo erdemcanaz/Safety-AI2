@@ -1,0 +1,15 @@
+# Save database backups
+# delete images if they are older than 30 days
+# check rule
+# zoom rule
+# FOL and local report threshold
+# check for usb drive to save images
+# PDF report export
+# Client UI
+# documentation
+# export shift reports as PDFs (also deleted after 180 days)
+# check memory usage of the images and PDF reports. Delete half of the images and PDF reports if memory usage is more than 80% for USB drive and 200GB for local drive
+# fetch shift reprot API
+# client ui pip install -r requirements.txt for raspberry pi (desktop)
+# Switch between cameras
+# Rule trigger checks table
