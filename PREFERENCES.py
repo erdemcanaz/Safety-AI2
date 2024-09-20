@@ -51,6 +51,8 @@ DEFINED_RULES = {
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
 MUST_EXISTING_DATA_SUBFOLDER_PATHS = { 
         #NOTE: NEVER EVER CHANGE THE KEY NAMES
+
+        # safety_ai/ ==============================
         "logs": Path("safety_ai/logs"),
         "camera_module_logs": Path("safety_ai/logs/sql_module_logs"),
         "frame_evaluator_logs": Path("safety_ai/logs/frame_evaluator_module_logs"),
@@ -61,6 +63,13 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
         "pdf_reports":  Path("safety_ai/pdf_reports"),
         "database_backups":  Path("safety_ai/database_backups"),
         "database":  Path("safety_ai/database"),
+
+        # api_server_2/ ==============================
+        "api_server_logs": Path("api_server_2/logs"),
+        "sql_module_logs": Path("api_server_2/logs/sql_module_logs"),
+        "fast_api_module_logs": Path("api_server_2/logs/fast_api_module_logs"),
+        "server_requests_logs": Path("api_server_2/logs/server_requests_logs"),
+
     }
 
 if os.name == "nt":  # For Windows (i.e development environment)
