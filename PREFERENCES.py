@@ -1,6 +1,5 @@
 import os, psutil, platform, subprocess
-if os.name == "nt":
-    import win32api, win32file
+if os.name == "nt": import win32api, win32file
 from pathlib import Path
 import psutil
 
@@ -195,7 +194,7 @@ SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password"
 
 DATA_FOLDER_PATH_EXTERNAL = None
 detector = USBDriveDetector()
-target_label = 'SAFETY_AI'  # Replace with your actual drive label
+target_label = 'SAFETY_AI'  if os.name == "nt" else 'T7 Shield'
 target_drive = detector.find_drive_by_label(target_label)
 if target_drive:
     if detector.os_type == 'Linux' or detector.is_docker:
