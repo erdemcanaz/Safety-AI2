@@ -13,6 +13,8 @@ sys.path.append(str(SAFETY_AI2_DIRECTORY))
 import PREFERENCES
 from sql_module import SQLManager
 
+
+WAIT_TIME_BETWEEN_TESTS = 10 #seconds
 print(f"{'='*100}\nTesting the SQLManager class for proper functionality\n{'='*100}")
 # Update the database path to the test database path
 PREFERENCES.SQL_DATABASE_PATH = str(Path(PREFERENCES.SQL_DATABASE_PATH).with_name('test_database.db'))
@@ -20,6 +22,7 @@ print(f"Creating a test database at the '{PREFERENCES.SQL_DATABASE_PATH}' path")
 sql_manager = SQLManager(db_path=PREFERENCES.SQL_DATABASE_PATH, verbose = True, overwrite_existing_db=True)
 
 #================================= Testing 'user_info' table functionality =================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"\nTesting 'user_info' table functionality {'='*50}")
 test_user_info = {
     "username": "test_user",
@@ -87,6 +90,7 @@ all_users = sql_manager.get_all_users()
 pprint.pprint(all_users)
 
 #================================= Testing 'authorization_table' table functionality =================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"\nTesting 'authorization_table' table functionality {'='*50}")
 print(f"creating a test user with \n\tusername:'{test_user_info['username']}'\n\tpersonal_fullname:'{test_user_info['personal_fullname']}'\n\tplain_password:'{test_user_info['plain_password']}'")
 test_user_authorization = sql_manager.create_user(username=test_user_info['username'], personal_fullname=test_user_info['personal_fullname'], plain_password=test_user_info['plain_password'])
@@ -122,6 +126,7 @@ user_authorizations = sql_manager.get_user_authorizations_by_username(username=t
 pprint.pprint(user_authorizations)
 
 #================================= Testing 'camera_info_table' table functionality =================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"\nTesting 'camera_info_table' table functionality {'='*50}")
 test_camera_info = {
     "camera_ip_address": "172.0.0.0",
@@ -177,6 +182,7 @@ print("Fetching all cameras")
 all_cameras = sql_manager.fetch_all_camera_info()
 pprint.pprint(all_cameras)
 #================================Testing 'counts_table' table functionality======================================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"{'='*100}\nTesting 'counts_table' table functionality\n{'='*100}")
 
 test_count_key = "test_count_key"
@@ -214,6 +220,7 @@ all_counts = sql_manager.fetch_all_counts()
 pprint.pprint(all_counts)
 
 #================================Testing 'rules_info_table' table functionality======================================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"{'='*100}\nTesting 'rules_info_table' table functionality\n{'='*100}")
 print("defined_departments:")
 pprint.pprint(PREFERENCES.DEFINED_DEPARTMENTS)
@@ -288,6 +295,41 @@ for _ in range(random.randint(1, 5)):
 all_rules = sql_manager.fetch_all_rules()
 pprint.pprint(all_rules)
 
+# ================================= Testing 'camera_last_frames' table functionality =================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS)
+print(f"{'='*100}\nTesting 'camera_last_frames' table functionality\n{'='*100}")
+
+print(f"(1) Updateing camera last frame for camera-1")
+camera_ip = str(random.randint(0,255))+"."+str(random.randint(0,255))+"."+str(random.randint(0,255))+"."+str(random.randint(0,255))
+print(f"Creating a camera with \n\tcamera_ip_address:'{camera_ip}'\n\tcamera_region:'{test_camera_info['camera_region']}'\n\tcamera_description:'{test_camera_info['camera_description']}'\n\tusername:'{test_camera_info['username']}'\n\tpassword:'{test_camera_info['password']}'\n\tstream_path:'{test_camera_info['stream_path']}'\n\tcamera_status:'{test_camera_info['camera_status']}'")
+camera_last_frame_camera = sql_manager.create_camera_info(camera_ip_address=camera_ip, camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
+pprint.pprint(camera_dict_create_camera)
+
+print(f"\nCreating a random RGB frame with 640x480 resolution")
+random_frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+print(f"Frame shape: {random_frame.shape}")
+print(f"Frame dtype: {random_frame.dtype}")
+
+
+print(f"\n(2) Updating the camera last frame for camera")
+updated_last_frame = sql_manager.update_last_camera_frame_as_by_camera_uuid(camera_uuid=camera_last_frame_camera['camera_uuid'], last_frame=random_frame, is_violation_detected=random.choice([True, False]), is_person_detected= random.choice([True, False]))
+pprint.pprint(updated_last_frame)
+
+print(f"\n(3) Fetching the last frame for camera")
+last_frame = sql_manager.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_last_frame_camera['camera_uuid'])
+keys_to_show = ['date_created', 'date_updated','camera_uuid', 'is_violation_detected', 'is_person_detected']
+pprint.pprint({key: last_frame[key] for key in keys_to_show})
+
+cv2.imshow("last_frame", last_frame['last_frame_np_array'])
+cv2.waitKey(2000)
+cv2.destroyAllWindows()
+
 # TODO: print test results
 # TODO: delete the test database
-sql_manager.close()
+sql_manager.close() #otherwise the database will be locked and cannot be deleted
+
+database_path_to_delete = Path(PREFERENCES.SQL_DATABASE_PATH)
+if database_path_to_delete.exists():
+    os.remove(database_path_to_delete)
+    print(f"\nTest database at '{database_path_to_delete}' is deleted")
+

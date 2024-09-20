@@ -15,8 +15,8 @@ import PREFERENCES
 # (+ 1.2)   reported_violations
 # (+ 1.2.1) image_paths table
 
-# (+ 1.1)   last_frames table
 
+# (+ 1.1)   camera_last_frames table
 # (+ 1.4)   rules_info_table
 # (X)   shift_counts_table
 # (+ 1.3)   counts_table
@@ -50,13 +50,185 @@ class SQLManager:
         self.__ensure_camera_info_table_exists()
         self.__ensure_counts_table_exists()
         self.__ensure_rules_info_table_exists()
+        self.__ensure_camera_last_frames_table_exists()
 
         #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
+
+        #Initialize image folders
+        self.DATA_FOLDER_PATH_LOCAL = PREFERENCES.DATA_FOLDER_PATH_LOCAL
+        self.DATA_FOLDER_PATH_EXTERNAL = PREFERENCES.DATA_FOLDER_PATH_EXTERNAL 
+        print(f"DATA_FOLDER_PATH_LOCAL: {self.DATA_FOLDER_PATH_LOCAL}")
+        print(f"DATA_FOLDER_PATH_EXTERNAL: {self.DATA_FOLDER_PATH_EXTERNAL}")
    
     def close(self):
         self.conn.close()
+      # LAST_FRAMES TABLE FUNCTIONS
     
+    @staticmethod
+    def encode_frame_to_b64encoded_jpg_bytes(np_ndarray: np.ndarray = None):
+        if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
+            raise ValueError('Invalid np_ndarray provided')
+        
+        success, encoded_image = cv2.imencode('.jpg', np_ndarray)
+        if not success:
+            raise ValueError('Failed to encode image')
+        base_64_encoded_jpg_image_bytes = base64.b64encode(encoded_image.tobytes())
+
+        return base_64_encoded_jpg_image_bytes # <class 'bytes'>
+    
+    @staticmethod
+    def decode_b64encoded_jpg_bytes_to_np_ndarray(base_64_encoded_jpg_image_bytes: bytes = None):
+        if base_64_encoded_jpg_image_bytes is None or not isinstance(base_64_encoded_jpg_image_bytes, bytes):
+            raise ValueError('Invalid base_64_encoded_jpg_image_bytes provided')
+        
+        return cv2.imdecode(np.frombuffer(base64.b64decode(base_64_encoded_jpg_image_bytes), dtype=np.uint8), cv2.IMREAD_COLOR)
+    
+    # ========================================= camera_last_frames ==============================================
+
+    def __ensure_camera_last_frames_table_exists(self):
+        # ========================================================================================================
+        # A table to store the last frames of the video streams
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # camera_ip_address     :(str) is the IP address of the camera
+        # camera_region         :(str) is the region of the camera
+        # is_violation_detected :(int) is a flag to indicate if a violation was detected in the last frame. 0 means no violation detected, 1 means violation detected
+        # is_person_detected    :(int) is a flag to indicate if a person was detected in the last frame. 0 means no person detected, 1 means person detected
+        # last_frame_b64_bytes        :(BLOB) is the last frame of the video stream in base64 encoded format
+        # ========================================================================================================
+        query = '''
+        CREATE TABLE IF NOT EXISTS camera_last_frames (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            camera_uuid TEXT NOT NULL,
+            camera_ip_address TEXT NOT NULL,
+            camera_region TEXT NOT NULL,
+            is_violation_detected INTEGER DEFAULT 0,
+            is_person_detected INTEGER DEFAULT 0,
+            last_frame_b64_bytes BLOB NOT NULL
+        )
+        '''        
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_camera_last_frames
+            AFTER UPDATE ON camera_last_frames
+            FOR EACH ROW
+            BEGIN
+                UPDATE camera_last_frames 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+            '''
+        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'camera_last_frames' table exists")
+
+    def update_last_camera_frame_as_by_camera_uuid(self, camera_uuid:str= None, is_violation_detected:bool=None, is_person_detected:bool=None, last_frame:np.ndarray=None)-> bool:
+        # Ensure image is proper
+        if last_frame is None or not isinstance(last_frame, np.ndarray):
+            raise ValueError('No image was provided or the image is not a NumPy array')
+        
+        # Ensure camera_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        camera_info = self.fetch_camera_info_by_uuid(camera_uuid= camera_uuid)['camera_info']
+        if camera_info is None:
+            raise ValueError('No camera found with the provided camera_uuid')
+        
+        # Ensure image is encoded properly as a JPEG image. It takes less space than PNG with minimal data loss
+        success, encoded_image = cv2.imencode('.jpg', last_frame)
+        if not success:
+            raise ValueError('Failed to encode image')    
+        base64_encoded_image = base64.b64encode(encoded_image.tobytes()) 
+
+        base_64_encoded_jpg_image_bytes = SQLManager.encode_frame_to_b64encoded_jpg_bytes(np_ndarray = last_frame)
+
+        # Save the last frame of the camera to the database as BLOB    
+        query = '''
+        SELECT id FROM camera_last_frames WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        row = cursor.fetchone()        
+        if row is None:
+            query = '''
+            INSERT INTO camera_last_frames (camera_uuid, camera_ip_address, camera_region, is_violation_detected, is_person_detected, last_frame_b64_bytes)
+            VALUES (?, ?, ?, ?, ?, ?)
+            '''
+            self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], camera_info["camera_region"], int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base_64_encoded_jpg_image_bytes))
+            )
+        else:
+            is_person_detected = 1 if is_person_detected else 0
+            query = '''
+            UPDATE camera_last_frames SET is_violation_detected = ?, is_person_detected = ?, camera_ip_address = ?, last_frame_b64_bytes = ? WHERE camera_uuid = ?
+            '''
+            self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), camera_info['camera_ip_address'], sqlite3.Binary(base64_encoded_image), camera_uuid))
+        
+        self.conn.commit()
+        return {
+            "camera_uuid": camera_uuid,
+            "camera_ip": camera_info["camera_ip_address"],
+            "camera_region": camera_info["camera_region"],
+            "is_violation_detected": is_violation_detected,
+            "is_person_detected": is_person_detected,            
+        }
+
+    def get_last_camera_frame_by_camera_uuid(self, camera_uuid:str = None)-> np.ndarray:
+
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        # Retrieve the last frame of the camera from the database
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, is_violation_detected, is_person_detected, last_frame_b64_bytes FROM camera_last_frames WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        row = cursor.fetchone()
+
+        # No image found with the provided camera_uuid
+        if row is None: 
+            return None
+        
+        # Unpack the row data
+        date_created, date_updated, retrieved_camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, base_64_encoded_jpg_image_bytes = row
+       
+        # keep the image as a base64 encoded string
+        return {
+            "date_created": date_created, #
+            "date_updated": date_updated,
+            "camera_uuid": retrieved_camera_uuid,
+            "camera_ip_address": camera_ip,
+            "camera_region": camera_region,
+            "is_violation_detected": is_violation_detected,
+            "is_person_detected": is_person_detected,
+            "last_frame_b64_bytes": base_64_encoded_jpg_image_bytes,
+            "last_frame_np_array": SQLManager.decode_b64encoded_jpg_bytes_to_np_ndarray(base_64_encoded_jpg_image_bytes=base_64_encoded_jpg_image_bytes)
+        }
+        # Succes
+        
+    def get_all_last_camera_frame_info_without_BLOB(self) -> list:
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected FROM camera_last_frames
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+
+        # Get column names from cursor description
+        column_names = [description[0] for description in cursor.description]
+        
+        # Convert each row to a dictionary
+        result = [dict(zip(column_names, row)) for row in rows]
+        
+        return result
+              
     # ========================================= rules_info_table ==============================================
     def __ensure_rules_info_table_exists(self):
         # =======================================rules_info_table===================================================
@@ -799,6 +971,10 @@ class SQLManager:
         if self.VERBOSE: print(f"Ensured 'camera_info_table' table exists")
 
     def create_camera_info(self, camera_ip_address:str=None, camera_region:str=None, camera_description:str=None, username:str=None, password:str=None, stream_path:str=None, camera_status:str=None)-> dict:
+        camera_uuid = str(uuid.uuid4())
+        camera_description = "" if camera_description == None else camera_description
+        camera_region = "" if camera_region == None else camera_region
+
         # Check if the camera_ip_address is provided
         if camera_ip_address is None or not isinstance(camera_ip_address, str) or len(camera_ip_address) == 0:
             raise ValueError('Invalid camera_ip_address provided')
@@ -835,11 +1011,7 @@ class SQLManager:
         if row is not None:
             raise ValueError('camera_ip_address already exists')
         
-        # Create camera 
-        camera_uuid = str(uuid.uuid4())
-        camera_description = "" if camera_description == None else camera_description
-        camera_region = "" if camera_region == None else camera_region
-
+        # Create camera       
         query = '''
         INSERT INTO camera_info_table (camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)

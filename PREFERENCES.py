@@ -1,5 +1,165 @@
-import os
+import os, psutil, platform, subprocess, win32api, win32file
 from pathlib import Path
+import psutil
+
+
+class USBDriveDetector:
+    def __init__(self):
+        self.os_type = platform.system()
+        self.is_docker = self.check_if_docker()
+    
+    def check_if_docker(self):
+        """
+        Check if the code is running inside a Docker container.
+        """
+        # Method 1: Check for /.dockerenv file
+        if os.path.exists('/.dockerenv'):
+            return True
+        
+        # Method 2: Check cgroup for 'docker'
+        try:
+            with open('/proc/1/cgroup', 'rt') as f:
+                for line in f:
+                    if 'docker' in line:
+                        return True
+        except Exception:
+            pass
+        
+        return False
+
+    def get_usb_drives(self):
+        """
+        Retrieve a list of connected USB drives based on the operating system and environment.
+        """
+        if self.is_docker:
+            print("Running inside a Docker container.")
+            return self.get_usb_drives_docker()
+        else:
+            print("Running on the host machine.")
+            if self.os_type == 'Linux':
+                return self.get_usb_drives_linux()
+            elif self.os_type == 'Windows':
+                return self.get_usb_drives_windows()
+            else:
+                raise NotImplementedError(f"Unsupported OS: {self.os_type}")
+    
+    def get_usb_drives_linux(self):
+        """
+        Detect USB drives on a Linux host.
+        """
+        external_drives = []
+        partitions = psutil.disk_partitions(all=False)
+        for partition in partitions:
+            if '/media/' in partition.mountpoint or '/mnt/' in partition.mountpoint:
+                device_path = partition.device
+                try:
+                    # Get UUID using blkid
+                    result = subprocess.run(['blkid', '-s', 'UUID', '-o', 'value', device_path], capture_output=True, text=True)
+                    uuid = result.stdout.strip()
+                except Exception as e:
+                    uuid = None
+                external_drives.append({
+                    'mountpoint': partition.mountpoint,
+                    'device': device_path,
+                    'uuid': uuid,
+                    'fstype': partition.fstype,
+                    'volume_abspath': os.path.abspath(partition.mountpoint)
+                })
+        return external_drives
+    
+    def get_usb_drives_windows(self):
+        """
+        Detect USB drives on a Windows host.
+        """
+        external_drives = []
+        try:
+            drives = win32api.GetLogicalDriveStrings()
+            drives = drives.split('\000')[:-1]
+            for drive in drives:
+                drive_type = win32file.GetDriveType(drive)
+                # DRIVE_REMOVABLE = 2
+                if drive_type == win32file.DRIVE_REMOVABLE:
+                    try:
+                        # Get Volume Information
+                        volume_info = win32api.GetVolumeInformation(drive)
+                        volume_name = volume_info[0]
+                        serial_number = volume_info[1]
+                        # Use serial_number as a pseudo-UUID
+                        uuid = f"{serial_number:08X}"
+                    except Exception as e:
+                        volume_name = None
+                        uuid = None
+                    external_drives.append({
+                        'drive_letter': drive,
+                        'volume_name': volume_name,
+                        'uuid': uuid,
+                        'volume_abspath': os.path.abspath(drive)
+                    })
+        except Exception as e:
+            print(f"Error detecting USB drives on Windows: {e}")
+        return external_drives
+    
+    def get_usb_drives_docker(self):
+        """
+        Detect USB drives within a Docker container.
+        Assumes that external drives are mounted as volumes inside the container.
+        """
+        # Define potential mount points inside Docker
+        # You can customize this list based on how you mount volumes in your Docker setup
+        potential_mount_points = [
+            '/mnt/SAFETY_AI',         # Example for Linux
+            '/media/SAFETY_AI',       # Another common mount point
+            '/data/SAFETY_AI',        # Custom mount point
+            '/SAFETY_AI'              # Root-level mount point
+        ]
+        
+        external_drives = []
+        for mount_point in potential_mount_points:
+            if os.path.ismount(mount_point):
+                device_path = mount_point  # In Docker, device paths might not be directly accessible
+                try:
+                    # Attempt to retrieve UUID if possible
+                    # This might not work inside Docker; adjust as necessary
+                    result = subprocess.run(['blkid', '-s', 'UUID', '-o', 'value', mount_point], capture_output=True, text=True)
+                    uuid = result.stdout.strip()
+                except Exception:
+                    uuid = None
+                external_drives.append({
+                    'mountpoint': mount_point,
+                    'device': device_path,
+                    'uuid': uuid,
+                    'fstype': None,  # Filesystem type might not be easily retrievable inside Docker
+                    'volume_abspath': os.path.abspath(mount_point)
+                })
+        
+        if not external_drives:
+            print("No external drives detected within Docker. Ensure that the drives are mounted as volumes.")
+        
+        return external_drives
+
+    def find_drive_by_label(self, label_name):
+        """
+        Find a USB drive by its label name.
+        """
+        usb_drives = self.get_usb_drives()
+        for drive in usb_drives:
+            # Depending on OS and environment, the label key may vary
+            label = drive.get('volume_name') or drive.get('Volume Name') or drive.get('label')
+            if label and label.lower() == label_name.lower():
+                return drive
+        return None
+
+    def find_drive_by_uuid(self, uuid):
+        """
+        Find a USB drive by its UUID.
+        """
+        usb_drives = self.get_usb_drives()
+        for drive in usb_drives:
+            drive_uuid = drive.get('uuid')
+            if drive_uuid and drive_uuid.lower() == uuid.lower():
+                return drive
+        return None
+    
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
 # Definitions (Hardcoded)
@@ -32,12 +192,42 @@ SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password"
 #TODO: set an interval for checking image integrity and remove images that are not in the database
 
 
+
+# Check for the external drive named SAFETY_AI
+drive_name = 'SAFETY_AI'
+
+
 if os.name == "nt":  # For Windows (i.e development environment)
     SERVER_IP_ADDRESS = "192.168.0.26"
     CLEAR_TERMINAL_COMMAND = "cls"
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent/ "api_server_2" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = True
-    ENCRYPTED_IMAGE_FOLDER = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
+
+    detector = USBDriveDetector()
+    target_label = 'SAFETY_AI'  # Replace with your actual drive label
+    target_drive = detector.find_drive_by_label(target_label)
+    
+    if target_drive:
+        if detector.os_type == 'Linux' or detector.is_docker:
+            EXPORT_IMAGE_FOLDER_EXTERNAL = target_drive.get('mountpoint') or target_drive.get('volume_abspath')
+        elif detector.os_type == 'Windows':
+            EXPORT_IMAGE_FOLDER_EXTERNAL = target_drive.get('drive_letter') or target_drive.get('volume_abspath')
+        else:
+            EXPORT_IMAGE_FOLDER_EXTERNAL = None
+        print(f"EXPORT_IMAGE_FOLDER_EXTERNAL set to: {EXPORT_IMAGE_FOLDER_EXTERNAL}")
+    else:
+        print(f"Drive with label '{target_label}' not found. Please ensure it is connected and mounted.")
+
+    def find_external_drive_by_name(drive_name:str = None):
+        # Iterate through all mounted partitions
+        for partition in psutil.disk_partitions():
+            # If the drive name matches and the device is removable, return the mount point
+            if drive_name in partition.mountpoint:
+                return partition.mountpoint
+        return None    
+    DATA_FOLDER_PATH_LOCAL = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
+    DATA_FOLDER_PATH_EXTERNAL = find_external_drive_by_name(drive_name = "SAFETY_AI")
+
     EXPORT_IMAGE_FOLDER = None
     ENCRYPTED_IMAGE_FOLDER_SSD = None
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
