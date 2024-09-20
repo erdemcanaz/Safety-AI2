@@ -13,9 +13,8 @@ import PREFERENCES
 
 # (-) Last time rule triggered table
 # (+ 1.2)   reported_violations
+
 # (+ 1.2.1) image_paths table
-
-
 # (+ 1.1)   camera_last_frames table
 # (+ 1.4)   rules_info_table
 # (X)   shift_counts_table
@@ -25,8 +24,6 @@ import PREFERENCES
 # (2.1)   authorizations_table
 
 class SQLManager:
-    DEVICE_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
-
     def __init__(self, db_path=None, verbose=False, overwrite_existing_db=False): 
         self.DB_PATH = db_path
         self.VERBOSE = verbose     
@@ -51,9 +48,11 @@ class SQLManager:
         self.__ensure_counts_table_exists()
         self.__ensure_rules_info_table_exists()
         self.__ensure_camera_last_frames_table_exists()
+        self.__ensure_image_paths_table_exists()
 
         #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
+        self.__sync_images_and_image_paths()
 
         #Initialize image folders
         self.DATA_FOLDER_PATH_LOCAL = PREFERENCES.DATA_FOLDER_PATH_LOCAL
@@ -63,7 +62,6 @@ class SQLManager:
    
     def close(self):
         self.conn.close()
-      # LAST_FRAMES TABLE FUNCTIONS
     
     @staticmethod
     def encode_frame_to_b64encoded_jpg_bytes(np_ndarray: np.ndarray = None):
@@ -78,12 +76,228 @@ class SQLManager:
         return base_64_encoded_jpg_image_bytes # <class 'bytes'>
     
     @staticmethod
+    def encode_frame_to_jpg(np_ndarray: np.ndarray = None):
+        if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
+            raise ValueError('Invalid np_ndarray provided')
+        
+        success, encoded_image = cv2.imencode('.jpg', np_ndarray)
+        if not success:
+            raise ValueError('Failed to encode image')
+        return encoded_image
+
+    @staticmethod
     def decode_b64encoded_jpg_bytes_to_np_ndarray(base_64_encoded_jpg_image_bytes: bytes = None):
         if base_64_encoded_jpg_image_bytes is None or not isinstance(base_64_encoded_jpg_image_bytes, bytes):
             raise ValueError('Invalid base_64_encoded_jpg_image_bytes provided')
         
         return cv2.imdecode(np.frombuffer(base64.b64decode(base_64_encoded_jpg_image_bytes), dtype=np.uint8), cv2.IMREAD_COLOR)
     
+    # ========================================= image_paths ==============================================
+    def __ensure_image_paths_table_exists(self):
+        # =======================================image_paths====================================================
+        # A table to store image encrpytion keys and encrypted images paths
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # image_uuid            :(str) is a unique identifier for the image
+        # random_key        :(str) is the key used to encrypt the image
+        # encrypted_image_path  :(str) is the path to the encrypted image
+        # image_category        :(str) is a string to categorize the image. It can be anything like 'hard_hat_dataset', 'violation', etc.
+        # ========================================================================================================       
+
+        query = '''
+        CREATE TABLE IF NOT EXISTS image_paths (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            image_uuid TEXT NOT NULL,
+            random_key TEXT NOT NULL,
+            encrypted_image_path TEXT NOT NULL,
+            image_category TEXT NOT NULL DEFAULT 'no-category'
+        )
+        '''
+
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_image_paths
+            AFTER UPDATE ON image_paths
+            FOR EACH ROW
+            BEGIN
+                UPDATE image_paths 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+            '''
+
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'image_paths' table exists")
+
+    def __sync_images_and_image_paths(self):
+        # Delete the iamge paths with no corresponding encrypted image
+        query = '''
+        SELECT image_uuid, encrypted_image_path FROM image_paths
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        for row in rows:
+            image_uuid, encrypted_image_path = row
+            if not os.path.exists(encrypted_image_path):
+                query = '''
+                DELETE FROM image_paths WHERE image_uuid = ?
+                '''
+                self.conn.execute(query, (image_uuid,))
+        self.conn.commit()
+
+        # Delete the encrypted images that are not in the table
+        all_existing_file_paths_inside_encrypted_images_folder = []
+        encrypted_images_key = 'api_server_encrypted_images' # The key for the encrypted images folder hardcoded in the PREFERENCES
+
+        if PREFERENCES.check_if_folder_accesible(folder_path=PREFERENCES.DATA_FOLDER_PATH_EXTERNAL):
+            external_encrypted_images_path = PREFERENCES.DATA_FOLDER_PATH_EXTERNAL / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS[encrypted_images_key]
+            all_existing_file_paths_inside_encrypted_images_folder.extend(external_encrypted_images_path.rglob('*.bin') 
+        )
+        if PREFERENCES.check_if_folder_accesible(folder_path=PREFERENCES.DATA_FOLDER_PATH_LOCAL):
+            local_encrypted_images_path = PREFERENCES.DATA_FOLDER_PATH_LOCAL / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS[encrypted_images_key]
+            all_existing_file_paths_inside_encrypted_images_folder.extend(local_encrypted_images_path.rglob('*.bin')
+        )
+
+        # Iterate over all collected file paths
+        for file_path in all_existing_file_paths_inside_encrypted_images_folder:
+            query = '''
+            SELECT image_uuid FROM image_paths WHERE encrypted_image_path = ?
+            '''
+            cursor = self.conn.execute(query, (str(file_path),))  # Ensure the path is a string if required by the DB
+            row = cursor.fetchone()
+            
+            if row is None:
+                try:
+                    os.remove(file_path)
+                    print(f"Removed file: {file_path}")
+                except Exception as e:
+                    print(f"Error removing file {file_path}: {e}")
+        
+    def save_encrypted_image_and_insert_path_to_table(self, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None) -> dict:
+        # Ensure image is proper
+        if image is None or not isinstance(image, np.ndarray):
+            raise ValueError('No image was provided or the image is not a NumPy array')
+        
+        # Ensure image_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(image_uuid):
+            raise ValueError('Invalid image_uuid provided')
+        
+        # Ensure image is encoded properly as a JPEG image. It takes less space than PNG with minimal data loss
+        encoded_jpg_image = SQLManager.encode_frame_to_jpg(np_ndarray = image)
+        
+        #decide on whether to save the image to the local or external folder
+        is_external_folder_accesible = PREFERENCES.check_if_folder_accesible(folder_path = self.DATA_FOLDER_PATH_EXTERNAL)
+        data_directory = self.DATA_FOLDER_PATH_EXTERNAL if is_external_folder_accesible else self.DATA_FOLDER_PATH_LOCAL
+        images_directory = data_directory / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_encrypted_images']
+        image_folder_name = f'date_{datetime.datetime.now().strftime("%Y-%m-%d")}'
+        save_folder = images_directory / image_folder_name
+
+        # Ensure the save folder exists
+        if not os.path.exists(save_folder):
+            os.makedirs(save_folder, exist_ok=True)
+
+        # Ensure UUID is unique
+        # NOTE: This is not checked. First encountered UUID is used. This is not a good practice but simpler. It is responsibility of the caller to ensure UUID is unique.
+
+        # Save the encrypted image as a file to the save_folder   
+        random_key = os.urandom(32)
+        composite_key = hashlib.sha256(random_key + PREFERENCES.SQL_MANAGER_SECRET_KEY).digest()     
+        iv = os.urandom(16)
+
+        # Create a Cipher object using the key and IV
+        cipher = Cipher(algorithms.AES(composite_key), modes.CBC(iv), backend=default_backend())
+        encryptor = cipher.encryptor()
+
+        padder = padding.PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(encoded_jpg_image.tobytes()) + padder.finalize()
+        encrypted_data = encryptor.update(padded_data) + encryptor.finalize()        
+        iv_plus_encrypted_data =  iv + encrypted_data # Append the IV. 
+
+        # Save the encrypted image as a file
+        encrypted_image_path = save_folder / f'{image_uuid}.bin'
+        with open(encrypted_image_path, 'wb') as file:
+            file.write(iv_plus_encrypted_data)       
+        
+        # Since image is saved, insert the image path to the table
+        query = '''
+        INSERT INTO image_paths (image_uuid, random_key, encrypted_image_path, image_category)
+        VALUES (?, ?, ?, ?)
+        '''
+        self.conn.execute(query, (image_uuid, random_key, str(encrypted_image_path.resolve()),  image_category))
+        self.conn.commit() # Success
+        return {
+            "image_uuid": image_uuid,
+            "encrypted_image_path": str(encrypted_image_path.resolve()),
+            "image_category": image_category
+        }
+
+    def get_encrypted_image_by_uuid(self, image_uuid: str) -> dict:
+
+        # Retrieve the encrypted image path and random key from the database, also check if the path with the provided image_uuid exists
+        query = '''
+        SELECT image_uuid, random_key, encrypted_image_path, image_category FROM image_paths WHERE image_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (image_uuid,))
+        row = cursor.fetchone()
+        if row is None: 
+            raise ValueError('No image path entry found with the provided image_uuid')
+        
+        # Unpack the row data
+        retrieved_image_uuid, random_key, encrypted_image_path, image_category = row
+       
+        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
+        if not os.path.exists(encrypted_image_path):          
+            query = '''
+            DELETE FROM image_paths WHERE image_uuid = ?
+            '''
+            self.conn.execute(query, (retrieved_image_uuid,))
+            self.conn.commit()            
+            raise ValueError('Encrypted image file not found with the provided image_uuid, will be marked as deleted in the database')
+        
+        # It is checked that the file exists, so read the encrypted data
+        with open(encrypted_image_path, 'rb') as file:
+            encrypted_data = file.read()            
+
+        # Re-create the composite key using the random key and the device-specific secret key
+        composite_key = hashlib.sha256(random_key + PREFERENCES.SQL_MANAGER_SECRET_KEY).digest()
+
+        # Extract the IV from the encrypted data
+        iv = encrypted_data[:16]
+        encrypted_image_data = encrypted_data[16:]
+
+        # Create a Cipher object using the composite key and IV
+        cipher = Cipher(algorithms.AES(composite_key), modes.CBC(iv), backend=default_backend())
+        decryptor = cipher.decryptor()
+
+        # Decrypt the data
+        padded_data = decryptor.update(encrypted_image_data) + decryptor.finalize()
+
+        # Unpad the decrypted data
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        image_data = unpadder.update(padded_data) + unpadder.finalize()
+
+        # Decode the byte data back into an image
+        image_array = np.frombuffer(image_data, dtype=np.uint8)
+        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+
+        # Ensure the image is proper
+        if image is None:
+            return None
+
+        # Return both the image and the row data as a dictionary
+        return {
+            "image_uuid": retrieved_image_uuid,
+            "encrypted_image_path": encrypted_image_path,
+            "image_category": image_category,
+            "image": image
+        }
+        
     # ========================================= camera_last_frames ==============================================
 
     def __ensure_camera_last_frames_table_exists(self):

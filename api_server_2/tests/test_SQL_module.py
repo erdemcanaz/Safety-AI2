@@ -14,13 +14,14 @@ import PREFERENCES
 from sql_module import SQLManager
 
 
-WAIT_TIME_BETWEEN_TESTS = 1 #seconds
+WAIT_TIME_BETWEEN_TESTS = 0#seconds
+paths_to_delete_after_tests = []
 print(f"{'='*100}\nTesting the SQLManager class for proper functionality\n{'='*100}")
 # Update the database path to the test database path
 sql_database_path_local = PREFERENCES.SQL_DATABASE_FOLDER_PATH_LOCAL / "test_database.db"
 print(f"Creating a test database at the '{sql_database_path_local}' path")
 sql_manager = SQLManager(db_path=sql_database_path_local, verbose = True, overwrite_existing_db=True)
-
+paths_to_delete_after_tests.append(sql_database_path_local)
 #================================= Testing 'user_info' table functionality =================================
 time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"\nTesting 'user_info' table functionality {'='*50}")
@@ -321,14 +322,43 @@ keys_to_show = ['date_created', 'date_updated','camera_uuid', 'is_violation_dete
 pprint.pprint({key: last_frame[key] for key in keys_to_show})
 
 cv2.imshow("last_frame", last_frame['last_frame_np_array'])
-cv2.waitKey(2000)
+cv2.waitKey(1000)
 cv2.destroyAllWindows()
+
+# ================================= Testing 'image_paths' table functionality =================================
+print(f"{'='*100}\nTesting 'image_paths' table functionality\n{'='*100}")
+print(f"(1) Saving the random frame as an encrypted image and recording the path in the database")
+print(f"\nCreating a random RGB frame with 640x480 resolution")
+random_frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+test_image_info = {
+    'image' : random_frame,
+    'image_category' : random.choice(['violation', 'person']),
+    'image_uuid' : str(uuid.uuid4())
+}
+post_result = sql_manager.save_encrypted_image_and_insert_path_to_table(**test_image_info)
+paths_to_delete_after_tests.append(post_result['encrypted_image_path'])
+pprint.pprint(post_result)
+
+print(f"\n(2) Fetching the image path by image_uuid:'{test_image_info['image_uuid']}'")
+get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid=post_result['image_uuid'])
+pprint.pprint(get_result)
+cv2.imshow("image", get_result['image'])
+cv2.waitKey(1000)
+
+print(f"\n(3) Fetching non-existing image path by image_uuid:'non_existing_image_uuid'")
+try:
+    get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid='non_existing_image_uuid')
+except Exception as e:
+    print(f"Error raised: {e}")
 
 # TODO: print test results
 # TODO: delete the test database
+cv2.destroyAllWindows()
 sql_manager.close() #otherwise the database will be locked and cannot be deleted
 
-if sql_database_path_local.exists():
-    os.remove(sql_database_path_local)
-    print(f"\nTest database at '{sql_database_path_local}' is deleted")
+time.sleep(15)
+for path in paths_to_delete_after_tests:
+    if Path(path).exists():
+        os.remove(path)
+        print(f"Deleted the path: {path}")
 

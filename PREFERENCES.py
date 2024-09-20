@@ -38,6 +38,7 @@ def calculate_folder_size_gb(folder_path: Path = None):
     return sum(f.stat().st_size for f in folder_path.glob('**/*') if f.is_file()) / (1024**3)
 
 # Definitions (Hardcoded)
+SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Used to encrypt-decrypt images. Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_LOCAL = 250     # 250 GB
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL = 1500 # 1.5 TB
 DEFINED_CAMERA_STATUSES = ["active", "inactive"]
@@ -68,6 +69,7 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
 
         # safety_ai/ ==============================
         "safety_ai_logs": Path("safety_ai/logs"),
+        "safety_ai_test_logs": Path("safety_ai/logs/test_logs"),
         "safety_ai_camera_module_logs": Path("safety_ai/logs/sql_module_logs"),
         "safety_ai_frame_evaluator_logs": Path("safety_ai/logs/frame_evaluator_module_logs"),
         "safety_ai_models_module_logs": Path("safety_ai/logs/models_module_logs"),
@@ -75,6 +77,7 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
         
         # api_server/ ==============================
         "api_server_logs": Path("api_server/logs"),
+        "api_server_test_logs": Path("api_server/logs/test_logs"),
         "api_server_sql_module_logs": Path("api_server/logs/sql_module_logs"),
         "api_server_fast_api_module_logs": Path("api_server/logs/fast_api_module_logs"),
         "api_server_server_requests_logs": Path("api_server/logs/server_requests_logs"),
@@ -213,4 +216,4 @@ SHOW_FRAMES = {
 
 
 print(f"[INFO] The preferences file is loaded successfully")
-time.sleep(5) # Wait so that the user can read the printed information
+time.sleep(0.5) # Wait so that the user can read the printed information
