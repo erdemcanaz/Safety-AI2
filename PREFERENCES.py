@@ -99,10 +99,11 @@ if os.name == "nt":  # For Windows (i.e development environment)
     print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
+    print(f"[INFO] Checking if the data folder paths are accessible")
     is_local_available = check_if_folder_accesible(DATA_FOLDER_PATH_LOCAL)
     is_external_available = check_if_folder_accesible(DATA_FOLDER_PATH_EXTERNAL)
-    print(f"[INFO] The local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
-    print(f"[INFO] The external path '{DATA_FOLDER_PATH_EXTERNAL}' : {'is available' if is_external_available else 'is not available'}")
+    print(f"\tThe local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
+    print(f"\tThe external path '{DATA_FOLDER_PATH_EXTERNAL}' : {'is available' if is_external_available else 'is not available'}")
 
     if not is_local_available:
         raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
@@ -127,10 +128,11 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
+    print(f"[INFO] Checking if the data folder paths are accessible")
     is_local_available = check_if_folder_accesible(DATA_FOLDER_PATH_LOCAL)
     is_external_available = check_if_folder_accesible(DATA_FOLDER_PATH_EXTERNAL)
-    print(f"[INFO] The local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
-    print(f"[INFO] The external path '{DATA_FOLDER_PATH_EXTERNAL}' : {'is available' if is_external_available else 'is not available'}")
+    print(f"\tThe local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
+    print(f"\yThe external path '{DATA_FOLDER_PATH_EXTERNAL}' : {'is available' if is_external_available else 'is not available'}")
 
     if not is_local_available:
         raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
