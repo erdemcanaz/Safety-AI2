@@ -108,6 +108,7 @@ class USBDriveDetector:
         # You can customize this list based on how you mount volumes in your Docker setup
         potential_mount_points = [
             '/media/safety',       #NOTE: safety is the name of the ubuntu user
+            '/media'
         ]
         
         external_drives = []
