@@ -14,7 +14,7 @@ import PREFERENCES
 from sql_module import SQLManager
 
 
-WAIT_TIME_BETWEEN_TESTS = 0#seconds
+WAIT_TIME_BETWEEN_TESTS = 0 #seconds, if 0 wait for user input
 paths_to_delete_after_tests = []
 print(f"{'='*100}\nTesting the SQLManager class for proper functionality\n{'='*100}")
 # Update the database path to the test database path
@@ -23,7 +23,7 @@ print(f"Creating a test database at the '{sql_database_path_local}' path")
 sql_manager = SQLManager(db_path=sql_database_path_local, verbose = True, overwrite_existing_db=True)
 paths_to_delete_after_tests.append(sql_database_path_local)
 #================================= Testing 'user_info' table functionality =================================
-time.sleep(WAIT_TIME_BETWEEN_TESTS)
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"\nTesting 'user_info' table functionality {'='*50}")
 test_user_info = {
     "username": "test_user",
@@ -91,7 +91,8 @@ all_users = sql_manager.get_all_users()
 pprint.pprint(all_users)
 
 #================================= Testing 'authorization_table' table functionality =================================
-time.sleep(WAIT_TIME_BETWEEN_TESTS)
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
+
 print(f"\nTesting 'authorization_table' table functionality {'='*50}")
 print(f"creating a test user with \n\tusername:'{test_user_info['username']}'\n\tpersonal_fullname:'{test_user_info['personal_fullname']}'\n\tplain_password:'{test_user_info['plain_password']}'")
 test_user_authorization = sql_manager.create_user(username=test_user_info['username'], personal_fullname=test_user_info['personal_fullname'], plain_password=test_user_info['plain_password'])
@@ -127,7 +128,7 @@ user_authorizations = sql_manager.get_user_authorizations_by_username(username=t
 pprint.pprint(user_authorizations)
 
 #================================= Testing 'camera_info_table' table functionality =================================
-time.sleep(WAIT_TIME_BETWEEN_TESTS)
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"\nTesting 'camera_info_table' table functionality {'='*50}")
 test_camera_info = {
     "camera_ip_address": "172.0.0.0",
@@ -183,7 +184,7 @@ print("Fetching all cameras")
 all_cameras = sql_manager.fetch_all_camera_info()
 pprint.pprint(all_cameras)
 #================================Testing 'counts_table' table functionality======================================================
-time.sleep(WAIT_TIME_BETWEEN_TESTS)
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"{'='*100}\nTesting 'counts_table' table functionality\n{'='*100}")
 
 test_count_key = "test_count_key"
@@ -221,7 +222,7 @@ all_counts = sql_manager.fetch_all_counts()
 pprint.pprint(all_counts)
 
 #================================Testing 'rules_info_table' table functionality======================================================
-time.sleep(WAIT_TIME_BETWEEN_TESTS)
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"{'='*100}\nTesting 'rules_info_table' table functionality\n{'='*100}")
 print("defined_departments:")
 pprint.pprint(PREFERENCES.DEFINED_DEPARTMENTS)
@@ -312,7 +313,7 @@ pprint.pprint(rule_dict_by_uuid)
 
 
 # ================================= Testing 'camera_last_frames' table functionality =================================
-time.sleep(WAIT_TIME_BETWEEN_TESTS)
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"{'='*100}\nTesting 'camera_last_frames' table functionality\n{'='*100}")
 
 print(f"(1) Updateing camera last frame for camera-1")
@@ -341,6 +342,7 @@ cv2.waitKey(1000)
 cv2.destroyAllWindows()
 
 # ================================= Testing 'image_paths' table functionality =================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"{'='*100}\nTesting 'image_paths' table functionality\n{'='*100}")
 print(f"(1) Saving the random frame as an encrypted image and recording the path in the database")
 print(f"\nCreating a random RGB frame with 640x480 resolution")
@@ -355,24 +357,24 @@ paths_to_delete_after_tests.append(post_result['encrypted_image_path'])
 pprint.pprint(post_result)
 
 print(f"\n(2) Fetching the image path by image_uuid:'{test_image_info['image_uuid']}'")
-get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid=post_result['image_uuid'])
+get_result = sql_manager.get_encrypted_image_by_image_uuid(image_uuid=post_result['image_uuid'])
 pprint.pprint(get_result)
 cv2.imshow("image", get_result['image'])
-cv2.waitKey(1000)
+cv2.waitKey(2500)
 
 print(f"\n(3) Fetching non-existing image path by image_uuid:'non_existing_image_uuid'")
 try:
-    get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid='non_existing_image_uuid')
+    get_result = sql_manager.get_encrypted_image_by_image_uuid(image_uuid='non_existing_image_uuid')
 except Exception as e:
     print(f"Error raised: {e}")
 
 print(f"\n(4) Corrupting the SQL_MANAGER_SECRET_KEY and then fetching the image path by image_uuid:'{test_image_info['image_uuid']}'")
 PREFERENCES.SQL_MANAGER_SECRET_KEY = b'G4ECs6lRrm6HXbtBdMwFoLA18iqaaaaa'
 try:
-    get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid=post_result['image_uuid'])
+    get_result = sql_manager.get_encrypted_image_by_image_uuid(image_uuid=post_result['image_uuid'])
     pprint.pprint(get_result)
     cv2.imshow("image", get_result['image'])
-    cv2.waitKey(1000)
+    cv2.waitKey(2500)
 except Exception as e:
     print(f"Error raised: {e}")
 
@@ -381,7 +383,8 @@ except Exception as e:
 cv2.destroyAllWindows()
 sql_manager.close() #otherwise the database will be locked and cannot be deleted
 
-time.sleep(15)
+print(f"{'='*100}\n{'='*100}\nTesting completed, deleting created files in 10 seconds\n{'='*100}\n{'='*100}")
+time.sleep(10)
 for path in paths_to_delete_after_tests:
     if Path(path).exists():
         os.remove(path)

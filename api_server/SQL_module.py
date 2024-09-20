@@ -9,7 +9,6 @@ import PREFERENCES
 # (iot device rule match) also the action code
 
 # (+ 1.2)   reported_violations
-
 # (+ 1.2.1) image_paths table
 # (+ 1.1)   camera_last_frames table
 # (+ 1.4)   rules_info_table
@@ -45,10 +44,13 @@ class SQLManager:
         self.__ensure_rules_info_table_exists()
         self.__ensure_camera_last_frames_table_exists()
         self.__ensure_image_paths_table_exists()
+        self.__ensure_reported_violations_table_exists()
 
         #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
-        self.__sync_images_and_image_paths()
+        #Ensure a user is registered for the admin     | second user !
+        self.__create_admin_user()
+        self.__sync_encrypted_images_and_image_paths_table() # Delete the encrypted images that are not in the table, and delete the image paths with no corresponding encrypted image
 
         #Initialize image folders
         self.DATA_FOLDER_PATH_LOCAL = PREFERENCES.DATA_FOLDER_PATH_LOCAL
@@ -87,6 +89,146 @@ class SQLManager:
             raise ValueError('Invalid base_64_encoded_jpg_image_bytes provided')
         
         return cv2.imdecode(np.frombuffer(base64.b64decode(base_64_encoded_jpg_image_bytes), dtype=np.uint8), cv2.IMREAD_COLOR)
+    
+    # ======================================= reported_violations ========================================
+    def __ensure_reported_violations_table_exists(self):
+        # ========================================reported_violations==================================================
+        # A table to store the reported violations
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # violation_date        :(TIMESTAMP) is the date and time the violation was detected
+        # violation_uuid        :(str) is a unique identifier for the violation
+        # region_name           :(str) is the name of the region where the violation was detected
+        # violation_type        :(str) is the type of violation. It can be 'hardhat_violation', 'restricted_area_violation' etc.
+        # violation_score       :(float) is the score of the violation. It can be between 0 and 1
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # image_uuid            :(str) is a unique identifier for the image
+        # ========================================================================================================
+       
+        query = '''
+        CREATE TABLE IF NOT EXISTS reported_violations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            violation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            violation_uuid TEXT NOT NULL,
+            region_name TEXT NOT NULL,
+            violation_type TEXT NOT NULL,
+            violation_score REAL NOT NULL,
+            camera_uuid TEXT NOT NULL,
+            image_uuid TEXT NOT NULL
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_reported_violations
+            AFTER UPDATE ON reported_violations
+            FOR EACH ROW
+            BEGIN
+                UPDATE reported_violations 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+        '''        
+
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'reported_violations' table exists")
+
+    def create_reported_violation(self, camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date:datetime.datetime=None, violation_type:str=None, violation_score:float=None, region_name:str=None, save_folder:str=None)->dict:
+        #def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None)-> str:
+        # Save the violation frame as a base64 encoded string and insert the path to the table
+        violation_uuid = str(uuid.uuid4())
+        image_uuid = str(uuid.uuid4())
+
+        self.save_encrypted_image_and_insert_path_to_table(image=violation_frame, image_category='violation_frame', image_uuid=image_uuid)
+        # succesful save of the violation frame, since no exception was raised
+
+        # Insert the violation to the table
+        query = '''
+        INSERT INTO reported_violations (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        '''
+        self.conn.execute(query, (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid))
+        self.conn.commit()
+        return {
+            "violation_uuid": violation_uuid,
+            "violation_date": violation_date,
+            "region_name": region_name,
+            "violation_type": violation_type,
+            "violation_score": violation_score,
+            "camera_uuid": camera_uuid,
+            "image_uuid": image_uuid
+        }
+    
+    def fetch_reported_violations_between_dates(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None, query_limit: int = 9999) -> dict:
+        
+        query = '''
+        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid
+        FROM reported_violations
+        WHERE violation_date BETWEEN ? AND ?
+        ORDER BY violation_date DESC
+        LIMIT ?
+        '''        
+        # Execute the query with start_date, end_date, and limit parameters
+        cursor = self.conn.execute(query, (start_date, end_date, query_limit))
+        rows = cursor.fetchall()
+        
+        if not rows:
+            return {'fetched_violations': []}
+        
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        
+        return {'fetched_violations':result}
+    
+    def fetch_reported_violation_by_violation_uuid(self, violation_uuid:str=None)-> dict:
+        query = '''
+        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid FROM reported_violations WHERE violation_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (violation_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('No violation found with the provided violation_uuid')
+
+        column_names = [description[0] for description in cursor.description]
+        return dict(zip(column_names, row))
+    
+    def delete_reported_violation_by_violation_uuid(self, violation_uuid:str=None)-> dict:
+        #check if the violation_uuid is valid
+        if violation_uuid is None or not isinstance(violation_uuid, str) or len(violation_uuid) == 0:
+            raise ValueError('Invalid violation_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(violation_uuid):
+            raise ValueError('Invalid violation_uuid provided')
+        
+        #check if the violation exists
+        query = '''
+        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid FROM reported_violations WHERE violation_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (violation_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Violation not found')
+        
+        violation_report_row = dict(zip([description[0] for description in cursor.description], row))
+
+        #delete the violation image if it exists
+        try:
+            self.delete_image_path_and_encrypted_image_by_image_uuid(violation_report_row['image_uuid'])
+        except Exception as e:
+            pass
+
+        #delete the violation from the table
+        query = '''
+        DELETE FROM reported_violations WHERE violation_uuid = ?
+        '''
+        self.conn.execute(query, (violation_uuid,))
+        self.conn.commit()
+        return violation_report_row
     
     # ========================================= image_paths ==============================================
     def __ensure_image_paths_table_exists(self):
@@ -130,7 +272,7 @@ class SQLManager:
         self.conn.commit()
         if self.VERBOSE: print(f"Ensured 'image_paths' table exists")
 
-    def __sync_images_and_image_paths(self):
+    def __sync_encrypted_images_and_image_paths_table(self):
         # Delete the iamge paths with no corresponding encrypted image
         query = '''
         SELECT image_uuid, encrypted_image_path FROM image_paths
@@ -233,7 +375,7 @@ class SQLManager:
             "image_category": image_category
         }
 
-    def get_encrypted_image_by_uuid(self, image_uuid: str) -> dict:
+    def get_encrypted_image_by_image_uuid(self, image_uuid: str) -> dict:
 
         # Retrieve the encrypted image path and random key from the database, also check if the path with the provided image_uuid exists
         query = '''
@@ -293,7 +435,44 @@ class SQLManager:
             "image_category": image_category,
             "image": image
         }
+
+    def delete_image_path_and_encrypted_image_by_image_uuid(self, image_uuid: str) -> dict:
+        # Retrieve the encrypted image path and random key from the database, also check if the path with the provided image_uuid exists
+        query = '''
+        SELECT image_uuid, random_key, encrypted_image_path, image_category FROM image_paths WHERE image_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (image_uuid,))
+        row = cursor.fetchone()
+        if row is None: 
+            raise ValueError('No image path entry found with the provided image_uuid')
         
+        # Unpack the row data
+        retrieved_image_uuid, random_key, encrypted_image_path, image_category = row
+       
+        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
+        if not os.path.exists(encrypted_image_path):          
+            query = '''
+            DELETE FROM image_paths WHERE image_uuid = ?
+            '''
+            self.conn.execute(query, (retrieved_image_uuid,))
+            self.conn.commit()            
+            raise ValueError('Encrypted image file not found with the provided image_uuid, will be marked as deleted in the database')
+        
+        # Delete the encrypted image file
+        os.remove(encrypted_image_path)
+
+        # Delete the row from the table
+        query = '''
+        DELETE FROM image_paths WHERE image_uuid = ?
+        '''
+        self.conn.execute(query, (retrieved_image_uuid,))
+        self.conn.commit()
+
+        return {
+            "image_uuid": retrieved_image_uuid,
+            "encrypted_image_path": encrypted_image_path,
+            "image_category": image_category
+        }    
     # ========================================= camera_last_frames ==============================================
 
     def __ensure_camera_last_frames_table_exists(self):
@@ -848,6 +1027,39 @@ class SQLManager:
         
         self.create_user(username=PREFERENCES.SAFETY_AI_USER_INFO['username'], personal_fullname=PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], plain_password=PREFERENCES.SAFETY_AI_USER_INFO['password'])
         if(self.VERBOSE): print(f"Safety AI user created successfully")
+
+    def __create_admin_user(self):
+        # Ensure the ADMIN_USER_INFO is properly set
+        if not isinstance(PREFERENCES.ADMIN_USER_INFO, dict) or len(PREFERENCES.ADMIN_USER_INFO) == 0:
+            raise ValueError('Invalid ADMIN_USER_INFO provided')
+        
+        # Ensure the ADMIN_USER_INFO contains the required keys
+        required_keys = ['username', 'password', 'personal_fullname']
+        for key in required_keys:
+            if key not in PREFERENCES.ADMIN_USER_INFO:
+                raise ValueError(f"ADMIN_USER_INFO missing key: '{key}'")
+        
+        # Ensure the ADMIN_USER_INFO values are proper
+        if not isinstance(PREFERENCES.ADMIN_USER_INFO['username'], str) or len(PREFERENCES.ADMIN_USER_INFO['username']) == 0:
+            raise ValueError('Invalid username provided in ADMIN_USER_INFO')
+        
+        if not isinstance(PREFERENCES.ADMIN_USER_INFO['password'], str) or len(PREFERENCES.ADMIN_USER_INFO['password']) == 0:
+            raise ValueError('Invalid password provided in ADMIN_USER_INFO')
+        
+        if not isinstance(PREFERENCES.ADMIN_USER_INFO['personal_fullname'], str) or len(PREFERENCES.ADMIN_USER_INFO['personal_fullname']) == 0:
+            raise ValueError('Invalid personal_fullname provided in ADMIN_USER_INFO')
+        
+        # Ensure the ADMIN_USER_INFO is not already created
+        query = '''
+        SELECT id FROM user_info WHERE username = ?
+        '''
+        cursor = self.conn.execute(query, (PREFERENCES.ADMIN_USER_INFO['username'],))
+        row = cursor.fetchone()
+        if row is not None:
+            return # Safety AI user already exists
+        
+        self.create_user(username=PREFERENCES.ADMIN_USER_INFO['username'], personal_fullname=PREFERENCES.ADMIN_USER_INFO['personal_fullname'], plain_password=PREFERENCES.ADMIN_USER_INFO['password'])
+        if(self.VERBOSE): print(f"Admin user created successfully")
 
     def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> dict:
         # Ensure username is proper

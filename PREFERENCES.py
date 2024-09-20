@@ -37,6 +37,7 @@ def calculate_folder_size_gb(folder_path: Path = None):
         return 0
     return sum(f.stat().st_size for f in folder_path.glob('**/*') if f.is_file()) / (1024**3)
 
+PREFERENCES_FILE_PATH = Path(__file__).resolve()
 # Definitions (Hardcoded)
 SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Used to encrypt-decrypt images. Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_LOCAL = 250     # 250 GB
@@ -64,6 +65,7 @@ DEFINED_RULES = {
     ],
     }
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
+ADMIN_USER_INFO = {"username": "admin", "password": "admin_password", "personal_fullname": "Admin User"}
 MUST_EXISTING_DATA_SUBFOLDER_PATHS = { 
         #NOTE: NEVER EVER CHANGE THE KEY NAMES
 
@@ -87,8 +89,6 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
         "api_server_database":  Path("api_server/database"),
 
     }
-
-PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
 if os.name == "nt":  # For Windows (i.e development environment)
     print("[INFO] Windows OS detected")
@@ -118,7 +118,6 @@ if os.name == "nt":  # For Windows (i.e development environment)
     update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
 
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
-
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     #NOTE: assumes that the script runs on docker container
     SERVER_IP_ADDRESS = "172.17.27.12"
@@ -194,26 +193,23 @@ SAFETY_AI_VERBOSES = {
     "frame_decoded": False,
     "frame_decoding_failed": True,
     "error_raised_rtsp": True,
-}
+    }
 
 # Models module related parameters
 MODELS_MODULE_VERBOSES = {
    "pose_detection_model_verbose": False,
    "hardhat_detection_model_verbose": False,
    "forklift_detection_model_verbose": False,
-}
-
+    }
 USED_MODELS = {
     "pose_detection_model_name": "yolov8x-pose", # yolov8n-pose, yolov8s-pose, yolov8m-pose, yolov8l-pose, yolov8x-pose
     "hardhat_detection_model_name": "hardhat_detector", # hardhat_detector
     "forklift_detection_model_name": "forklift_detector", # forklift_detector
-}
-
+    }
 SHOW_FRAMES = {
     "combined_violation_frame": True,
     "show_all_frames": True,
-}
-
+    }
 
 print(f"[INFO] The preferences file is loaded successfully")
 time.sleep(0.5) # Wait so that the user can read the printed information
