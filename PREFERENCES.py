@@ -76,9 +76,9 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     PRINT_MOUSE_COORDINATES = False
 
     # This is the volume path inside the docker container connected to local SSD
-    DATA_FOLDER_PATH_LOCAL = update_X_data_folder_and_DATA_FOLDER_PATH_X(data_folder_path= Path(__file__).parent.parent  / 'local_ssd_data_folder', must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    DATA_FOLDER_PATH_LOCAL = update_data_folder_and_DATA_FOLDER_PATH(is_external=False, data_folder_path= Path(__file__).parent.parent  / 'local_ssd_data_folder', must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
     # This is the volume path inside the docker container connected to external SSD
-    DATA_FOLDER_PATH_EXTERNAL = update_X_data_folder_and_DATA_FOLDER_PATH_X(data_folder_path= "/home/external_ssd_data_folder", must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    DATA_FOLDER_PATH_EXTERNAL = update_data_folder_and_DATA_FOLDER_PATH(is_external=True, data_folder_path= "/home/external_ssd_data_folder", must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
 
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
     SQL_DATABASE_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
