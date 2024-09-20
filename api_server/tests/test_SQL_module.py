@@ -9,7 +9,10 @@ from pathlib import Path
 API_SERVER_DIRECTORY = Path(__file__).resolve().parent.parent
 SAFETY_AI2_DIRECTORY = API_SERVER_DIRECTORY.parent
 sys.path.append(str(API_SERVER_DIRECTORY))
-sys.path.append(str(SAFETY_AI2_DIRECTORY))     
+sys.path.append(str(SAFETY_AI2_DIRECTORY))    
+print(f"API_SERVER_DIRECTORY: {API_SERVER_DIRECTORY}")
+print(f"SAFETY_AI2_DIRECTORY: {SAFETY_AI2_DIRECTORY}")
+ 
 import PREFERENCES
 from sql_module import SQLManager
 
