@@ -12,12 +12,13 @@ if __name__ == "__main__":
 import PREFERENCES
 
 # (-) Last time rule triggered table
-# (+ 1.1)   last_frames table
 # (+ 1.2)   reported_violations
 # (+ 1.2.1) image_paths table
-# (+ 1.4)   rules_info_table
-# (+ 1.5)   shift_counts_table
 
+# (+ 1.1)   last_frames table
+
+# (+ 1.4)   rules_info_table
+# (X)   shift_counts_table
 # (+ 1.3)   counts_table
 # (+ 1)     camera_info_table
 # (2)     user_info_table
@@ -48,13 +49,186 @@ class SQLManager:
         self.__ensure_authorization_table_exists()
         self.__ensure_camera_info_table_exists()
         self.__ensure_counts_table_exists()
+        self.__ensure_rules_info_table_exists()
 
         #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
    
     def close(self):
         self.conn.close()
+    
+    # ========================================= rules_info_table ==============================================
+    def __ensure_rules_info_table_exists(self):
+        # =======================================rules_info_table===================================================
+        # A table to store the rules for the cameras
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # rule_uuid             :(str) is a unique identifier for the rule
+        # rule_department       :(str) for example HSE, QUALITY, SECURITY etc.
+        # rule_type             :(str) for example hardhat_violation, restricted_area_violation etc.
+        # evaluation_method     :(str) There can be multiple methods to evaluate the same rule. This indicates the method to be used
+        # threshold_value       :(str,  [0, 1]) is the threshold value to evaluate the rule
+        # rule_polygon_str      :(str) is the polygon to indicate the area rule is applied. "x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn"
+        # ========================================================================================================
+        
+        query = '''
+        CREATE TABLE IF NOT EXISTS rules_info_table (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            camera_uuid TEXT NOT NULL,
+            rule_uuid TEXT NOT NULL,
+            rule_department TEXT NOT NULL,
+            rule_type TEXT NOT NULL,
+            evaluation_method TEXT NOT NULL,
+            threshold_value TEXT NOT NULL,
+            rule_polygon TEXT NOT NULL
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_rules_info_table
+            AFTER UPDATE ON rules_info_table
+            FOR EACH ROW
+            BEGIN
+                UPDATE rules_info_table 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+        '''        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'rules_info_table' table exists")
 
+    def create_rule(self, camera_uuid:str=None, rule_department:str=None, rule_type:str=None, evaluation_method:str=None, threshold_value:str=None, rule_polygon:str=None)->dict:
+        # Ensure camera_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        # Ensure a camera with the provided camera_uuid exists
+        camera_info = self.fetch_camera_info_by_uuid(camera_uuid=camera_uuid)
+        if camera_info is None:
+            raise ValueError('No camera found with the provided camera_uuid')
+        
+        # Ensure rule_department is proper
+        if rule_department not in PREFERENCES.DEFINED_DEPARTMENTS:
+            raise ValueError('Invalid rule_department provided')
+        
+        # Ensure rule_type is proper
+        if rule_type not in PREFERENCES.DEFINED_RULES.keys():
+            raise ValueError('Invalid rule_type provided')
+        
+        # Ensure evaluation_method is proper
+        if evaluation_method not in PREFERENCES.DEFINED_RULES[rule_type]:
+            raise ValueError('Invalid evaluation_method provided')
+                
+        # Ensure threshold_value is proper
+        if threshold_value is None or not isinstance(threshold_value, str) or len(threshold_value) == 0:
+            raise ValueError('Invalid threshold_value provided')
+        
+        if  float(threshold_value) < 0 or float(threshold_value) > 1:
+            raise ValueError('Invalid threshold_value provided')
+    
+        if not 0 <= float(threshold_value) <= 1:
+            raise ValueError('Invalid threshold_value provided, should be between 0 and 1')
+        
+        # Ensure rule_polygon is proper
+        # x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn
+        rule_polygon_list = rule_polygon.split(',')
+        if len(rule_polygon_list) % 2 != 0 or len(rule_polygon_list) < 6:
+            raise ValueError('Invalid rule_polygon provided')
+        for i in range(0, len(rule_polygon_list), 2):
+            float(rule_polygon_list[i]), float(rule_polygon_list[i+1]) # Check if they are floatable
+            if float(rule_polygon_list[i]) < 0 or float(rule_polygon_list[i]) > 1 or float(rule_polygon_list[i+1]) < 0 or float(rule_polygon_list[i+1]) > 1:
+                raise ValueError('Invalid rule_polygon provided, should be normalized')
+                  
+        # Generate a UUID for the rule
+        rule_uuid = str(uuid.uuid4())
+        
+        query = '''
+        INSERT INTO rules_info_table (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        '''
+        self.conn.execute(query, (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon))
+        self.conn.commit()
+
+        return {
+            "camera_uuid": camera_uuid,
+            "rule_uuid": rule_uuid,
+            "rule_department": rule_department,
+            "rule_type": rule_type,
+            "evaluation_method": evaluation_method,
+            "threshold_value": threshold_value,
+            "rule_polygon": rule_polygon
+        }
+    
+    def delete_rule_by_rule_uuid(self, rule_uuid:str=None)-> dict:
+        #check if the rule_uuid is valid
+        if rule_uuid is None or not isinstance(rule_uuid, str) or len(rule_uuid) == 0:
+            raise ValueError('Invalid rule_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(rule_uuid):
+            raise ValueError('Invalid rule_uuid provided')
+        
+        #check if the rule exists
+        query = '''
+        SELECT id FROM rules_info_table WHERE rule_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (rule_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Rule not found')
+
+        #delete the rule
+        query = '''
+        DELETE FROM rules_info_table WHERE rule_uuid = ?
+        '''
+        self.conn.execute(query, (rule_uuid,))
+        self.conn.commit()
+
+        return {
+            "rule_uuid": rule_uuid
+        }  
+    
+    def fetch_rules_by_camera_uuid(self, camera_uuid:str=None)-> list:
+        # Ensure camera_uuid is proper
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon FROM rules_info_table WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        rows = cursor.fetchall()
+        if rows is None:
+            return {'camera_rules':[]}
+
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        return {'camera_rules':result}
+    
+    def fetch_all_rules(self)-> list:
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon FROM rules_info_table
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        if rows is None:
+            return None
+
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        return {'all_rules':result}
+    
     # ========================================= counts_table ==============================================
     def __ensure_counts_table_exists(self):
         # ======================================== counts_table ====================================================

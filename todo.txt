@@ -13,3 +13,4 @@
 # client ui pip install -r requirements.txt for raspberry pi (desktop)
 # Switch between cameras
 # Rule trigger checks table
+# Show only the joints of the persons in the image for the UI using background

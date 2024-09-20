@@ -176,7 +176,6 @@ print(f"\tIs camera deleted: {is_deleted}")
 print("Fetching all cameras")
 all_cameras = sql_manager.fetch_all_camera_info()
 pprint.pprint(all_cameras)
-
 #================================Testing 'counts_table' table functionality======================================================
 print(f"{'='*100}\nTesting 'counts_table' table functionality\n{'='*100}")
 
@@ -213,6 +212,78 @@ for key in new_count_key:
 print(f"\n(6) Fetching all counts")
 all_counts = sql_manager.fetch_all_counts()
 pprint.pprint(all_counts)
+
+#================================Testing 'rules_info_table' table functionality======================================================
+print(f"{'='*100}\nTesting 'rules_info_table' table functionality\n{'='*100}")
+print("defined_departments:")
+pprint.pprint(PREFERENCES.DEFINED_DEPARTMENTS)
+print("defined_rules:")
+pprint.pprint(PREFERENCES.DEFINED_RULES)
+
+print(f"\nCreating a camera with \n\tcamera_ip_address:'{test_camera_info['camera_ip_address']}'\n\tcamera_region:'{test_camera_info['camera_region']}'\n\tcamera_description:'{test_camera_info['camera_description']}'\n\tusername:'{test_camera_info['username']}'\n\tpassword:'{test_camera_info['password']}'\n\tstream_path:'{test_camera_info['stream_path']}'\n\tcamera_status:'{test_camera_info['camera_status']}'")
+rule_camera_1 = sql_manager.create_camera_info(camera_ip_address=test_camera_info['camera_ip_address'], camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
+pprint.pprint(rule_camera_1)
+
+choosen_type = random.choice(list(PREFERENCES.DEFINED_RULES.keys()))
+test_rule = {
+    "camera_uuid" : rule_camera_1['camera_uuid'],
+    "rule_department": random.choice(PREFERENCES.DEFINED_DEPARTMENTS),
+    "rule_type": choosen_type,
+    "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
+    "threshold_value": f"{random.uniform(0, 1):.3f}",
+    "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
+}
+
+print(f"\n(1) Creating a rule with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\trule_polygon:'{test_rule['rule_polygon']}'")
+rule_dict_create_rule = sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], rule_polygon=test_rule['rule_polygon'])
+pprint.pprint(rule_dict_create_rule)
+
+print(f"\n(2) Fetching the rule by rule_uuid:'{rule_dict_create_rule['rule_uuid']}'")
+rule_dict_by_uuid = sql_manager.fetch_rules_by_camera_uuid(camera_uuid=test_rule['camera_uuid'])
+pprint.pprint(rule_dict_by_uuid)
+
+print(f"\n(3) Deleting the rule by rule_uuid:'{rule_dict_create_rule['rule_uuid']}'")
+is_deleted = sql_manager.delete_rule_by_rule_uuid(rule_uuid=rule_dict_create_rule['rule_uuid'])
+print(f"\tIs rule deleted: {is_deleted}")
+
+print(f"\nFetching all rules")
+all_rules = sql_manager.fetch_all_rules()
+pprint.pprint(all_rules)
+
+print(f"\n(4) Fetching all rules where 2 cameras exists")
+print("Creating a second camera")
+rule_camera_2 = sql_manager.create_camera_info(camera_ip_address="1.1.1.2", camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
+pprint.pprint(rule_camera_2)
+
+print("\nAssigning random rules to camera 1 & 2")
+for _ in range(random.randint(1, 5)):
+    choosen_type = random.choice(list(PREFERENCES.DEFINED_RULES.keys()))
+    test_rule = {
+        "camera_uuid" : rule_camera_1['camera_uuid'],
+        "rule_department": random.choice(PREFERENCES.DEFINED_DEPARTMENTS),
+        "rule_type": choosen_type,
+        "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
+        "threshold_value": f"{random.uniform(0, 1):.3f}",
+        "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
+    }
+    print(f"Creating a rule for camera-1 with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\trule_polygon:'{test_rule['rule_polygon']}'")
+    sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], rule_polygon=test_rule['rule_polygon'])
+
+for _ in range(random.randint(1, 5)):
+    choosen_type = random.choice(list(PREFERENCES.DEFINED_RULES.keys()))
+    test_rule = {
+        "camera_uuid" : rule_camera_2['camera_uuid'],
+        "rule_department": random.choice(PREFERENCES.DEFINED_DEPARTMENTS),
+        "rule_type": choosen_type,
+        "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
+        "threshold_value": f"{random.uniform(0, 1):.3f}",
+        "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
+    }
+    print(f"Creating a rule for camera-2 with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\trule_polygon:'{test_rule['rule_polygon']}'")
+    sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], rule_polygon=test_rule['rule_polygon'])
+
+all_rules = sql_manager.fetch_all_rules()
+pprint.pprint(all_rules)
 
 # TODO: print test results
 # TODO: delete the test database
