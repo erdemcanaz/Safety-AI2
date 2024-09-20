@@ -51,7 +51,7 @@ DEFINED_AUTHORIZATIONS = [
             'SUMMARY_PAGE',
             'UPDATE_CAMERAS',
             'IOT_DEVICES'
-]
+    ]
 DEFINED_RULES = {
     "hardhat_violation": [
         "v1", # People are detected via pose detection. Then their head is centered with 320x320 image. Image is then resized to 640x640 and fed to the hardhat detection model.
@@ -60,7 +60,7 @@ DEFINED_RULES = {
         "v1", # People are detected via pose detection. If their ankle is inside the restricted area, then it is a violation.
         "v2"  # People are detected via pose detection. If thier bbox-center is inside the restricted area, then it is a violation.
     ],
-}
+    }
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
 MUST_EXISTING_DATA_SUBFOLDER_PATHS = { 
         #NOTE: NEVER EVER CHANGE THE KEY NAMES
@@ -139,7 +139,7 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     if not is_external_available:
         raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
                         
-    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
+    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 
     # NOTE: When the external volume is disconnected, inside the Docker container, the directory 
     # /home/external_ssd_data_folder is still present as a bind mount. However, its contents are 
