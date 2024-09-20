@@ -119,13 +119,14 @@ if os.name == "nt":  # For Windows (i.e development environment)
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
+    #NOTE: assumes that the script runs on docker container
     SERVER_IP_ADDRESS = "172.17.27.12"
     CLEAR_TERMINAL_COMMAND = "clear"
     PRINT_MOUSE_COORDINATES = False
 
     # ENSURE THAT THE LOCAL SSD and EXTERNAL SSD IS MOUNTED TO THE CONTAINER PROPERLY
-    DATA_FOLDER_PATH_LOCAL = Path('home') / 'local_ssd_data_folder'
-    DATA_FOLDER_PATH_EXTERNAL = Path('home') / 'external_ssd_data_folder'
+    DATA_FOLDER_PATH_LOCAL = Path('/home') / 'local_ssd_data_folder'
+    DATA_FOLDER_PATH_EXTERNAL = Path('/home') / 'external_ssd_data_folder'
     print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
@@ -148,7 +149,7 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     # now inaccessible because the underlying host directory is no longer mounted.
     # DO: always call 'def check_if_folder_accesible(folder_path: Path = None)->bool' to check if the folder is accessible 
     # before reading or writing to it.
-    
+
 else:
     raise Exception("Unknown operating system")
 
