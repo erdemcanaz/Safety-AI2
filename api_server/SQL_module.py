@@ -6,18 +6,6 @@ import os, re, hashlib, time, sys, pprint
 from pathlib import Path
 import PREFERENCES
 
-# (iot device rule match) also the action code
-
-# (+ 1.2)   reported_violations
-# (+ 1.2.1) image_paths table
-# (+ 1.1)   camera_last_frames table
-# (+ 1.4)   rules_info_table
-# (X)   shift_counts_table
-# (+ 1.3)   counts_table
-# (+ 1)     camera_info_table
-# (2)     user_info_table
-# (2.1)   authorizations_table
-
 class SQLManager:
     def __init__(self, db_path=None, verbose=False, overwrite_existing_db=False): 
         self.DB_PATH = db_path
@@ -45,6 +33,8 @@ class SQLManager:
         self.__ensure_camera_last_frames_table_exists()
         self.__ensure_image_paths_table_exists()
         self.__ensure_reported_violations_table_exists()
+        self.__ensure_iot_devices_table_exists()
+        self.__ensure_iot_device_and_rule_relations_table_exists()
 
         #Ensure a user is registered for the safety AI | first user !
         self.__create_safety_ai_user() 
@@ -90,6 +80,135 @@ class SQLManager:
         
         return cv2.imdecode(np.frombuffer(base64.b64decode(base_64_encoded_jpg_image_bytes), dtype=np.uint8), cv2.IMREAD_COLOR)
     
+    # ================================iot_device_and_rule_relations==============================
+    def __ensure_iot_device_and_rule_relations_table_exists(self):
+        # =======================================iot_device_and_rule_relations===================================================
+        # A table to store the iot devices and their rules
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # relation_uuid         :(str) is a unique identifier for the relation
+        # device_uuid           :(str) is a unique identifier for the device        
+        # rule_uuid             :(str) is a unique identifier for the rule
+        # which_action          :(str) is the action code for the rule (8bit unsigned int)
+        # ========================================================================================================
+        query = '''
+        CREATE TABLE IF NOT EXISTS iot_device_and_rule_relations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            relation_uuid TEXT NOT NULL,
+            device_uuid TEXT NOT NULL,
+            rule_uuid TEXT NOT NULL,
+            which_action TEXT NOT NULL 
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_iot_device_and_rule_relations
+            AFTER UPDATE ON iot_device_and_rule_relations
+            FOR EACH ROW
+            BEGIN
+                UPDATE iot_device_and_rule_relations 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+            '''
+
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'iot_device_and_rule_relations' table exists")
+    
+    def add_iot_device_and_rule_relation(self, device_uuid:str=None, rule_uuid:str=None, which_action:str = None)-> dict:
+        # Ensure device_uuid is proper
+        if device_uuid is None or not isinstance(device_uuid, str) or len(device_uuid) == 0:
+            raise ValueError('Invalid device_uuid provided')
+        
+        # Ensure rule_uuid is proper
+        if rule_uuid is None or not isinstance(rule_uuid, str) or len(rule_uuid) == 0:
+            raise ValueError('Invalid rule_uuid provided')
+        
+        # Ensure which_action is proper        
+        if not 0<=int(which_action)<=255:
+            raise ValueError('Invalid which_action provided')
+        
+        # Ensure the device exists
+        query = '''
+        SELECT device_uuid, device_name, device_id FROM iot_devices WHERE device_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (device_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Device not found')
+        
+        # Ensure the rule exists
+        query = '''
+        SELECT * FROM rules_info_table WHERE rule_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (rule_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Rule not found')
+               
+
+        # Insert the device-rule relation to the table
+        relation_uuid = str(uuid.uuid4())
+        query = '''
+        INSERT INTO iot_device_and_rule_relations (relation_uuid, device_uuid, rule_uuid, which_action)
+        VALUES (?, ?, ?, ? )
+        '''
+        self.conn.execute(query, (relation_uuid, device_uuid, rule_uuid, str(int(which_action))))
+        self.conn.commit()
+        return {    
+            "relation_uuid": relation_uuid,
+            "device_uuid": device_uuid,
+            "rule_uuid": rule_uuid,
+            "which_action": str(int(which_action))
+        }
+    
+    def fetch_all_iot_device_and_rule_relations(self)-> dict:
+        query = '''
+        SELECT relation_uuid, device_uuid, rule_uuid, which_action FROM iot_device_and_rule_relations
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        if not rows:
+            return {'all_iot_device_and_rule_relations': []}
+        
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        
+        return {'all_iot_device_and_rule_relations':result}
+    
+    def remove_iot_device_and_rule_relation_by_relation_uuid(self, relation_uuid:str=None)-> dict:
+        #check if the relation_uuid is valid
+        if relation_uuid is None or not isinstance(relation_uuid, str) or len(relation_uuid) == 0:
+            raise ValueError('Invalid relation_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(relation_uuid):
+            raise ValueError('Invalid relation_uuid provided')
+        
+        #check if the relation exists
+        query = '''
+        SELECT relation_uuid, device_uuid, rule_uuid, which_action FROM iot_device_and_rule_relations WHERE relation_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (relation_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Relation not found')
+        
+        relation_row = dict(zip([description[0] for description in cursor.description], row))
+
+        #delete the relation from the table
+        query = '''
+        DELETE FROM iot_device_and_rule_relations WHERE relation_uuid = ?
+        '''
+        self.conn.execute(query, (relation_uuid,))
+        self.conn.commit()
+        return relation_row
+    
     # ======================================= iot_device ========================================
     def __ensure_iot_devices_table_exists(self):
         # =======================================iot_devices===================================================
@@ -100,16 +219,16 @@ class SQLManager:
         # date_updated          :(TIMESTAMP) is the date and time the record was last updated
         # device_uuid           :(str) is a unique identifier for the device
         # device_name           :(str) is the name of the device
-        # device_id             :(str) is the id of the device, used to send data to the device (16 bit unsigned integer)
+        # device_id             :(str) is the id of the device, used to send data to the device, do not need to be unique (16 bit unsigned integer)
         # ========================================================================================================
-        query = '''
+        query ='''
         CREATE TABLE IF NOT EXISTS iot_devices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             device_uuid TEXT NOT NULL,
             device_name TEXT NOT NULL,
-            device_id TEXT NOT NULL,
+            device_id TEXT NOT NULL
         )
         '''
         trigger_query = '''
@@ -122,9 +241,11 @@ class SQLManager:
                 WHERE id = OLD.id;
             END;
         '''        
+
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
+
         if self.VERBOSE: print(f"Ensured 'iot_devices' table exists")
     
     def create_iot_device(self, device_name:str=None, device_id:str=None)->dict:
@@ -136,14 +257,12 @@ class SQLManager:
         if device_id is None or not isinstance(device_id, str) or len(device_id) == 0:
             raise ValueError('Invalid device_id provided')
         
-        # Ensure device_id is a 16 bit unsigned integer
+        # Ensure device_id is integer castable
         try:
             device_id = int(device_id)
-            if device_id < 0 or device_id > 65535:
-                raise ValueError('Invalid device_id provided')
         except:
             raise ValueError('Invalid device_id provided')
-        
+               
         # Generate a unique device_uuid
         device_uuid = str(uuid.uuid4())
         
@@ -157,8 +276,51 @@ class SQLManager:
         return {
             "device_uuid": device_uuid,
             "device_name": device_name,
-            "device_id": device_id
+            "device_id": str(int(device_id))
         }
+    
+    def delete_iot_device_by_device_uuid(self, device_uuid:str=None)-> dict:
+        #check if the device_uuid is valid
+        if device_uuid is None or not isinstance(device_uuid, str) or len(device_uuid) == 0:
+            raise ValueError('Invalid device_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(device_uuid):
+            raise ValueError('Invalid device_uuid provided')
+        
+        #check if the device exists
+        query = '''
+        SELECT device_uuid, device_name, device_id FROM iot_devices WHERE device_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (device_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Device not found')
+        
+        device_row = dict(zip([description[0] for description in cursor.description], row))
+
+        #delete the device from the table
+        query = '''
+        DELETE FROM iot_devices WHERE device_uuid = ?
+        '''
+        self.conn.execute(query, (device_uuid,))
+        self.conn.commit()
+        return device_row
+    
+    def fetch_all_iot_devices(self)-> dict:
+        query = '''
+        SELECT device_uuid, device_name, device_id FROM iot_devices
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        if not rows:
+            return {'all_iot_devices': []}
+        
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        
+        return {'all_iot_devices':result}
+    
     # ======================================= reported_violations ========================================
     def __ensure_reported_violations_table_exists(self):
         # ========================================reported_violations==================================================

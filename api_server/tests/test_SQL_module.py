@@ -369,6 +369,7 @@ except Exception as e:
     print(f"Error raised: {e}")
 
 print(f"\n(4) Corrupting the SQL_MANAGER_SECRET_KEY and then fetching the image path by image_uuid:'{test_image_info['image_uuid']}'")
+initial_key = PREFERENCES.SQL_MANAGER_SECRET_KEY
 PREFERENCES.SQL_MANAGER_SECRET_KEY = b'G4ECs6lRrm6HXbtBdMwFoLA18iqaaaaa'
 try:
     get_result = sql_manager.get_encrypted_image_by_image_uuid(image_uuid=post_result['image_uuid'])
@@ -378,6 +379,8 @@ try:
 except Exception as e:
     print(f"Error raised: {e}")
 
+print(f"Restoring the SQL_MANAGER_SECRET_KEY to the initial value")
+PREFERENCES.SQL_MANAGER_SECRET_KEY = initial_key
 # ================================= Testing 'reported_violations' table functionality =================================
 time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 print(f"{'='*100}\nTesting 'reported_violations' table functionality\n{'='*100}")
@@ -443,13 +446,115 @@ except Exception as e:
     print(f"Error raised: {e}")
 
 # ================================= Testing 'iot_devices' table functionality =================================
-# TODO:
+print(f"{'='*100}\nTesting 'iot_devices' table functionality\n{'='*100}")
+print(f"\n(1) Creating two IoT devices")
+iot_device_1_info = {
+    "device_name": "test_device_1",
+    "device_id": "12",
+}
+iot_device_2_info = {
+    "device_name": "test_device_2",
+    "device_id": "13",
+}
+iot_device_1 = sql_manager.create_iot_device(**iot_device_1_info)
+pprint.pprint(iot_device_1)
+iot_device_2 = sql_manager.create_iot_device(**iot_device_2_info)
+pprint.pprint(iot_device_2)
+
+print(f"\n(2) Fetching all IoT devices")
+all_iot_devices = sql_manager.fetch_all_iot_devices()
+pprint.pprint(all_iot_devices)
+
+print(f"\n(3) deleting the IoT devices by device_uuids {iot_device_1['device_uuid']} and {iot_device_2['device_uuid']}")
+deleted_1 = sql_manager.delete_iot_device_by_device_uuid(device_uuid=iot_device_1['device_uuid'])
+pprint.pprint(deleted_1)
+
+print(f"Fetching all IoT devices")
+all_iot_devices = sql_manager.fetch_all_iot_devices()
+pprint.pprint(all_iot_devices)
+
+deleted_2 = sql_manager.delete_iot_device_by_device_uuid(device_uuid=iot_device_2['device_uuid'])
+pprint.pprint(deleted_2)
+
+print(f"Fetching all IoT devices")
+all_iot_devices = sql_manager.fetch_all_iot_devices()
+pprint.pprint(all_iot_devices)
 
 # ================================= Testing 'iot_device_and_rule' table functionality =================================
-#TODO:
-
-
 time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
+print(f"{'='*100}\nTesting 'iot_device_and_rule_relations' table functionality\n{'='*100}")
+
+print(f"\n(1)  Creating a device-rule relation")
+
+camera_ip = str(random.randint(0,255))+"."+str(random.randint(0,255))+"."+str(random.randint(0,255))+"."+str(random.randint(0,255))
+print(f"\nCreating a camera with \n\tcamera_ip_address:'{camera_ip}'\n\tcamera_region:'{test_camera_info['camera_region']}'\n\tcamera_description:'{test_camera_info['camera_description']}'\n\tusername:'{test_camera_info['username']}'\n\tpassword:'{test_camera_info['password']}'\n\tstream_path:'{test_camera_info['stream_path']}'\n\tcamera_status:'{test_camera_info['camera_status']}'")
+relation_camera = sql_manager.create_camera_info(camera_ip_address=camera_ip, camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
+pprint.pprint(relation_camera)
+
+print("Creating a rule")
+choosen_type = random.choice(list(PREFERENCES.DEFINED_RULES.keys()))
+test_rule = {
+    "camera_uuid" : relation_camera['camera_uuid'],
+    "rule_department": random.choice(PREFERENCES.DEFINED_DEPARTMENTS),
+    "rule_type": choosen_type,
+    "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
+    "threshold_value": f"{random.uniform(0, 1):.3f}",
+    "fol_threshold_value": f"{random.uniform(0, 1):.3f}",
+    "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
+}
+created_rule = sql_manager.create_rule(**test_rule)
+pprint.pprint(created_rule)
+
+print(f"Creating a iot-device")
+iot_device_info = {
+    "device_name": "test_device_1",
+    "device_id": "12",
+}
+iot_device_1 = sql_manager.create_iot_device(**iot_device_info)
+pprint.pprint(iot_device_1)
+
+print(f"Creating a device-rule relation")
+relation_info = {
+    "device_uuid": iot_device_1['device_uuid'],
+    "rule_uuid": created_rule['rule_uuid'],
+    "which_action": str(random.randint(0,255))
+}
+created_relation_1 = sql_manager.add_iot_device_and_rule_relation(**relation_info)
+pprint.pprint(created_relation_1)
+
+print("adding a second relation")
+relation_info = {
+    "device_uuid": iot_device_1['device_uuid'],
+    "rule_uuid": created_rule['rule_uuid'],
+    "which_action": str(random.randint(0,255))
+}
+created_relation_2 = sql_manager.add_iot_device_and_rule_relation(**relation_info)
+pprint.pprint(created_relation_2)
+
+print(f"\n(2) Fetching all device-rule relations")
+all_relations = sql_manager.fetch_all_iot_device_and_rule_relations()
+pprint.pprint(all_relations)
+
+print(f"\n(3) Deleting the device-rule relation by relation_uuid:{created_relation_1['relation_uuid']}")
+
+print("Deleting the first relation")
+is_deleted = sql_manager.remove_iot_device_and_rule_relation_by_relation_uuid(relation_uuid=created_relation_1['relation_uuid'])
+pprint.pprint(is_deleted)
+
+print(f"Fetching all device-rule relations")
+all_relations = sql_manager.fetch_all_iot_device_and_rule_relations()
+pprint.pprint(all_relations)
+
+print("Deleting the second relation")
+is_deleted = sql_manager.remove_iot_device_and_rule_relation_by_relation_uuid(relation_uuid=created_relation_2['relation_uuid'])
+pprint.pprint(is_deleted)
+
+print(f"Fetching all device-rule relations")
+all_relations = sql_manager.fetch_all_iot_device_and_rule_relations()
+pprint.pprint(all_relations)
+
+
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to finish the tests...")
 cv2.destroyAllWindows()
 sql_manager.close() #otherwise the database will be locked and cannot be deleted
 
