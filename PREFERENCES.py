@@ -1,19 +1,33 @@
 import os, psutil, platform, subprocess
 if os.name == "nt": import win32api, win32file
 from pathlib import Path
-import psutil, datetime
+import psutil, datetime, time
 
-def update_data_folder_and_DATA_FOLDER_PATH(is_external:bool = None, data_folder_path:Path = None, must_existing_data_subfolder_paths = None):
-    if data_folder_path is None:
-        raise ValueError("data_folder_path_external is None")
+#check if year is less than 2024, raise error
+if datetime.datetime.now().year < 2024:
+    raise ValueError("System year is less than 2024, Please ensure the system date and time is correct, best way to connect device to the internet and it will likely to automatically update the date and time")
+
+def update_data_folder(is_external:bool = None, data_folder_path:Path = None, must_existing_data_subfolder_paths = None):   
+    if data_folder_path == None or not isinstance(data_folder_path, Path):
+        raise ValueError("data_folder_path is None or not a Path object")
     
     if is_external:
-        if not os.path.exists(data_folder_path):
-            data_folder_path = None #reset data_folder_path_external
-            return data_folder_path
+        is_parent_folder_accessible = os.path.isdir(data_folder_path.parent) and os.access(data_folder_path.parent, os.R_OK | os.W_OK)
+        is_folder_exists = os.path.isdir(data_folder_path)
+        if is_parent_folder_accessible and not is_folder_exists:
+            os.makedirs(data_folder_path, exist_ok=True)
+        else:
+            return # The external drive is not mounted to the container properly, thus can not create the data_folder_path and its subfolders
     else:
-        if not os.path.exists(data_folder_path):
-            os.makedirs(data_folder_path, exist_ok=True)           
+        is_parent_folder_accessible = os.path.isdir(data_folder_path.parent) and os.access(data_folder_path.parent, os.R_OK | os.W_OK)
+        is_folder_exists = os.path.isdir(data_folder_path)
+        print(f"[INFO] Checking if the folder '{data_folder_path}' is accessible")
+        print(f"[INFO] is_parent_folder_accessible: {is_parent_folder_accessible}, is_folder_exists: {is_folder_exists}")
+        print(f"[INFO] is_external: {is_external}, data_folder_path: {data_folder_path}, must_existing_data_subfolder_paths: {must_existing_data_subfolder_paths}")
+        if is_parent_folder_accessible and not is_folder_exists:
+            os.makedirs(data_folder_path, exist_ok=True)
+        else:
+            return            
     
     for subfolder_key, subfolder_path in must_existing_data_subfolder_paths.items():
         if not os.path.exists(data_folder_path / subfolder_path):
@@ -22,6 +36,12 @@ def update_data_folder_and_DATA_FOLDER_PATH(is_external:bool = None, data_folder
                f.write(f"Created at: {datetime.datetime.now()}:\nData Folder Path: {data_folder_path}\nSubfolder Key: {subfolder_key}\nSubfolder Path: {subfolder_path}")
            
     return Path(data_folder_path)
+
+def check_if_folder_accesible(folder_path: Path = None):  
+    print(f"[INFO] Checking if the folder '{folder_path}' is accessible")  
+    if not isinstance(folder_path, Path):
+        return False
+    return os.path.isdir(folder_path) and os.access(folder_path, os.R_OK | os.W_OK)
 
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
@@ -73,29 +93,62 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
     }
 
 if os.name == "nt":  # For Windows (i.e development environment)
+    print("[INFO] Windows OS detected")
     SERVER_IP_ADDRESS = "192.168.0.26"
     CLEAR_TERMINAL_COMMAND = "cls"
     PRINT_MOUSE_COORDINATES = True
     
-    DATA_FOLDER_PATH_LOCAL = update_data_folder_and_DATA_FOLDER_PATH(is_external = False, data_folder_path= Path(__file__).parent.resolve() /'api_server_2' / 'local_ssd_data_folder', must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
-    DATA_FOLDER_PATH_EXTERNAL = update_data_folder_and_DATA_FOLDER_PATH(is_external = True, data_folder_path= Path("E:"), must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    # ENSURE THAT THE LOCAL SSD and EXTERNAL USB IS MOUNTED TO THE CONTAINER PROPERLY
+    DATA_FOLDER_PATH_LOCAL = Path(__file__).parent.resolve() /'api_server_2' / 'local_ssd_data_folder'
+    DATA_FOLDER_PATH_EXTERNAL = Path("E:")
+    print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
+    print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
-    print(f"DATA_FOLDER_PATH_LOCAL: {DATA_FOLDER_PATH_LOCAL}")
-    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
-    SQL_DATABASE_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
+    update_data_folder(is_external = False, data_folder_path= DATA_FOLDER_PATH_LOCAL , must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    update_data_folder(is_external = True, data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    is_local_available = check_if_folder_accesible(DATA_FOLDER_PATH_LOCAL)
+    is_external_available = check_if_folder_accesible(DATA_FOLDER_PATH_EXTERNAL)
+    print(f"[INFO] The local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
+    print(f"[INFO] The external path '{DATA_FOLDER_PATH_EXTERNAL}' : {'is available' if is_external_available else 'is not available'}")
+
+    if not is_local_available:
+        raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
+    if not is_external_available:
+        raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
+                        
+    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SERVER_IP_ADDRESS = "172.17.27.12"
     CLEAR_TERMINAL_COMMAND = "clear"
     PRINT_MOUSE_COORDINATES = False
 
-    # This is the volume path inside the docker container connected to local SSD
-    DATA_FOLDER_PATH_LOCAL = update_data_folder_and_DATA_FOLDER_PATH(is_external=False, data_folder_path= Path(__file__).parent.parent  / 'local_ssd_data_folder', must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
-    # This is the volume path inside the docker container connected to external SSD
-    DATA_FOLDER_PATH_EXTERNAL = update_data_folder_and_DATA_FOLDER_PATH(is_external=True, data_folder_path= "/home/external_ssd_data_folder", must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    # ENSURE THAT THE LOCAL SSD and EXTERNAL SSD IS MOUNTED TO THE CONTAINER PROPERLY
+    DATA_FOLDER_PATH_LOCAL = Path('home') / 'local_ssd_data_folder'
+    DATA_FOLDER_PATH_EXTERNAL = Path('home') / 'external_ssd_data_folder'
+    print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
+    print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
-    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
-    SQL_DATABASE_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
+    update_data_folder(is_external = False, data_folder_path= DATA_FOLDER_PATH_LOCAL , must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    update_data_folder(is_external = True, data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    is_local_available = check_if_folder_accesible(DATA_FOLDER_PATH_LOCAL)
+    is_external_available = check_if_folder_accesible(DATA_FOLDER_PATH_EXTERNAL)
+    print(f"[INFO] The local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
+    print(f"[INFO] The external path '{DATA_FOLDER_PATH_EXTERNAL}' : {'is available' if is_external_available else 'is not available'}")
+
+    if not is_local_available:
+        raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
+    if not is_external_available:
+        raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
+                        
+    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
+
+    # NOTE: When the external volume is disconnected, inside the Docker container, the directory 
+    # /home/external_ssd_data_folder is still present as a bind mount. However, its contents are 
+    # now inaccessible because the underlying host directory is no longer mounted.
+    # DO: always call 'def check_if_folder_accesible(folder_path: Path = None)->bool' to check if the folder is accessible 
+    # before reading or writing to it.
+    
 else:
     raise Exception("Unknown operating system")
 

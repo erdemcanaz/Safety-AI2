@@ -14,3 +14,4 @@
 # Switch between cameras
 # Rule trigger checks table
 # Show only the joints of the persons in the image for the UI using background
+# if external ssd is connected, save images and PDF reports to the external ssd otherwise save to the local drive. Check each time trying to save images and PDF reports
