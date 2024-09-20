@@ -7,6 +7,7 @@ from pathlib import Path
 import PREFERENCES
 
 class SQLManager:
+    
     def __init__(self, db_path=None, verbose=False, overwrite_existing_db=False): 
         self.DB_PATH = db_path
         self.VERBOSE = verbose     
