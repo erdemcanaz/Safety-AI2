@@ -3,10 +3,6 @@ if os.name == "nt": import win32api, win32file
 from pathlib import Path
 import psutil, datetime, time
 
-#check if year is less than 2024, raise error
-if datetime.datetime.now().year < 2024:
-    raise ValueError("System year is less than 2024, Please ensure the system date and time is correct, best way to connect device to the internet and it will likely to automatically update the date and time")
-
 def update_data_folder(data_folder_path:Path = None, must_existing_data_subfolder_paths = None):      
     if data_folder_path == None or not isinstance(data_folder_path, Path):
         raise ValueError("data_folder_path is None or not a Path object")
@@ -36,7 +32,10 @@ def check_if_folder_accesible(folder_path: Path = None):
         return False
     return os.path.isdir(folder_path) and os.access(folder_path, os.R_OK | os.W_OK)
 
-PREFERENCES_FILE_PATH = Path(__file__).resolve()
+def calculate_folder_size_gb(folder_path: Path = None):
+    if not isinstance(folder_path, Path):
+        return 0
+    return sum(f.stat().st_size for f in folder_path.glob('**/*') if f.is_file()) / (1024**3)
 
 # Definitions (Hardcoded)
 DEFINED_CAMERA_STATUSES = ["active", "inactive"]
@@ -83,6 +82,8 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
         "api_server_database":  Path("api_server/database"),
 
     }
+
+PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
 if os.name == "nt":  # For Windows (i.e development environment)
     print("[INFO] Windows OS detected")
@@ -145,9 +146,15 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     # now inaccessible because the underlying host directory is no longer mounted.
     # DO: always call 'def check_if_folder_accesible(folder_path: Path = None)->bool' to check if the folder is accessible 
     # before reading or writing to it.
-
 else:
-    raise Exception("Unknown operating system")
+    raise Exception("Not supported operating system")
+
+print(f"[INFO] Size of the local data folder: {calculate_folder_size_gb(DATA_FOLDER_PATH_LOCAL):.2f} GB")
+print(f"[INFO] Size of the external data folder: {calculate_folder_size_gb(DATA_FOLDER_PATH_EXTERNAL):.2f} GB")
+
+# Check if year is less than 2024, if so raise an error
+if datetime.datetime.now().year < 2024:
+    raise ValueError("System year is less than 2024, Please ensure the system date and time is correct, best way to connect device to the internet and it will likely to automatically update the date and time")
 
 # Safety-AI related parameters
 PERSON_BBOX_BLUR_KERNEL_SIZE = 31 # Odd number
