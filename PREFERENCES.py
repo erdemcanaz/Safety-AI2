@@ -96,10 +96,6 @@ if os.name == "nt":  # For Windows (i.e development environment)
     print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
-    print(f"[INFO] Ensuring the data folders exists and subfolders are created")
-    update_data_folder( data_folder_path= DATA_FOLDER_PATH_LOCAL , must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
-    update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
-    
     is_local_available = check_if_folder_accesible(DATA_FOLDER_PATH_LOCAL)
     is_external_available = check_if_folder_accesible(DATA_FOLDER_PATH_EXTERNAL)
     print(f"[INFO] The local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
@@ -109,10 +105,12 @@ if os.name == "nt":  # For Windows (i.e development environment)
         raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
     if not is_external_available:
         raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
-                        
-    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 
-    time.sleep(20)
+    print(f"[INFO] Ensuring the data folder's subfolders are created")
+    update_data_folder( data_folder_path= DATA_FOLDER_PATH_LOCAL , must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+
+    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     #NOTE: assumes that the script runs on docker container
@@ -126,9 +124,6 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     print(f"[INFO] The local data folder path is set to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is set to: '{DATA_FOLDER_PATH_EXTERNAL}'")
 
-    print(f"[INFO] Ensuring the data folders exists and subfolders are created")
-    update_data_folder( data_folder_path= DATA_FOLDER_PATH_LOCAL , must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
-    update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
     is_local_available = check_if_folder_accesible(DATA_FOLDER_PATH_LOCAL)
     is_external_available = check_if_folder_accesible(DATA_FOLDER_PATH_EXTERNAL)
     print(f"[INFO] The local path '{DATA_FOLDER_PATH_LOCAL}' : {'is available' if is_local_available else 'is not available'}")
@@ -138,7 +133,11 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
         raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
     if not is_external_available:
         raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
-                        
+
+    print(f"[INFO] Ensuring the data folder's subfolders are created")    
+    update_data_folder( data_folder_path= DATA_FOLDER_PATH_LOCAL , must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+   
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 
     # NOTE: When the external volume is disconnected, inside the Docker container, the directory 
