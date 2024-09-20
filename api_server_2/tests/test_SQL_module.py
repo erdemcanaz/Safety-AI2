@@ -14,12 +14,12 @@ import PREFERENCES
 from sql_module import SQLManager
 
 
-WAIT_TIME_BETWEEN_TESTS = 10 #seconds
+WAIT_TIME_BETWEEN_TESTS = 1 #seconds
 print(f"{'='*100}\nTesting the SQLManager class for proper functionality\n{'='*100}")
 # Update the database path to the test database path
-PREFERENCES.SQL_DATABASE_PATH = str(Path(PREFERENCES.SQL_DATABASE_PATH).with_name('test_database.db'))
-print(f"Creating a test database at the '{PREFERENCES.SQL_DATABASE_PATH}' path")
-sql_manager = SQLManager(db_path=PREFERENCES.SQL_DATABASE_PATH, verbose = True, overwrite_existing_db=True)
+sql_database_path_local = PREFERENCES.SQL_DATABASE_FOLDER_PATH_LOCAL / "test_database.db"
+print(f"Creating a test database at the '{sql_database_path_local}' path")
+sql_manager = SQLManager(db_path=sql_database_path_local, verbose = True, overwrite_existing_db=True)
 
 #================================= Testing 'user_info' table functionality =================================
 time.sleep(WAIT_TIME_BETWEEN_TESTS)
@@ -328,8 +328,7 @@ cv2.destroyAllWindows()
 # TODO: delete the test database
 sql_manager.close() #otherwise the database will be locked and cannot be deleted
 
-database_path_to_delete = Path(PREFERENCES.SQL_DATABASE_PATH)
-if database_path_to_delete.exists():
-    os.remove(database_path_to_delete)
-    print(f"\nTest database at '{database_path_to_delete}' is deleted")
+if sql_database_path_local.exists():
+    os.remove(sql_database_path_local)
+    print(f"\nTest database at '{sql_database_path_local}' is deleted")
 

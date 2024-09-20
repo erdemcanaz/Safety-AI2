@@ -1,164 +1,28 @@
 import os, psutil, platform, subprocess
 if os.name == "nt": import win32api, win32file
 from pathlib import Path
-import psutil
+import psutil, datetime
 
-class USBDriveDetector:
-    def __init__(self):
-        self.os_type = platform.system()
-        self.is_docker = self.check_if_docker()
+def update_data_folder_and_DATA_FOLDER_PATH(is_external:bool = None, data_folder_path:Path = None, must_existing_data_subfolder_paths = None):
+    if data_folder_path is None:
+        raise ValueError("data_folder_path_external is None")
     
-    def check_if_docker(self):
-        """
-        Check if the code is running inside a Docker container.
-        """
-        # Method 1: Check for /.dockerenv file
-        if os.path.exists('/.dockerenv'):
-            return True
-        
-        # Method 2: Check cgroup for 'docker'
-        try:
-            with open('/proc/1/cgroup', 'rt') as f:
-                for line in f:
-                    if 'docker' in line:
-                        return True
-        except Exception:
-            pass
-        
-        return False
+    if is_external:
+        if not os.path.exists(data_folder_path):
+            data_folder_path = None #reset data_folder_path_external
+            return data_folder_path
+    else:
+        if not os.path.exists(data_folder_path):
+            os.makedirs(data_folder_path, exist_ok=True)           
+    
+    for subfolder_key, subfolder_path in must_existing_data_subfolder_paths.items():
+        if not os.path.exists(data_folder_path / subfolder_path):
+           os.makedirs(data_folder_path / subfolder_path, exist_ok=True)
+           with open(data_folder_path / subfolder_path / "created_at.txt", "w") as f:
+               f.write(f"Created at: {datetime.datetime.now()}:\nData Folder Path: {data_folder_path}\nSubfolder Key: {subfolder_key}\nSubfolder Path: {subfolder_path}")
+           
+    return Path(data_folder_path)
 
-    def get_usb_drives(self):
-        """
-        Retrieve a list of connected USB drives based on the operating system and environment.
-        """
-        if self.is_docker:
-            print("Running inside a Docker container.")
-            return self.get_usb_drives_docker()
-        else:
-            print("Running on the host machine.")
-            if self.os_type == 'Linux':
-                return self.get_usb_drives_linux()
-            elif self.os_type == 'Windows':
-                return self.get_usb_drives_windows()
-            else:
-                raise NotImplementedError(f"Unsupported OS: {self.os_type}")
-    
-    def get_usb_drives_linux(self):
-        """
-        Detect USB drives on a Linux host.
-        """
-        external_drives = []
-        partitions = psutil.disk_partitions(all=False)
-        for partition in partitions:
-            if '/media/' in partition.mountpoint or '/mnt/' in partition.mountpoint:
-                device_path = partition.device
-                try:
-                    # Get UUID using blkid
-                    result = subprocess.run(['blkid', '-s', 'UUID', '-o', 'value', device_path], capture_output=True, text=True)
-                    uuid = result.stdout.strip()
-                except Exception as e:
-                    uuid = None
-                external_drives.append({
-                    'mountpoint': partition.mountpoint,
-                    'device': device_path,
-                    'uuid': uuid,
-                    'fstype': partition.fstype,
-                    'volume_abspath': os.path.abspath(partition.mountpoint)
-                })
-        return external_drives
-    
-    def get_usb_drives_windows(self):
-        """
-        Detect USB drives on a Windows host.
-        """
-        external_drives = []
-        try:
-            drives = win32api.GetLogicalDriveStrings()
-            drives = drives.split('\000')[:-1]
-            for drive in drives:
-                drive_type = win32file.GetDriveType(drive)
-                # DRIVE_REMOVABLE = 2
-                if drive_type == win32file.DRIVE_REMOVABLE:
-                    try:
-                        # Get Volume Information
-                        volume_info = win32api.GetVolumeInformation(drive)
-                        volume_name = volume_info[0]
-                        serial_number = volume_info[1]
-                        # Use serial_number as a pseudo-UUID
-                        uuid = f"{serial_number:08X}"
-                    except Exception as e:
-                        volume_name = None
-                        uuid = None
-                    external_drives.append({
-                        'drive_letter': drive,
-                        'volume_name': volume_name,
-                        'uuid': uuid,
-                        'volume_abspath': os.path.abspath(drive)
-                    })
-        except Exception as e:
-            print(f"Error detecting USB drives on Windows: {e}")
-        return external_drives
-    
-    def get_usb_drives_docker(self):
-        """
-        Detect USB drives within a Docker container.
-        Assumes that external drives are mounted as volumes inside the container.
-        """
-        # Define potential mount points inside Docker
-        # You can customize this list based on how you mount volumes in your Docker setup
-        potential_mount_points = [
-            '/home/external_data_folder',
-        ]
-        
-        external_drives = []
-        for mount_point in potential_mount_points:
-            print(f"Checking mount point: {mount_point}")
-            if os.path.ismount(mount_point):
-                device_path = mount_point  # In Docker, device paths might not be directly accessible
-                try:
-                    # Attempt to retrieve UUID if possible
-                    # This might not work inside Docker; adjust as necessary
-                    result = subprocess.run(['blkid', '-s', 'UUID', '-o', 'value', mount_point], capture_output=True, text=True)
-                    uuid = result.stdout.strip()
-                except Exception:
-                    uuid = None
-                external_drives.append({
-                    'mountpoint': mount_point,
-                    'device': device_path,
-                    'uuid': uuid,
-                    'fstype': None,  # Filesystem type might not be easily retrievable inside Docker
-                    'volume_abspath': os.path.abspath(mount_point)
-                })
-        
-        if not external_drives:
-            print("No external drives detected within Docker. Ensure that the drives are mounted as volumes.")
-        
-        return external_drives
-
-    def find_drive_by_label(self, label_name):
-        """
-        Find a USB drive by its label name.
-        """
-        usb_drives = self.get_usb_drives()
-        for drive in usb_drives:
-            print(drive)
-            # Depending on OS and environment, the label key may vary
-            label = drive.get('volume_name') or drive.get('Volume Name') or drive.get('label')
-            if label and label.lower() == label_name.lower():
-                return drive
-        return None
-
-    def find_drive_by_uuid(self, uuid):
-        """
-        Find a USB drive by its UUID.
-        """
-        usb_drives = self.get_usb_drives()
-        for drive in usb_drives:
-            drive_uuid = drive.get('uuid')
-            if drive_uuid and drive_uuid.lower() == uuid.lower():
-                return drive
-        return None
-    
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 
 # Definitions (Hardcoded)
@@ -175,7 +39,6 @@ DEFINED_AUTHORIZATIONS = [
             'UPDATE_CAMERAS',
             'IOT_DEVICES'
 ]
-
 DEFINED_RULES = {
     "hardhat_violation": [
         "v1", # People are detected via pose detection. Then their head is centered with 320x320 image. Image is then resized to 640x640 and fed to the hardhat detection model.
@@ -185,41 +48,40 @@ DEFINED_RULES = {
         "v2"  # People are detected via pose detection. If thier bbox-center is inside the restricted area, then it is a violation.
     ],
 }
-
-SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}
-#TODO: set an interval for checking image integrity and remove images that are not in the database
-
-DATA_FOLDER_PATH_EXTERNAL = None
-detector = USBDriveDetector()
-target_label = 'SAFETY_AI'  if os.name == "nt" else 'T7 Shield'
-target_drive = detector.find_drive_by_label(target_label)
-if target_drive:
-    if detector.os_type == 'Linux' or detector.is_docker:
-        DATA_FOLDER_PATH_EXTERNAL = target_drive.get('mountpoint') or target_drive.get('volume_abspath')
-    elif detector.os_type == 'Windows':
-        DATA_FOLDER_PATH_EXTERNAL = target_drive.get('drive_letter') or target_drive.get('volume_abspath')
-    else:
-        DATA_FOLDER_PATH_EXTERNAL = None
-    print(f"DATA_FOLDER_PATH_EXTERNAL set to: {DATA_FOLDER_PATH_EXTERNAL}")
-else:
-    print(f"Drive with label '{target_label}' not found. Please ensure it is connected and mounted.")
+SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
+MUST_EXISTING_DATA_SUBFOLDER_PATHS = { 
+        #NOTE: NEVER EVER CHANGE THE KEY NAMES
+        "logs": Path("safety_ai/logs"),
+        "encrypted_images":  Path("safety_ai/encrypted_images"),
+        "pdf_reports":  Path("safety_ai/pdf_reports"),
+        "database_backups":  Path("safety_ai/database_backups"),
+        "database":  Path("safety_ai/database"),
+    }
 
 if os.name == "nt":  # For Windows (i.e development environment)
     SERVER_IP_ADDRESS = "192.168.0.26"
     CLEAR_TERMINAL_COMMAND = "cls"
-    SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent/ "api_server_2" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = True
     
-    DATA_FOLDER_PATH_LOCAL = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
-    DATA_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL
+    DATA_FOLDER_PATH_LOCAL = update_data_folder_and_DATA_FOLDER_PATH(is_external = False, data_folder_path= Path(__file__).parent.resolve() /'api_server_2' / 'local_ssd_data_folder', must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    DATA_FOLDER_PATH_EXTERNAL = update_data_folder_and_DATA_FOLDER_PATH(is_external = True, data_folder_path= Path("E:"), must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+
+    print(f"DATA_FOLDER_PATH_LOCAL: {DATA_FOLDER_PATH_LOCAL}")
+    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
+    SQL_DATABASE_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
 
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SERVER_IP_ADDRESS = "172.17.27.12"
     CLEAR_TERMINAL_COMMAND = "clear"
-    SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = False
-    DATA_FOLDER_PATH_LOCAL = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
-    DATA_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL
+
+    # This is the volume path inside the docker container connected to local SSD
+    DATA_FOLDER_PATH_LOCAL = update_X_data_folder_and_DATA_FOLDER_PATH_X(data_folder_path= Path(__file__).parent.parent  / 'local_ssd_data_folder', must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+    # This is the volume path inside the docker container connected to external SSD
+    DATA_FOLDER_PATH_EXTERNAL = update_X_data_folder_and_DATA_FOLDER_PATH_X(data_folder_path= "/home/external_ssd_data_folder", must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
+
+    SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
+    SQL_DATABASE_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['database']
 else:
     raise Exception("Unknown operating system")
 
