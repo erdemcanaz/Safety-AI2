@@ -296,6 +296,21 @@ for _ in range(random.randint(1, 5)):
 all_rules = sql_manager.fetch_all_rules()
 pprint.pprint(all_rules)
 
+print(f"\n(5) Triggering the rule from all rules")
+picked_rule = random.choice(all_rules['all_rules'])
+print(f"Triggering the rule with rule_uuid:'{picked_rule['rule_uuid']}'")
+print('Before triggering the rule:')
+rule_dict_by_uuid = sql_manager.fetch_rules_by_camera_uuid(camera_uuid=picked_rule['camera_uuid'])
+pprint.pprint(rule_dict_by_uuid)
+triggered_rule = sql_manager.trigger_rule_by_rule_uuid(rule_uuid=picked_rule['rule_uuid'])
+pprint.pprint(triggered_rule)
+print('After triggering the rule:')
+rule_dict_by_uuid = sql_manager.fetch_rules_by_camera_uuid(camera_uuid=picked_rule['camera_uuid'])
+pprint.pprint(rule_dict_by_uuid)
+
+
+
+
 # ================================= Testing 'camera_last_frames' table functionality =================================
 time.sleep(WAIT_TIME_BETWEEN_TESTS)
 print(f"{'='*100}\nTesting 'camera_last_frames' table functionality\n{'='*100}")
@@ -348,6 +363,16 @@ cv2.waitKey(1000)
 print(f"\n(3) Fetching non-existing image path by image_uuid:'non_existing_image_uuid'")
 try:
     get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid='non_existing_image_uuid')
+except Exception as e:
+    print(f"Error raised: {e}")
+
+print(f"\n(4) Corrupting the SQL_MANAGER_SECRET_KEY and then fetching the image path by image_uuid:'{test_image_info['image_uuid']}'")
+PREFERENCES.SQL_MANAGER_SECRET_KEY = b'G4ECs6lRrm6HXbtBdMwFoLA18iqaaaaa'
+try:
+    get_result = sql_manager.get_encrypted_image_by_uuid(image_uuid=post_result['image_uuid'])
+    pprint.pprint(get_result)
+    cv2.imshow("image", get_result['image'])
+    cv2.waitKey(1000)
 except Exception as e:
     print(f"Error raised: {e}")
 

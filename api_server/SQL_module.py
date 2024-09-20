@@ -2,528 +2,104 @@ import sqlite3, base64, numpy as np, cv2, pprint, uuid, datetime
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
-import os, re, hashlib, time
-
+import os, re, hashlib, time, sys, pprint
+from pathlib import Path
 import PREFERENCES
 
-# (+ 1)     camera_info_table
-# (+ 1.1)   last_frames table
+# (iot device rule match) also the action code
+
 # (+ 1.2)   reported_violations
+
 # (+ 1.2.1) image_paths table
-# (+ 1.3)   counts_table
+# (+ 1.1)   camera_last_frames table
 # (+ 1.4)   rules_info_table
-# (+ 1.5)   shift_counts_table
-# (+ 2)     user_info_table
-# (+ 2.1)   authorizations_table
+# (X)   shift_counts_table
+# (+ 1.3)   counts_table
+# (+ 1)     camera_info_table
+# (2)     user_info_table
+# (2.1)   authorizations_table
 
-class DatabaseManager:
-    DEVICE_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
+class SQLManager:
+    def __init__(self, db_path=None, verbose=False, overwrite_existing_db=False): 
+        self.DB_PATH = db_path
+        self.VERBOSE = verbose     
 
-    def __init__(self, db_path=None, delete_existing_db=False):
-        if db_path is None:
-            raise ValueError('db_name is required')
-        
-        if delete_existing_db and os.path.exists(db_path):
+        #check if the database exists and delete it if it does before creating a new one
+        if overwrite_existing_db and os.path.exists(db_path):
             os.remove(db_path) if os.path.exists(db_path) else None
-            print(f"#{db_path} is recreated")
+            if self.VERBOSE: print(f"Deleted and recreated database at '{db_path}'")
 
-        print(f"Connecting to {db_path}")
-        self.conn = sqlite3.connect(db_path) # creates a new database if it doesn't exist
-        self.ensure_image_paths_table_exists()
-        self.ensure_last_frames_table_exists()
-        self.ensure_camera_counts_table_exists()
-        self.ensure_camera_info_table_exists()
-        self.ensure_user_info_table_exists()
-        self.ensure_authorization_table_exists()
-        self.ensure_shift_counts_table_exists()
-        self.ensure_rules_info_table_exists()
-        self.ensure_reported_violations_table_exists()
+        #check if the path folder exists, if not, create it 
+        if not os.path.exists(os.path.dirname(db_path)):
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            if self.VERBOSE: print(f"Created the parent folder(s) for the database at '{os.path.dirname(db_path)}'")
 
+        #NOTE: creates a new database if it doesn't exist
+        self.conn = sqlite3.connect(self.DB_PATH) 
+
+        #Ensure required tables exist
+        self.__ensure_user_info_table_exists()
+        self.__ensure_authorization_table_exists()
+        self.__ensure_camera_info_table_exists()
+        self.__ensure_counts_table_exists()
+        self.__ensure_rules_info_table_exists()
+        self.__ensure_camera_last_frames_table_exists()
+        self.__ensure_image_paths_table_exists()
+
+        #Ensure a user is registered for the safety AI | first user !
+        self.__create_safety_ai_user() 
+        self.__sync_images_and_image_paths()
+
+        #Initialize image folders
+        self.DATA_FOLDER_PATH_LOCAL = PREFERENCES.DATA_FOLDER_PATH_LOCAL
+        self.DATA_FOLDER_PATH_EXTERNAL = PREFERENCES.DATA_FOLDER_PATH_EXTERNAL 
+        print(f"DATA_FOLDER_PATH_LOCAL: {self.DATA_FOLDER_PATH_LOCAL}")
+        print(f"DATA_FOLDER_PATH_EXTERNAL: {self.DATA_FOLDER_PATH_EXTERNAL}")
+   
     def close(self):
         self.conn.close()
-
-    # REPORTED_VIOLATIONS TABLE FUNCTIONS
-    def ensure_reported_violations_table_exists(self):
-        # ========================================================================================================
-        # A table to store the reported violations
-        # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # camera_uuid           : is a unique identifier for the camera
-        # image_uuid            : is a unique identifier for the image
-        # violation_type        : is the type of violation. It can be 'hardhat_violation', 'restricted_area_violation' etc.
-        # violation_polygon_str : is the polygon to indicate the area of the violation. "x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn"
-        # ========================================================================================================
-       
-        query = '''
-        CREATE TABLE IF NOT EXISTS reported_violations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            violation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            violation_uuid TEXT NOT NULL,
-            region_name TEXT NOT NULL,
-            violation_type TEXT NOT NULL,
-            violation_score REAL NOT NULL,
-            camera_uuid TEXT NOT NULL,
-            image_uuid TEXT NOT NULL
-        )
-        '''
-        trigger_query = '''
-            CREATE TRIGGER IF NOT EXISTS update_date_updated_reported_violations
-            AFTER UPDATE ON reported_violations
-            FOR EACH ROW
-            BEGIN
-                UPDATE reported_violations 
-                SET date_updated = CURRENT_TIMESTAMP 
-                WHERE id = OLD.id;
-            END;
-        '''
-
-        self.conn.execute(query)
-        self.conn.execute(trigger_query)
-        self.conn.commit()
-
-    def create_reported_violation(self, camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date:datetime.datetime=None, violation_type:str=None, violation_score:float=None, region_name:str=None, save_folder:str=None):
-        #def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None)-> str:
-        # Save the violation frame as a base64 encoded string and insert the path to the table
-        violation_uuid = str(uuid.uuid4())
-        image_uuid = str(uuid.uuid4())
-        self.save_encrypted_image_and_insert_path_to_table(save_folder=save_folder, image=violation_frame, image_category='violation_frame', image_uuid=image_uuid)
-        
-        # Insert the violation to the table
-        query = '''
-        INSERT INTO reported_violations (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        '''
-        self.conn.execute(query, (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid))
-        self.conn.commit()
-
-    def create_reported_violation_v2(self, camera_uuid:str=None, violation_frame_b64:str=None, violation_date_ddmmyyy_hhmmss:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None, save_folder:str=None):
-        #def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None)-> str:
-        # Save the violation frame as a base64 encoded string and insert the path to the table
-        violation_uuid = str(uuid.uuid4())
-        image_uuid = str(uuid.uuid4())
-
-        cv2_violation_frame = cv2.imdecode(np.frombuffer(base64.b64decode(violation_frame_b64), np.uint8), cv2.IMREAD_COLOR)
-        violation_datetime = datetime.datetime.strptime(violation_date_ddmmyyy_hhmmss, "%d.%m.%Y %H:%M:%S")        
-        self.save_encrypted_image_and_insert_path_to_table(save_folder=save_folder, image=cv2_violation_frame, image_category='violation_frame', image_uuid=image_uuid)
-        
-        # Insert the violation to the table
-        query = '''
-        INSERT INTO reported_violations (violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        '''
-        self.conn.execute(query, (violation_uuid, violation_datetime, region_name, violation_type, violation_score, camera_uuid, image_uuid))
-        self.conn.commit()
-        return {
-            "violation_uuid": violation_uuid,
-            "violation_date": violation_datetime,
-            "region_name": region_name,
-            "violation_type": violation_type,
-            "violation_score": violation_score,
-            "camera_uuid": camera_uuid,
-            "image_uuid": image_uuid
-        }
-        
-    def fetch_reported_violations_between_dates(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None, query_limit: int = 9999) -> list:
-        query = '''
-        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid
-        FROM reported_violations
-        WHERE violation_date BETWEEN ? AND ?
-        ORDER BY violation_date DESC
-        LIMIT ?
-        '''
-        
-        # Execute the query with start_date, end_date, and limit parameters
-        cursor = self.conn.execute(query, (start_date, end_date, query_limit))
-        rows = cursor.fetchall()
-        
-        if not rows:
-            return []
-        
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        
-        return result
-
-    def fetch_reported_violation_by_violation_uuid(self, violation_uuid:str=None)-> dict:
-        query = '''
-        SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid FROM reported_violations WHERE violation_uuid = ?
-        '''
-        cursor = self.conn.execute(query, (violation_uuid,))
-        row = cursor.fetchone()
-        if row is None:
-            return None
-
-        column_names = [description[0] for description in cursor.description]
-        return dict(zip(column_names, row))
     
-    # RULES_INFO_TABLE FUNCTIONS
-    def ensure_rules_info_table_exists(self):
-        # ========================================================================================================
-        # A table to store the rules for the cameras
-        # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # camera_uuid           : is a unique identifier for the camera
-        # rule_uuid             : is a unique identifier for the rule
-        # rule_department       : for example HSE, QUALITY, SECURITY etc.
-        # rule_type             : for example hardhat_violation, restricted_area_violation etc.
-        # evaluation_method     : There can be multiple methods to evaluate the same rule. This indicates the method to be used
-        # threshold_value       : is the threshold value to evaluate the rule
-        # rule_polygon_str      : is the polygon to indicate the area rule is applied. "x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn"
-        # ========================================================================================================
+    @staticmethod
+    def encode_frame_to_b64encoded_jpg_bytes(np_ndarray: np.ndarray = None):
+        if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
+            raise ValueError('Invalid np_ndarray provided')
         
-        query = '''
-        CREATE TABLE IF NOT EXISTS rules_info_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            camera_uuid TEXT NOT NULL,
-            rule_uuid TEXT NOT NULL,
-            rule_department TEXT NOT NULL,
-            rule_type TEXT NOT NULL,
-            evaluation_method TEXT NOT NULL,
-            threshold_value REAL NOT NULL,
-            rule_polygon TEXT NOT NULL
-        )
-        '''
-        trigger_query = '''
-            CREATE TRIGGER IF NOT EXISTS update_date_updated_rules_info_table
-            AFTER UPDATE ON rules_info_table
-            FOR EACH ROW
-            BEGIN
-                UPDATE rules_info_table 
-                SET date_updated = CURRENT_TIMESTAMP 
-                WHERE id = OLD.id;
-            END;
-        '''        
-        self.conn.execute(query)
-        self.conn.execute(trigger_query)
-        self.conn.commit()
+        success, encoded_image = cv2.imencode('.jpg', np_ndarray)
+        if not success:
+            raise ValueError('Failed to encode image')
+        base_64_encoded_jpg_image_bytes = base64.b64encode(encoded_image.tobytes())
+
+        return base_64_encoded_jpg_image_bytes # <class 'bytes'>
     
-    def create_rule(self, camera_uuid:str=None, rule_department:str=None, rule_type:str=None, evaluation_method:str=None, threshold_value:float=None, rule_polygon:str=None):
-        # Ensure camera_uuid is proper
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
+    @staticmethod
+    def encode_frame_to_jpg(np_ndarray: np.ndarray = None):
+        if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
+            raise ValueError('Invalid np_ndarray provided')
         
-        # Ensure a camera with the provided camera_uuid exists
-        camera_info = self.fetch_camera_info_by_uuid(camera_uuid=camera_uuid)
-        if camera_info is None:
-            raise ValueError('No camera found with the provided camera_uuid')
+        success, encoded_image = cv2.imencode('.jpg', np_ndarray)
+        if not success:
+            raise ValueError('Failed to encode image')
+        return encoded_image
+
+    @staticmethod
+    def decode_b64encoded_jpg_bytes_to_np_ndarray(base_64_encoded_jpg_image_bytes: bytes = None):
+        if base_64_encoded_jpg_image_bytes is None or not isinstance(base_64_encoded_jpg_image_bytes, bytes):
+            raise ValueError('Invalid base_64_encoded_jpg_image_bytes provided')
         
-        # Ensure rule_department is proper
-        if rule_department not in PREFERENCES.DEFINED_DEPARTMENTS:
-            raise ValueError('Invalid rule_department provided')
-        
-        # Ensure rule_type is proper
-        if rule_type not in PREFERENCES.DEFINED_RULES.keys():
-            raise ValueError('Invalid rule_type provided')
-        
-        # Ensure evaluation_method is proper
-        if evaluation_method not in PREFERENCES.DEFINED_RULES[rule_type]:
-            raise ValueError('Invalid evaluation_method provided')
-                
-        # Ensure threshold_value is proper
-        if not isinstance(threshold_value, (int, float)):
-            raise ValueError('Invalid threshold_value provided')
+        return cv2.imdecode(np.frombuffer(base64.b64decode(base_64_encoded_jpg_image_bytes), dtype=np.uint8), cv2.IMREAD_COLOR)
     
-        if not 0 <= threshold_value <= 1:
-            raise ValueError('Invalid threshold_value provided, should be between 0 and 1')
-        
-        # Ensure rule_polygon is proper
-        rule_polygon_list = rule_polygon.split(',')
-        if len(rule_polygon_list) % 2 != 0:
-            raise ValueError('Invalid rule_polygon provided')
-        for i in range(0, len(rule_polygon_list), 2):
-            float(rule_polygon_list[i]), float(rule_polygon_list[i+1]) # Check if they are floatable
-            if float(rule_polygon_list[i]) < 0 or float(rule_polygon_list[i]) > 1 or float(rule_polygon_list[i+1]) < 0 or float(rule_polygon_list[i+1]) > 1:
-                raise ValueError('Invalid rule_polygon provided, should be normalized')
-                  
-        # Generate a UUID for the rule
-        rule_uuid = str(uuid.uuid4())
-        
-        query = '''
-        INSERT INTO rules_info_table (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        '''
-        self.conn.execute(query, (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon))
-        self.conn.commit()
-
-        return {
-            "camera_uuid": camera_uuid,
-            "rule_uuid": rule_uuid,
-            "rule_department": rule_department,
-            "rule_type": rule_type,
-            "evaluation_method": evaluation_method,
-            "threshold_value": threshold_value,
-            "rule_polygon": rule_polygon
-        }
-        
-    def delete_rule_by_rule_uuid(self, rule_uuid:str=None)-> bool:
-        query = '''
-        DELETE FROM rules_info_table WHERE rule_uuid = ?
-        '''
-        self.conn.execute(query, (rule_uuid,))
-        self.conn.commit()
-
-        return {
-            "rule_uuid": rule_uuid
-        }
-    
-    def fetch_rules_by_camera_uuid(self, camera_uuid:str=None)-> list:
-        # Ensure camera_uuid is proper
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
-        
-        query = '''
-        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon FROM rules_info_table WHERE camera_uuid = ?
-        '''
-        cursor = self.conn.execute(query, (camera_uuid,))
-        rows = cursor.fetchall()
-        if rows is None:
-            return []
-
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        return result
-
-    def fetch_all_rules(self)-> list:
-        query = '''
-        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon FROM rules_info_table
-        '''
-        cursor = self.conn.execute(query)
-        rows = cursor.fetchall()
-        if rows is None:
-            return None
-
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        return result
-    
-    # CAMERA_INFO_TABLE FUNCTIONS
-    def ensure_camera_info_table_exists(self):
-        # ========================================================================================================
-        # A table to store the information of the cameras
-        # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # camera_uuid           : is a unique identifier for the camera
-        # camera_ip_address     : is the IP address of the camera
-        # camera_region         : is the region of the camera
-        # camera_description    : is the description of the camera
-        # NVR_ip_address        : is the IP address of the NVR
-        # username              : is the username to access the camera
-        # password              : is the password to access the camera
-        # stream_path           : is the path to the video stream
-        # camera_status         : is the status of the camera. It can be 'active', 'inactive'
-        # ========================================================================================================
-        query = '''
-        CREATE TABLE IF NOT EXISTS camera_info_table (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            camera_uuid TEXT NOT NULL,
-            camera_ip_address TEXT NOT NULL,
-            camera_region TEXT NOT NULL,
-            camera_description TEXT NOT NULL,
-            NVR_ip_address TEXT NOT NULL,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL,
-            stream_path TEXT NOT NULL,
-            camera_status TEXT NOT NULL
-        )
-        '''
-
-        self.conn.execute(query)
-        self.conn.commit()
-
-    def create_camera_info(self, camera_uuid:str=None, camera_ip_address:str=None, NVR_ip_address:str = None, camera_region:str=None, camera_description:str=None, username:str=None, password:str=None, stream_path:str=None, camera_status:str=None)-> dict:
-        if camera_uuid is None:
-            camera_uuid = str(uuid.uuid4())
-        # Check if the camera_uuid is valid or not
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
-        
-        # Check IP is valid or not
-        if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', camera_ip_address):
-            raise ValueError('Invalid IP address provided')
-        
-        if NVR_ip_address is None:
-            NVR_ip_address = ""
-        elif not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', NVR_ip_address):
-            raise ValueError('Invalid NVR-IP address provided')
-        
-        # Check if the camera_status is valid or not
-        if camera_status not in PREFERENCES.DEFINED_CAMERA_STATUSES:
-            raise ValueError("Invalid camera_status provided. Valid values are 'active' or 'inactive'")
-        
-        # Check if username and password are provided
-        if username is None or password is None:
-            raise ValueError('Username and password are required')
-                
-        # Format the camera_description and camera_region
-        camera_description = "" if camera_description == None else camera_description
-        camera_region = "" if camera_region == None else camera_region
-        print(f" camera description: {camera_description}, camera region: {camera_region}")
-
-
-        # Check if the camera_uuid is unique or not
-        query = '''
-        SELECT id FROM camera_info_table WHERE camera_uuid = ?
-        '''
-        cursor = self.conn.execute(query, (camera_uuid,))
-        row = cursor.fetchone()
-        if row is not None:
-            raise ValueError('camera_uuid already exists')
-        
-        # Check if the camera_ip_address is unique or not
-        query = '''
-        SELECT id FROM camera_info_table WHERE camera_ip_address = ?
-        '''
-        cursor = self.conn.execute(query, (camera_ip_address,))
-        row = cursor.fetchone()
-        if row is not None:
-            raise ValueError('camera_ip_address already exists')
-        
-        query = '''
-        INSERT INTO camera_info_table (camera_uuid, camera_ip_address, NVR_ip_address, camera_region, camera_description, username, password, stream_path, camera_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        '''    
-        self.conn.execute(query, (camera_uuid, camera_ip_address, NVR_ip_address, camera_region, camera_description, username, password, stream_path, camera_status))
-        self.conn.commit()
-
-        return {
-            "camera_uuid": camera_uuid,
-            "camera_ip_address": camera_ip_address,
-            "NVR_ip_address": NVR_ip_address,
-            "camera_region": camera_region,
-            "camera_description": camera_description,
-            "username": username,
-            "password": password,
-            "stream_path": stream_path,
-            "camera_status": camera_status
-        }
-
-    def update_camera_info_attribute(self, camera_uuid:str=None, attribute:str=None, value:str=None)-> bool:
-        # Check if the camera_uuid is valid or not
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
-        
-        # Check if the attribute is valid or not
-        if attribute not in ['camera_ip_address', 'camera_region', 'camera_description', 'NVR_ip_address', 'username', 'password', 'stream_path', 'camera_status']:
-            raise ValueError(f'Invalid attribute provided {attribute}')
-        
-        # Check whether camera_region attribute is properly formatted
-        if not isinstance(value, str):
-            raise ValueError('Attribute value must be a string')
-               
-        if attribute == 'NVR_ip':
-            if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', value):
-                raise ValueError('Invalid IP address provided')
-            
-        if attribute == 'camera_ip_address':
-            if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', value):
-                raise ValueError('Invalid IP address provided')
-            
-            # Check if the camera_ip_address is unique or not
-            query = '''
-            SELECT id FROM camera_info_table WHERE camera_ip_address = ?
-            '''
-            cursor = self.conn.execute(query, (value,))
-            row = cursor.fetchone()
-            if row is not None:
-                raise ValueError('camera_ip_address already exists')
-        
-        if attribute == 'camera_status' and value not in ['active', 'inactive']:
-            raise ValueError("Invalid camera_status provided. Valid values are 'active' or 'inactive'")
-
-        print(f"Updating {attribute} to {value} for camera_uuid {camera_uuid}")
-        query = f'''
-        UPDATE camera_info_table 
-        SET {attribute} = ?, date_updated = CURRENT_TIMESTAMP 
-        WHERE camera_uuid = ?
-        '''
-        self.conn.execute(query, (value, camera_uuid))
-        self.conn.commit()
-
-    def delete_camera_info_by_uuid(self, camera_uuid:str=None)-> bool:
-        # Check if the camera_uuid is valid or not
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
-        
-        query = '''
-        DELETE FROM camera_info_table WHERE camera_uuid = ?
-        '''
-        self.conn.execute(query, (camera_uuid,))
-        self.conn.commit()
-
-        return {
-            "camera_uuid": camera_uuid
-        }
-    
-    def fetch_all_camera_info(self)-> list:
-        query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, NVR_ip_address, username, password, stream_path, camera_status FROM camera_info_table
-        '''
-        cursor = self.conn.execute(query)
-        rows = cursor.fetchall()
-        
-        # Get column names from cursor description
-        column_names = [description[0] for description in cursor.description]
-        
-        # Convert each row to a dictionary
-        result = [dict(zip(column_names, row)) for row in rows]
-        
-        keys_to_delete = []
-        for d in result:
-            for key in keys_to_delete:
-                d.pop(key, None)  # Use pop with default to avoid KeyError if key is not present
-                
-        return result
-    
-    def fetch_camera_info_by_uuid(self, camera_uuid:str = None) -> dict:
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
-        
-        query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, NVR_ip_address, username, password, stream_path, camera_status FROM camera_info_table WHERE camera_uuid = ?
-        '''
-        cursor = self.conn.execute(query, (camera_uuid,))
-        row = cursor.fetchone()
-        
-        if row is None:
-            return None
-        else:
-            # Get column names from cursor description
-            column_names = [description[0] for description in cursor.description]
-            
-            # Create a dictionary using the column names and row data
-            return dict(zip(column_names, row))
-            
-    # IMAGE_PATHS TABLE FUNCTIONS
-    def ensure_image_paths_table_exists(self):
-        # ========================================================================================================
+    # ========================================= image_paths ==============================================
+    def __ensure_image_paths_table_exists(self):
+        # =======================================image_paths====================================================
         # A table to store image encrpytion keys and encrypted images paths
         # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # image_uuid            : is a unique identifier for the image
-        # encryption_key        : is the key used to encrypt the image
-        # encrypted_image_path  : is the path to the encrypted image
-        # is_deleted            : is a flag to indicate if the encrypted image has been deleted. 0 means not deleted, 1 means deleted
-        # image_category        : is a string to categorize the image. It can be anything like 'hard_hat_dataset', 'violation', etc.
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # image_uuid            :(str) is a unique identifier for the image
+        # random_key        :(str) is the key used to encrypt the image
+        # encrypted_image_path  :(str) is the path to the encrypted image
+        # image_category        :(str) is a string to categorize the image. It can be anything like 'hard_hat_dataset', 'violation', etc.
         # ========================================================================================================       
 
         query = '''
@@ -532,9 +108,8 @@ class DatabaseManager:
             date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             image_uuid TEXT NOT NULL,
-            encryption_key TEXT NOT NULL,
+            random_key TEXT NOT NULL,
             encrypted_image_path TEXT NOT NULL,
-            is_deleted INTEGER DEFAULT 0,
             image_category TEXT NOT NULL DEFAULT 'no-category'
         )
         '''
@@ -553,32 +128,82 @@ class DatabaseManager:
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'image_paths' table exists")
 
-    def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None):
+    def __sync_images_and_image_paths(self):
+        # Delete the iamge paths with no corresponding encrypted image
+        query = '''
+        SELECT image_uuid, encrypted_image_path FROM image_paths
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        for row in rows:
+            image_uuid, encrypted_image_path = row
+            if not os.path.exists(encrypted_image_path):
+                query = '''
+                DELETE FROM image_paths WHERE image_uuid = ?
+                '''
+                self.conn.execute(query, (image_uuid,))
+        self.conn.commit()
+
+        # Delete the encrypted images that are not in the table
+        all_existing_file_paths_inside_encrypted_images_folder = []
+        encrypted_images_key = 'api_server_encrypted_images' # The key for the encrypted images folder hardcoded in the PREFERENCES
+
+        if PREFERENCES.check_if_folder_accesible(folder_path=PREFERENCES.DATA_FOLDER_PATH_EXTERNAL):
+            external_encrypted_images_path = PREFERENCES.DATA_FOLDER_PATH_EXTERNAL / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS[encrypted_images_key]
+            all_existing_file_paths_inside_encrypted_images_folder.extend(external_encrypted_images_path.rglob('*.bin') 
+        )
+        if PREFERENCES.check_if_folder_accesible(folder_path=PREFERENCES.DATA_FOLDER_PATH_LOCAL):
+            local_encrypted_images_path = PREFERENCES.DATA_FOLDER_PATH_LOCAL / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS[encrypted_images_key]
+            all_existing_file_paths_inside_encrypted_images_folder.extend(local_encrypted_images_path.rglob('*.bin')
+        )
+
+        # Iterate over all collected file paths
+        for file_path in all_existing_file_paths_inside_encrypted_images_folder:
+            query = '''
+            SELECT image_uuid FROM image_paths WHERE encrypted_image_path = ?
+            '''
+            cursor = self.conn.execute(query, (str(file_path),))  # Ensure the path is a string if required by the DB
+            row = cursor.fetchone()
+            
+            if row is None:
+                try:
+                    os.remove(file_path)
+                    print(f"Removed file: {file_path}")
+                except Exception as e:
+                    print(f"Error removing file {file_path}: {e}")
+        
+    def save_encrypted_image_and_insert_path_to_table(self, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None) -> dict:
         # Ensure image is proper
         if image is None or not isinstance(image, np.ndarray):
             raise ValueError('No image was provided or the image is not a NumPy array')
         
-        # Ensure image is encoded properly as a JPEG image. It takes less space than PNG with minimal data loss
-        success, encoded_image = cv2.imencode('.jpg', image)
-        if not success:
-            raise ValueError('Failed to encode image')
-                
         # Ensure image_uuid is proper
         regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
         if not regex.match(image_uuid):
             raise ValueError('Invalid image_uuid provided')
         
-        # Ensure image folder exists
+        # Ensure image is encoded properly as a JPEG image. It takes less space than PNG with minimal data loss
+        encoded_jpg_image = SQLManager.encode_frame_to_jpg(np_ndarray = image)
+        
+        #decide on whether to save the image to the local or external folder
+        is_external_folder_accesible = PREFERENCES.check_if_folder_accesible(folder_path = self.DATA_FOLDER_PATH_EXTERNAL)
+        data_directory = self.DATA_FOLDER_PATH_EXTERNAL if is_external_folder_accesible else self.DATA_FOLDER_PATH_LOCAL
+        images_directory = data_directory / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_encrypted_images']
+        image_folder_name = f'date_{datetime.datetime.now().strftime("%Y-%m-%d")}'
+        save_folder = images_directory / image_folder_name
+
+        # Ensure the save folder exists
         if not os.path.exists(save_folder):
-            os.makedirs(save_folder)
+            os.makedirs(save_folder, exist_ok=True)
 
         # Ensure UUID is unique
         # NOTE: This is not checked. First encountered UUID is used. This is not a good practice but simpler. It is responsibility of the caller to ensure UUID is unique.
 
         # Save the encrypted image as a file to the save_folder   
         random_key = os.urandom(32)
-        composite_key = hashlib.sha256(random_key + DatabaseManager.DEVICE_SECRET_KEY).digest()     
+        composite_key = hashlib.sha256(random_key + PREFERENCES.SQL_MANAGER_SECRET_KEY).digest()     
         iv = os.urandom(16)
 
         # Create a Cipher object using the key and IV
@@ -586,47 +211,49 @@ class DatabaseManager:
         encryptor = cipher.encryptor()
 
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
-        padded_data = padder.update(encoded_image.tobytes()) + padder.finalize()
+        padded_data = padder.update(encoded_jpg_image.tobytes()) + padder.finalize()
         encrypted_data = encryptor.update(padded_data) + encryptor.finalize()        
         iv_plus_encrypted_data =  iv + encrypted_data # Append the IV. 
 
-        encrypted_image_path = os.path.join(save_folder, f'{image_uuid}.bin')
+        # Save the encrypted image as a file
+        encrypted_image_path = save_folder / f'{image_uuid}.bin'
         with open(encrypted_image_path, 'wb') as file:
             file.write(iv_plus_encrypted_data)       
         
-        # Insert the image path to the table
+        # Since image is saved, insert the image path to the table
         query = '''
-        INSERT INTO image_paths (image_uuid, encryption_key, encrypted_image_path, is_deleted, image_category)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO image_paths (image_uuid, random_key, encrypted_image_path, image_category)
+        VALUES (?, ?, ?, ?)
         '''
-        self.conn.execute(query, (image_uuid, random_key, encrypted_image_path, 0,  image_category))
+        self.conn.execute(query, (image_uuid, random_key, str(encrypted_image_path.resolve()),  image_category))
         self.conn.commit() # Success
-        return image_uuid
+        return {
+            "image_uuid": image_uuid,
+            "encrypted_image_path": str(encrypted_image_path.resolve()),
+            "image_category": image_category
+        }
 
-    def get_encrypted_image_by_uuid(self, image_uuid: str, get_b64_image_only:bool = False) -> np.ndarray:
-        # Retrieve the encrypted image path and random key from the database
+    def get_encrypted_image_by_uuid(self, image_uuid: str) -> dict:
+
+        # Retrieve the encrypted image path and random key from the database, also check if the path with the provided image_uuid exists
         query = '''
-        SELECT image_uuid, encryption_key, encrypted_image_path, is_deleted, image_category FROM image_paths WHERE image_uuid = ?
+        SELECT image_uuid, random_key, encrypted_image_path, image_category FROM image_paths WHERE image_uuid = ?
         '''
         cursor = self.conn.execute(query, (image_uuid,))
         row = cursor.fetchone()
-
-        # No image found with the provided image_uuid
         if row is None: 
             raise ValueError('No image path entry found with the provided image_uuid')
         
         # Unpack the row data
-        retrieved_image_uuid, random_key, encrypted_image_path, is_deleted, image_category = row
-        if is_deleted:
-            raise ValueError('Encrypted image file with the provided image_uuid is deleted and cannot be retrieved')
+        retrieved_image_uuid, random_key, encrypted_image_path, image_category = row
        
-        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database
-        if not os.path.exists(encrypted_image_path):
-            update_query = '''
-            UPDATE image_paths SET is_deleted = 1 WHERE image_uuid = ?
+        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
+        if not os.path.exists(encrypted_image_path):          
+            query = '''
+            DELETE FROM image_paths WHERE image_uuid = ?
             '''
-            self.conn.execute(update_query, (image_uuid,))
-            self.conn.commit()
+            self.conn.execute(query, (retrieved_image_uuid,))
+            self.conn.commit()            
             raise ValueError('Encrypted image file not found with the provided image_uuid, will be marked as deleted in the database')
         
         # It is checked that the file exists, so read the encrypted data
@@ -634,7 +261,7 @@ class DatabaseManager:
             encrypted_data = file.read()            
 
         # Re-create the composite key using the random key and the device-specific secret key
-        composite_key = hashlib.sha256(random_key + DatabaseManager.DEVICE_SECRET_KEY).digest()
+        composite_key = hashlib.sha256(random_key + PREFERENCES.SQL_MANAGER_SECRET_KEY).digest()
 
         # Extract the IV from the encrypted data
         iv = encrypted_data[:16]
@@ -663,46 +290,45 @@ class DatabaseManager:
         return {
             "image_uuid": retrieved_image_uuid,
             "encrypted_image_path": encrypted_image_path,
-            "image_b64": base64.b64encode(image_data).decode('utf-8'),
-            "image": image if not get_b64_image_only else None,
-            "is_deleted": is_deleted,
-            "image_category": image_category
+            "image_category": image_category,
+            "image": image
         }
         
-    # LAST_FRAMES TABLE FUNCTIONS
-    def ensure_last_frames_table_exists(self):
+    # ========================================= camera_last_frames ==============================================
+
+    def __ensure_camera_last_frames_table_exists(self):
         # ========================================================================================================
         # A table to store the last frames of the video streams
         # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # camera_uuid           : is a unique identifier for the camera
-        # camera_ip             : is the IP address of the camera
-        # camera_region         : is the region of the camera
-        # is_violation_detected : is a flag to indicate if a violation was detected in the last frame. 0 means no violation detected, 1 means violation detected
-        # is_person_detected    : is a flag to indicate if a person was detected in the last frame. 0 means no person detected, 1 means person detected
-        # last_frame_b64        : is the last frame of the video stream in base64 encoded format
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # camera_ip_address     :(str) is the IP address of the camera
+        # camera_region         :(str) is the region of the camera
+        # is_violation_detected :(int) is a flag to indicate if a violation was detected in the last frame. 0 means no violation detected, 1 means violation detected
+        # is_person_detected    :(int) is a flag to indicate if a person was detected in the last frame. 0 means no person detected, 1 means person detected
+        # last_frame_b64_bytes        :(BLOB) is the last frame of the video stream in base64 encoded format
         # ========================================================================================================
         query = '''
-        CREATE TABLE IF NOT EXISTS last_frames (
+        CREATE TABLE IF NOT EXISTS camera_last_frames (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             camera_uuid TEXT NOT NULL,
-            camera_ip TEXT NOT NULL,
+            camera_ip_address TEXT NOT NULL,
             camera_region TEXT NOT NULL,
             is_violation_detected INTEGER DEFAULT 0,
             is_person_detected INTEGER DEFAULT 0,
-            last_frame_b64 BLOB NOT NULL
+            last_frame_b64_bytes BLOB NOT NULL
         )
         '''        
         trigger_query = '''
-            CREATE TRIGGER IF NOT EXISTS update_date_updated_last_frames
-            AFTER UPDATE ON last_frames
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_camera_last_frames
+            AFTER UPDATE ON camera_last_frames
             FOR EACH ROW
             BEGIN
-                UPDATE last_frames 
+                UPDATE camera_last_frames 
                 SET date_updated = CURRENT_TIMESTAMP 
                 WHERE id = OLD.id;
             END;
@@ -711,8 +337,9 @@ class DatabaseManager:
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'camera_last_frames' table exists")
 
-    def update_last_camera_frame_as_b64string_by_camera_uuid(self, camera_uuid:str= None, is_violation_detected:bool=None, is_person_detected:bool=None, last_frame:np.ndarray=None)-> bool:
+    def update_last_camera_frame_as_by_camera_uuid(self, camera_uuid:str= None, is_violation_detected:bool=None, is_person_detected:bool=None, last_frame:np.ndarray=None)-> bool:
         # Ensure image is proper
         if last_frame is None or not isinstance(last_frame, np.ndarray):
             raise ValueError('No image was provided or the image is not a NumPy array')
@@ -722,7 +349,7 @@ class DatabaseManager:
         if not regex.match(camera_uuid):
             raise ValueError('Invalid camera_uuid provided')
         
-        camera_info = self.fetch_camera_info_by_uuid(camera_uuid= camera_uuid)
+        camera_info = self.fetch_camera_info_by_uuid(camera_uuid= camera_uuid)['camera_info']
         if camera_info is None:
             raise ValueError('No camera found with the provided camera_uuid')
         
@@ -732,33 +359,38 @@ class DatabaseManager:
             raise ValueError('Failed to encode image')    
         base64_encoded_image = base64.b64encode(encoded_image.tobytes()) 
 
+        base_64_encoded_jpg_image_bytes = SQLManager.encode_frame_to_b64encoded_jpg_bytes(np_ndarray = last_frame)
+
         # Save the last frame of the camera to the database as BLOB    
         query = '''
-        SELECT id FROM last_frames WHERE camera_uuid = ?
+        SELECT id FROM camera_last_frames WHERE camera_uuid = ?
         '''
         cursor = self.conn.execute(query, (camera_uuid,))
-        row = cursor.fetchone()
+        row = cursor.fetchone()        
         if row is None:
             query = '''
-            INSERT INTO last_frames (camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, last_frame_b64)
+            INSERT INTO camera_last_frames (camera_uuid, camera_ip_address, camera_region, is_violation_detected, is_person_detected, last_frame_b64_bytes)
             VALUES (?, ?, ?, ?, ?, ?)
             '''
-            self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], camera_info["camera_region"], int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base64_encoded_image))
+            self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], camera_info["camera_region"], int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base_64_encoded_jpg_image_bytes))
             )
         else:
             is_person_detected = 1 if is_person_detected else 0
             query = '''
-            UPDATE last_frames SET is_violation_detected = ?, is_person_detected = ?, last_frame_b64 = ? WHERE camera_uuid = ?
+            UPDATE camera_last_frames SET is_violation_detected = ?, is_person_detected = ?, camera_ip_address = ?, last_frame_b64_bytes = ? WHERE camera_uuid = ?
             '''
-            self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base64_encoded_image), camera_uuid))
+            self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), camera_info['camera_ip_address'], sqlite3.Binary(base64_encoded_image), camera_uuid))
+        
         self.conn.commit()
         return {
             "camera_uuid": camera_uuid,
+            "camera_ip": camera_info["camera_ip_address"],
+            "camera_region": camera_info["camera_region"],
             "is_violation_detected": is_violation_detected,
-            "is_person_detected": is_person_detected
+            "is_person_detected": is_person_detected,            
         }
 
-    def get_last_camera_frame_by_camera_uuid(self, camera_uuid:str = None, convert_b64_to_cv2frame:bool=False)-> np.ndarray:
+    def get_last_camera_frame_by_camera_uuid(self, camera_uuid:str = None)-> np.ndarray:
 
         regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
         if not regex.match(camera_uuid):
@@ -766,7 +398,7 @@ class DatabaseManager:
         
         # Retrieve the last frame of the camera from the database
         query = '''
-        SELECT camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, last_frame_b64 FROM last_frames WHERE camera_uuid = ?
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, is_violation_detected, is_person_detected, last_frame_b64_bytes FROM camera_last_frames WHERE camera_uuid = ?
         '''
         cursor = self.conn.execute(query, (camera_uuid,))
         row = cursor.fetchone()
@@ -776,23 +408,25 @@ class DatabaseManager:
             return None
         
         # Unpack the row data
-        retrieved_camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, last_frame_b64 = row
+        date_created, date_updated, retrieved_camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, base_64_encoded_jpg_image_bytes = row
        
         # keep the image as a base64 encoded string
         return {
+            "date_created": date_created, #
+            "date_updated": date_updated,
             "camera_uuid": retrieved_camera_uuid,
-            "camera_ip": camera_ip,
+            "camera_ip_address": camera_ip,
             "camera_region": camera_region,
             "is_violation_detected": is_violation_detected,
             "is_person_detected": is_person_detected,
-            "last_frame_b64": last_frame_b64,
-            "decoded_last_frame": cv2.imdecode(np.frombuffer(base64.b64decode(last_frame_b64), dtype=np.uint8), cv2.IMREAD_COLOR) if convert_b64_to_cv2frame else None # Decode the base64 string to a NumPy array if needed
+            "last_frame_b64_bytes": base_64_encoded_jpg_image_bytes,
+            "last_frame_np_array": SQLManager.decode_b64encoded_jpg_bytes_to_np_ndarray(base_64_encoded_jpg_image_bytes=base_64_encoded_jpg_image_bytes)
         }
         # Succes
         
     def get_all_last_camera_frame_info_without_BLOB(self) -> list:
         query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected FROM last_frames
+        SELECT date_created, date_updated, camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected FROM camera_last_frames
         '''
         cursor = self.conn.execute(query)
         rows = cursor.fetchall()
@@ -805,33 +439,242 @@ class DatabaseManager:
         
         return result
               
-    # COUNTS_TABLE TABLE FUNCTIONS
-    def ensure_camera_counts_table_exists(self):
+    # ========================================= rules_info_table ==============================================
+    def __ensure_rules_info_table_exists(self):
+        # =======================================rules_info_table===================================================
+        # A table to store the rules for the cameras
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # last_time_triggered   :(TIMESTAMP) is the date and time the rule was last triggered
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # rule_uuid             :(str) is a unique identifier for the rule
+        # rule_department       :(str) for example HSE, QUALITY, SECURITY etc.
+        # rule_type             :(str) for example hardhat_violation, restricted_area_violation etc.
+        # evaluation_method     :(str) There can be multiple methods to evaluate the same rule. This indicates the method to be used
+        # threshold_value       :(str,  [0, 1]) is the threshold value to report a violation to local server
+        # fol_threshold_value   :(str,  [0, 1]) is the threshold value to report a violation to the fol server
+        # rule_polygon_str      :(str) is the polygon to indicate the area rule is applied. "x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn"
         # ========================================================================================================
+        
+        query = '''
+        CREATE TABLE IF NOT EXISTS rules_info_table (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_time_triggered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            camera_uuid TEXT NOT NULL,
+            rule_uuid TEXT NOT NULL,
+            rule_department TEXT NOT NULL,
+            rule_type TEXT NOT NULL,
+            evaluation_method TEXT NOT NULL,
+            threshold_value TEXT NOT NULL,
+            fol_threshold_value TEXT NOT NULL,
+            rule_polygon TEXT NOT NULL
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_rules_info_table
+            AFTER UPDATE ON rules_info_table
+            FOR EACH ROW
+            BEGIN
+                UPDATE rules_info_table 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+        '''        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'rules_info_table' table exists")
+
+    def create_rule(self, camera_uuid:str=None, rule_department:str=None, rule_type:str=None, evaluation_method:str=None, threshold_value:str=None, fol_threshold_value:str=None, rule_polygon:str=None)->dict:
+        # Ensure camera_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        # Ensure a camera with the provided camera_uuid exists
+        camera_info = self.fetch_camera_info_by_uuid(camera_uuid=camera_uuid)
+        if camera_info is None:
+            raise ValueError('No camera found with the provided camera_uuid')
+        
+        # Ensure rule_department is proper
+        if rule_department not in PREFERENCES.DEFINED_DEPARTMENTS:
+            raise ValueError('Invalid rule_department provided')
+        
+        # Ensure rule_type is proper
+        if rule_type not in PREFERENCES.DEFINED_RULES.keys():
+            raise ValueError('Invalid rule_type provided')
+        
+        # Ensure evaluation_method is proper
+        if evaluation_method not in PREFERENCES.DEFINED_RULES[rule_type]:
+            raise ValueError('Invalid evaluation_method provided')
+                
+        # Ensure threshold_value is proper
+        if threshold_value is None or not isinstance(threshold_value, str) or len(threshold_value) == 0:
+            raise ValueError('Invalid threshold_value provided')
+        
+        if  float(threshold_value) < 0 or float(threshold_value) > 1:
+            raise ValueError('Invalid threshold_value provided')
+        
+        # Ensure fol_threshold_value is proper
+        if fol_threshold_value is None or not isinstance(fol_threshold_value, str) or len(fol_threshold_value) == 0:
+            raise ValueError('Invalid fol_threshold_value provided')
+        
+        if  float(fol_threshold_value) < 0 or float(fol_threshold_value) > 1:
+            raise ValueError('Invalid fol_threshold_value provided')
+                
+        # Ensure rule_polygon is proper
+        # x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn
+        rule_polygon_list = rule_polygon.split(',')
+        if len(rule_polygon_list) % 2 != 0 or len(rule_polygon_list) < 6:
+            raise ValueError('Invalid rule_polygon provided')
+        for i in range(0, len(rule_polygon_list), 2):
+            float(rule_polygon_list[i]), float(rule_polygon_list[i+1]) # Check if they are floatable
+            if float(rule_polygon_list[i]) < 0 or float(rule_polygon_list[i]) > 1 or float(rule_polygon_list[i+1]) < 0 or float(rule_polygon_list[i+1]) > 1:
+                raise ValueError('Invalid rule_polygon provided, should be normalized')
+                  
+        # Generate a UUID for the rule
+        rule_uuid = str(uuid.uuid4())
+        query = '''
+        INSERT INTO rules_info_table (last_time_triggered, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value,fol_threshold_value, rule_polygon)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        '''
+        self.conn.execute(query, ('1970-01-01 00:00:00', camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, fol_threshold_value, rule_polygon))
+        self.conn.commit()
+
+        return {
+            "camera_uuid": camera_uuid,
+            "rule_uuid": rule_uuid,
+            "rule_department": rule_department,
+            "rule_type": rule_type,
+            "evaluation_method": evaluation_method,
+            "threshold_value": threshold_value,
+            "fol_threshold_value": fol_threshold_value,
+            "rule_polygon": rule_polygon
+        }
+    
+    def trigger_rule_by_rule_uuid(self, rule_uuid:str=None)-> dict:
+        #check if the rule_uuid is valid
+        if rule_uuid is None or not isinstance(rule_uuid, str) or len(rule_uuid) == 0:
+            raise ValueError('Invalid rule_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(rule_uuid):
+            raise ValueError('Invalid rule_uuid provided')
+        
+        #check if the rule exists
+        query = '''
+        SELECT id FROM rules_info_table WHERE rule_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (rule_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Rule not found')
+        
+        trigger_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        #update the last_time_triggered field
+        query = '''
+        UPDATE rules_info_table SET last_time_triggered = ? WHERE rule_uuid = ?
+        '''
+        self.conn.execute(query, (trigger_time, rule_uuid,))
+        self.conn.commit()
+
+        return {
+            "rule_uuid": rule_uuid,
+            "trigger_time": trigger_time
+        }
+    
+    def delete_rule_by_rule_uuid(self, rule_uuid:str=None)-> dict:
+        #check if the rule_uuid is valid
+        if rule_uuid is None or not isinstance(rule_uuid, str) or len(rule_uuid) == 0:
+            raise ValueError('Invalid rule_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(rule_uuid):
+            raise ValueError('Invalid rule_uuid provided')
+        
+        #check if the rule exists
+        query = '''
+        SELECT id FROM rules_info_table WHERE rule_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (rule_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Rule not found')
+
+        #delete the rule
+        query = '''
+        DELETE FROM rules_info_table WHERE rule_uuid = ?
+        '''
+        self.conn.execute(query, (rule_uuid,))
+        self.conn.commit()
+
+        return {
+            "rule_uuid": rule_uuid
+        }  
+    
+    def fetch_rules_by_camera_uuid(self, camera_uuid:str=None)-> list:
+        # Ensure camera_uuid is proper
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        query = '''
+        SELECT date_created, date_updated, last_time_triggered, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, fol_threshold_value, rule_polygon FROM rules_info_table WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        rows = cursor.fetchall()
+        if rows is None:
+            return {'camera_rules':[]}
+
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        return {'camera_rules':result}
+    
+    def fetch_all_rules(self)-> list:
+        query = '''
+        SELECT date_created, date_updated, last_time_triggered, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, fol_threshold_value, rule_polygon FROM rules_info_table
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        if rows is None:
+            return None
+
+        column_names = [description[0] for description in cursor.description]
+        result = [dict(zip(column_names, row)) for row in rows]
+        return {'all_rules':result}
+    
+    # ========================================= counts_table ==============================================
+    def __ensure_counts_table_exists(self):
+        # ======================================== counts_table ====================================================
         # A table to store the integer counts of anything useful. It can be people, violations, processed images etc.
         # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # camera_uuid           : is a unique identifier for the camera
-        # camera_ip             : is the IP address of the camera
-        # count_type            : is the type of count. It can be 'people' or 'violations' etc.
-        # total_count           : is the total count of the type of count
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # count_key             :(str) - how count will be fetched. Can be any arbitrary string but if used for camera, using (camera_uuid_key) is recommended
+        # count_subkey          :(str) is the type of count. It can be 'people' or 'violations' etc.
+        # total_count           :(str) is the total count of the type of count (considered as float during calculations)
         # ========================================================================================================
         query = '''
         CREATE TABLE IF NOT EXISTS counts_table (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            camera_uuid TEXT NOT NULL,
-            camera_ip TEXT NOT NULL,
-            count_type TEXT NOT NULL,
-            total_count INTEGER NOT NULL
+            count_key TEXT NOT NULL,
+            count_subkey TEXT NOT NULL,
+            total_count TEXT NOT NULL
         )
         '''
 
         trigger_query = '''
-            CREATE TRIGGER IF NOT EXISTS update_date_updated_camera_counts
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_counts_table
             AFTER UPDATE ON counts_table
             FOR EACH ROW
             BEGIN
@@ -844,89 +687,107 @@ class DatabaseManager:
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'counts_table' table exists")
 
-    def update_count(self, camera_uuid:str=None, count_type:str=None, delta_count:int=None)-> bool:
-        # Ensure camera_uuid is proper
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
-                
+    def update_count(self, count_key:str = None, count_subkey:str = None, delta_count:float = None)-> dict:               
         # Ensure delta_count is proper
-        if not isinstance(delta_count, int):
+        if not isinstance(delta_count, int) and not isinstance(delta_count, float):
             raise ValueError('Invalid delta_count provided')
-               
-        previous_value = 0
+        
+        # If count_key is not provided, raise an error
+        if count_key is None or not isinstance(count_key, str) or len(count_key) == 0:
+            raise ValueError('Invalid count_key provided')
+        
+        # If count_subkey is not provided, raise an error
+        if count_subkey is None or not isinstance(count_subkey, str) or len(count_subkey) == 0:
+            raise ValueError('Invalid count_subkey provided')
+        
+        # Check if the count_key and count_subkey combination exists, else create it by setting the total_count to 0
         query = '''
-        SELECT total_count FROM counts_table WHERE camera_uuid = ? AND count_type = ?
+        SELECT total_count FROM counts_table WHERE count_key = ? AND count_subkey = ?
         '''
-        cursor = self.conn.execute(query, (camera_uuid, count_type))
+        cursor = self.conn.execute(query, (count_key, count_subkey))
         row = cursor.fetchone()
+        previous_value = None       
         if row is not None:
-            previous_value = row[0]
+            previous_value = float(row[0])
             query = '''
-            UPDATE counts_table SET total_count = ? WHERE camera_uuid = ? AND count_type = ?
+            UPDATE counts_table SET total_count = ? WHERE count_key = ? AND count_subkey = ?
             '''
-            self.conn.execute(query, (previous_value + delta_count, camera_uuid, count_type))
+            self.conn.execute(query, (str(previous_value + delta_count), count_key, count_subkey))
+
         else:
-            camera_info = self.fetch_camera_info_by_uuid(camera_uuid= camera_uuid)
-            if camera_info is None:
-                raise ValueError('No camera found with the provided camera_uuid')
+            previous_value = 0
             query = '''
-            INSERT INTO counts_table (camera_uuid, camera_ip, count_type, total_count)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO counts_table (count_key, count_subkey, total_count)
+            VALUES (?, ?, ?)
             '''
-            self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], count_type, delta_count))
+            self.conn.execute(query, (count_key, count_subkey, str(delta_count)))
 
         self.conn.commit()
         return {
-            "camera_uuid": camera_uuid,
-            "count_type": count_type,
-            "previous_value": previous_value,
-            "delta_count": delta_count,
+            'count_key': count_key, 
+            'count_subkey': count_subkey,
+            'previous_count': previous_value,
+            'delta_count': delta_count,
+            'total_count': previous_value + delta_count
         }
-        
-    def get_counts_by_camera_uuid(self, camera_uuid:str=None)-> int:
-        # Ensure camera_uuid is proper
-        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
-        if not regex.match(camera_uuid):
-            raise ValueError('Invalid camera_uuid provided')
+            
+    def get_counts_by_count_key(self, count_key:str = None)-> dict:
+        # Ensure count_key is proper
+        if count_key is None or not isinstance(count_key, str) or len(count_key) == 0:
+            raise ValueError('Invalid count_key provided')
         
         query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip, count_type, total_count FROM counts_table WHERE camera_uuid = ?
+        SELECT count_subkey, total_count FROM counts_table WHERE count_key = ?
         '''
-        cursor = self.conn.execute(query, (camera_uuid))
-        rows= cursor.fetchall()
-        if rows is None:
-            return []
-
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        return result
-
-    def fetch_all_counts(self)-> list:
+        cursor = self.conn.execute(query, (count_key,))
+        rows = cursor.fetchall()
+        return {'counts': 
+                [{row[0]: float(row[1])} for row in rows]
+        }
+    
+    def get_total_count_by_count_key_and_count_subkey(self, count_key:str = None, count_subkey:str = None)-> dict:
+        # Ensure count_key is proper
+        if count_key is None or not isinstance(count_key, str) or len(count_key) == 0:
+            raise ValueError('Invalid count_key provided')
+        
+        # Ensure count_subkey is proper
+        if count_subkey is None or not isinstance(count_subkey, str) or len(count_subkey) == 0:
+            raise ValueError('Invalid count_subkey provided')
+        
         query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip, count_type, total_count FROM counts_table
+        SELECT total_count FROM counts_table WHERE count_key = ? AND count_subkey = ?
+        '''
+        cursor = self.conn.execute(query, (count_key, count_subkey))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Could not found')
+        
+        return {'total_count': float(row[0])}
+    
+    def fetch_all_counts(self)-> dict:
+        query = '''
+        SELECT count_key, count_subkey, total_count FROM counts_table
         '''
         cursor = self.conn.execute(query)
         rows = cursor.fetchall()
-        if rows is None:
-            return []
+        return {'all_counts': 
+                [{row[0]: {row[1]: float(row[2])}} for row in rows]
+        }
 
-        column_names = [description[0] for description in cursor.description]
-        return [dict(zip(column_names, row)) for row in rows]
-
-    # USER INFO TABLE FUNCTIONS
-    def ensure_user_info_table_exists(self):
-        # ========================================================================================================
-        # A table to store the last frames of the video streams
+    # ========================================= user_info =================================================
+    def __ensure_user_info_table_exists(self):
+        # =========================================user_info=====================================================
+        # A table to store user information
         # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # user_uuid             : is a unique identifier for the user
-        # username              : is the username of the user
-        # personal_fullname     : is the full name of the user
-        # hashed_password       : is the hashed password of the user
+        # id                    :(int) is the primary key (autoincremented)
+        # date_created          :(TIMESTAMP) is the date and time the record was created (default is the current date and time)
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated (default is the current date and time)
+        # user_uuid             :(str) is a unique identifier for the user (str(uuid.uuid4()))
+        # username              :(str) is the username of the user (unique and str)
+        # personal_fullname     :(str) is the full name of the user 
+        # hashed_password       :(str) is the hashed password of the user
         # ========================================================================================================
         query = '''
         CREATE TABLE IF NOT EXISTS user_info (
@@ -953,9 +814,42 @@ class DatabaseManager:
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'user_info' table exists")
+    
+    def __create_safety_ai_user(self):
+        # Ensure the SAFETY_AI_USER_INFO is properly set
+        if not isinstance(PREFERENCES.SAFETY_AI_USER_INFO, dict) or len(PREFERENCES.SAFETY_AI_USER_INFO) == 0:
+            raise ValueError('Invalid SAFETY_AI_USER_INFO provided')
+        
+        # Ensure the SAFETY_AI_USER_INFO contains the required keys
+        required_keys = ['username', 'password', 'personal_fullname']
+        for key in required_keys:
+            if key not in PREFERENCES.SAFETY_AI_USER_INFO:
+                raise ValueError(f"SAFETY_AI_USER_INFO missing key: '{key}'")
+        
+        # Ensure the SAFETY_AI_USER_INFO values are proper
+        if not isinstance(PREFERENCES.SAFETY_AI_USER_INFO['username'], str) or len(PREFERENCES.SAFETY_AI_USER_INFO['username']) == 0:
+            raise ValueError('Invalid username provided in SAFETY_AI_USER_INFO')
+        
+        if not isinstance(PREFERENCES.SAFETY_AI_USER_INFO['password'], str) or len(PREFERENCES.SAFETY_AI_USER_INFO['password']) == 0:
+            raise ValueError('Invalid password provided in SAFETY_AI_USER_INFO')
+        
+        if not isinstance(PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], str) or len(PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname']) == 0:
+            raise ValueError('Invalid personal_fullname provided in SAFETY_AI_USER_INFO')
+        
+        # Ensure the SAFETY_AI_USER_INFO is not already created
+        query = '''
+        SELECT id FROM user_info WHERE username = ?
+        '''
+        cursor = self.conn.execute(query, (PREFERENCES.SAFETY_AI_USER_INFO['username'],))
+        row = cursor.fetchone()
+        if row is not None:
+            return # Safety AI user already exists
+        
+        self.create_user(username=PREFERENCES.SAFETY_AI_USER_INFO['username'], personal_fullname=PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], plain_password=PREFERENCES.SAFETY_AI_USER_INFO['password'])
+        if(self.VERBOSE): print(f"Safety AI user created successfully")
 
-    def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> bool:
-        print(f"username: {username}, personal_fullname: {personal_fullname}, plain_password: '{plain_password}', {len(plain_password)}")
+    def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> dict:
         # Ensure username is proper
         if not isinstance(username, str) or len(username) == 0:
             raise ValueError('Invalid username provided')
@@ -987,93 +881,147 @@ class DatabaseManager:
         INSERT INTO user_info (user_uuid, username, personal_fullname, hashed_password)
         VALUES (?, ?, ?, ?)
         '''
+
         self.conn.execute(query, (user_uuid, username, personal_fullname, hashed_password))
         self.conn.commit()
 
         return {
             "user_uuid": user_uuid,
             "username": username,
-            "personal_fullname": personal_fullname,            
+            "personal_fullname": personal_fullname,   
+            "hashed_password": hashed_password        
         }
-
-    def authenticate_user(self, username:str=None, plain_password:str=None)->bool:
-        hashed_password_candidate = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
-        try:
-            user_dict = self.get_user_by_username(username=username)
-            if user_dict["hashed_password"] == hashed_password_candidate:
-                return True
-            else:
-                return False
-        except Exception as e:
-            print("Exception:", str(e))
-            return False
-        
+    
     def get_user_by_username(self, username:str=None)-> dict:
         # Ensure username is proper
         if not isinstance(username, str) or len(username) == 0:
             raise ValueError('Invalid username provided')
         
         query = '''
-        SELECT date_created, date_updated, user_uuid, username, personal_fullname, hashed_password FROM user_info WHERE username = ?
+        SELECT user_uuid, username, personal_fullname, hashed_password
+        FROM user_info
+        WHERE username = ?
         '''
         cursor = self.conn.execute(query, (username,))
         row = cursor.fetchone()
         if row is None:
-            return None
+            raise ValueError('User not found')
         
-        column_names = [description[0] for description in cursor.description]
-        return dict(zip(column_names, row))
+        return {
+            "user_uuid": row[0],
+            "username": row[1],
+            "personal_fullname": row[2],
+            "hashed_password": row[3]
+        }
     
-    def get_user_by_uuid(self, uuid:str=None):
+    def get_user_by_user_uuid(self, user_uuid:str=None)-> dict:
+        # Ensure user_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(user_uuid, str) or len(user_uuid) == 0 or not regex.match(user_uuid):
+            raise ValueError('Invalid user_uuid provided')
+        
         query = '''
-        SELECT date_created, date_updated, user_uuid, username, personal_fullname, hashed_password FROM user_info WHERE user_uuid = ?
+        SELECT user_uuid, username, personal_fullname, hashed_password
+        FROM user_info
+        WHERE user_uuid = ?
         '''
-        cursor = self.conn.execute(query, (uuid,))
+        cursor = self.conn.execute(query, (user_uuid,))
         row = cursor.fetchone()
         if row is None:
-            return None
+            raise ValueError('User not found')
         
-        column_names = [description[0] for description in cursor.description]
-        return dict(zip(column_names, row))
+        return {
+            "user_uuid": row[0],
+            "username": row[1],
+            "personal_fullname": row[2],
+            "hashed_password": row[3]
+        }
 
-    def update_user_password_by_uuid(self, user_uuid:str=None, new_plain_password:str=None):
-        # Ensure password is proper
-        if not isinstance(new_plain_password, str) or len(new_plain_password) == 0:
+    def is_authenticated_user(self, username:str=None, plain_password:str=None)->dict:
+        if not isinstance(username, str) or len(username) == 0:
+            raise ValueError('Invalid username provided')
+        
+        if not isinstance(plain_password, str) or len(plain_password) == 0:
             raise ValueError('Invalid password provided')
         
-        # Hash the password
-        hashed_password = hashlib.sha256(new_plain_password.encode('utf-8')).hexdigest()
+        hashed_password_candidate = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+        try:
+            user_dict = self.get_user_by_username(username=username)          
+            if user_dict["hashed_password"] == hashed_password_candidate:
+                return {'is_authenticated' : True}
+            else:
+                return {'is_authenticated' : False}
+        except Exception as e:
+            return {'is_authenticated' : False}
+    
+    def delete_user_by_username(self, username:str=None)->dict:
+        if not isinstance(username, str) or len(username) == 0:
+            raise ValueError('Invalid username provided')
         
+        # Check if the user exists
         query = '''
-        UPDATE user_info SET hashed_password = ? WHERE user_uuid = ?
+        SELECT id FROM user_info WHERE username = ?
         '''
-        self.conn.execute(query, (hashed_password, user_uuid))
-        self.conn.commit()
-
-    def fetch_all_user_info(self):
+        cursor = self.conn.execute(query, (username,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Delete the user
         query = '''
-        SELECT date_created, date_updated, user_uuid, username, personal_fullname, hashed_password FROM user_info
+        DELETE FROM user_info WHERE username = ?
+        '''
+        self.conn.execute(query, (username,))
+        self.conn.commit()
+        return {'is_deleted' : True}
+    
+    def delete_user_by_user_uuid(self, user_uuid:str=None)->dict:
+        if not isinstance(user_uuid, str) or len(user_uuid) == 0:
+            raise ValueError('Invalid user_uuid provided')
+        
+        # Check if the user exists
+        query = '''
+        SELECT id FROM user_info WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Delete the user
+        query = '''
+        DELETE FROM user_info WHERE user_uuid = ?
+        '''
+        self.conn.execute(query, (user_uuid,))
+        self.conn.commit()
+        return {'is_deleted' : True}
+    
+    def get_all_users(self)->dict:
+        query = '''
+        SELECT user_uuid, username, personal_fullname, hashed_password
+        FROM user_info
         '''
         cursor = self.conn.execute(query)
         rows = cursor.fetchall()
-        if rows is None:
-            return []
-
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        return result
-
-    # AUTHORIZATION TABLE FUNCTIONS
-    def ensure_authorization_table_exists(self):
-        # ========================================================================================================
+        return {'users': [{
+            "user_uuid": row[0],
+            "username": row[1],
+            "personal_fullname": row[2],
+            "hashed_password": row[3]
+        } for row in rows]
+        }
+    
+    # ========================================= authorization_table ========================================
+    def __ensure_authorization_table_exists(self):
+        # ===========================================authorization_table==========================================
         # A table to store the authorizations of the users. One user can be linked to multiple authorizations
         # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # user_uuid             : is a unique identifier for the user
-        # authorization_uuid    : is a unique identifier for the authorization
-        # authorization_name    : is the name of the authorization
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # user_uuid             :(str) is a unique identifier for the user
+        # authorization_uuid    :(str) is a unique identifier for the authorization
+        # authorization_name    :(str) is the name of the authorization
         # ========================================================================================================
         query = '''
         CREATE TABLE IF NOT EXISTS authorization_table (
@@ -1099,169 +1047,359 @@ class DatabaseManager:
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
-        
-        self.conn.execute(query)
-        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'authorization_table' table exists")
     
-    def authorize_user(self, user_uuid:str=None, authorization_name:str=None):
+    def add_authorization(self, user_uuid:str=None, authorization_name:str=None)-> dict:
         # Ensure user_uuid is proper
-        if not isinstance(user_uuid, str) or len(user_uuid) == 0:
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(user_uuid, str) or len(user_uuid) == 0 or not regex.match(user_uuid):
             raise ValueError('Invalid user_uuid provided')
         
         # Ensure authorization_name is proper
-        if not isinstance(authorization_name, str) or len(authorization_name) == 0:
+        if not isinstance(authorization_name, str) or authorization_name not in PREFERENCES.DEFINED_AUTHORIZATIONS:
             raise ValueError('Invalid authorization_name provided')
         
-        if not authorization_name in PREFERENCES.DEFINED_AUTHORIZATIONS:
-            raise ValueError("Invalid 'authorization_name' provided")
+        # Ensure the user exists
+        query = '''
+        SELECT id FROM user_info WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
         
-        # Ensure user exists
-        user_info = self.get_user_by_uuid(uuid=user_uuid)
-        if user_info is None:
-            raise ValueError('No user found with the provided user_uuid')
+        # Generate a UUID for the authorization
+        authorization_uuid = str(uuid.uuid4())
         
         query = '''
-        INSERT INTO authorization_table (user_uuid, authorization_name, authorization_uuid)
+        INSERT INTO authorization_table (user_uuid, authorization_uuid, authorization_name)
         VALUES (?, ?, ?)
         '''
-        self.conn.execute(query, (user_uuid, authorization_name, str(uuid.uuid4())))
+        self.conn.execute(query, (user_uuid, authorization_uuid, authorization_name))
         self.conn.commit()
+        
+        return {
+            "user_uuid": user_uuid,
+            "authorization_uuid": authorization_uuid,
+            "authorization_name": authorization_name
+        }
 
-    def remove_authorization(self, authorization_uuid:str = None):
+    def remove_authorization(self, authorization_uuid:str = None)->dict:
+        # Ensure authorization_uuid is proper
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(authorization_uuid, str) or len(authorization_uuid) == 0 or not regex.match(authorization_uuid):
+            raise ValueError('Invalid authorization_uuid provided')
+        
+        # Check if the authorization exists
+        query = '''
+        SELECT id FROM authorization_table WHERE authorization_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (authorization_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Authorization not found')
+        
+        # Delete the authorization
         query = '''
         DELETE FROM authorization_table WHERE authorization_uuid = ?
         '''
         self.conn.execute(query, (authorization_uuid,))
         self.conn.commit()
+        return {'is_authorization_removed': True}
 
-    def fetch_user_authorizations(self, user_uuid:str=None):
+    def get_user_authorizations_by_user_uuid(self, user_uuid:str=None)->dict:
         # Ensure user_uuid is proper
-        if not isinstance(user_uuid, str) or len(user_uuid) == 0:
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not isinstance(user_uuid, str) or len(user_uuid) == 0 or not regex.match(user_uuid):
             raise ValueError('Invalid user_uuid provided')
         
+        # Ensure user exists
         query = '''
-        SELECT date_created, date_updated, user_uuid, authorization_uuid, authorization_name FROM authorization_table WHERE user_uuid = ?
+        SELECT id FROM user_info WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Get the authorizations
+        query = '''
+        SELECT authorization_uuid, authorization_name
+        FROM authorization_table
+        WHERE user_uuid = ?
         '''
         cursor = self.conn.execute(query, (user_uuid,))
         rows = cursor.fetchall()
-        if rows is None:
-            return []
-
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        return result
-
-    def fetch_all_authorizations(self):
+        return {'user_authorizations':[{
+            "authorization_uuid": row[0],
+            "authorization_name": row[1]
+        } for row in rows]
+        }
+    
+    def get_user_authorizations_by_username(self, username:str=None)->dict:
+        # Ensure username is proper
+        if not isinstance(username, str) or len(username) == 0:
+            raise ValueError('Invalid username provided')
+        
+        # Ensure user exists
         query = '''
-        SELECT date_created, date_updated, user_uuid, authorization_uuid, authorization_name FROM authorization_table
+        SELECT id FROM user_info WHERE username = ?
         '''
-        cursor = self.conn.execute(query)
+        cursor = self.conn.execute(query, (username,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('User not found')
+        
+        # Get the authorizations
+        query = '''
+        SELECT authorization_uuid, authorization_name
+        FROM authorization_table
+        WHERE user_uuid = (SELECT user_uuid FROM user_info WHERE username = ?)
+        '''
+        cursor = self.conn.execute(query, (username,))
         rows = cursor.fetchall()
-        if rows is None:
-            return []
-
-        column_names = [description[0] for description in cursor.description]
-        result = [dict(zip(column_names, row)) for row in rows]
-        return result
-
-    # SHIFT COUNTS TABLE
-    def ensure_shift_counts_table_exists(self):
-        # ========================================================================================================
-        # A table to store the integer counts of a SHIFT anything useful. It can be people, violations, processed images etc.
+        return {'user_authorizations':[{
+            "authorization_uuid": row[0],
+            "authorization_name": row[1]
+        } for row in rows]
+        }
+    # ========================================= camera_info_table ========================================
+    
+    def __ensure_camera_info_table_exists(self):
+        # ========================================camera_info_table================================================
+        # A table to store the information of the cameras
         # ====================================== TABLE STRUCTURE =================================================
-        # id                    : is the primary key
-        # date_created          : is the date and time the record was created
-        # date_updated          : is the date and time the record was last updated
-        # shift_date_ddmmyyyy   : is the date of the shift in the format of 'dd.mm.yyyy'
-        # shift_no              : is the number of the shift. It can be '0','1','2'
-        # camera_uuid           : is a unique identifier for the camera
-        # camera_ip             : is the IP address of the camera
-        # count_type            : is the type of count. It can be 'people' or 'violations' etc.
-        # total_count           : is the total count of the type of count
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # camera_uuid           :(str) is a unique identifier for the camera
+        # camera_ip_address     :(str) is the IP address of the camera
+        # camera_region         :(str) is the region of the camera
+        # camera_description    :(str) is the description of the camera
+        # username              :(str) is the username to access the camera
+        # password              :(str) is the password to access the camera
+        # stream_path           :(str) is the path to the video stream
+        # camera_status         :(str) is the status of the camera. Defined at PREFERENCES.DEFINED_CAMERA_STATUSES (probably 'active' or 'inactive' but should check)
         # ========================================================================================================
         query = '''
-        CREATE TABLE IF NOT EXISTS shift_counts_table (
+        CREATE TABLE IF NOT EXISTS camera_info_table (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            shift_date_ddmmyyyy TEXT NOT NULL,
-            shift_no TEXT NOT NULL,
             camera_uuid TEXT NOT NULL,
-            camera_ip TEXT NOT NULL,
-            count_type TEXT NOT NULL,
-            total_count INTEGER NOT NULL
+            camera_ip_address TEXT NOT NULL,
+            camera_region TEXT NOT NULL,
+            camera_description TEXT NOT NULL,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            stream_path TEXT NOT NULL,
+            camera_status TEXT NOT NULL
         )
         '''
-
         trigger_query = '''
-            CREATE TRIGGER IF NOT EXISTS update_date_updated_shift_counts
-            AFTER UPDATE ON shift_counts_table
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_camera_info_table
+            AFTER UPDATE ON camera_info_table
             FOR EACH ROW
             BEGIN
-                UPDATE shift_counts_table 
+                UPDATE camera_info_table 
                 SET date_updated = CURRENT_TIMESTAMP 
                 WHERE id = OLD.id;
             END;
-            '''
+        '''
         
         self.conn.execute(query)
         self.conn.execute(trigger_query)
         self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'camera_info_table' table exists")
 
-    def update_shift_count(self, camera_uuid:str=None, count_type:str=None, shift_date_ddmmyyyy:str = None, shift_no:str=None, delta_count:int=None)-> bool:
-        # Ensure camera_uuid is proper
+    def create_camera_info(self, camera_ip_address:str=None, camera_region:str=None, camera_description:str=None, username:str=None, password:str=None, stream_path:str=None, camera_status:str=None)-> dict:
+        camera_uuid = str(uuid.uuid4())
+        camera_description = "" if camera_description == None else camera_description
+        camera_region = "" if camera_region == None else camera_region
+
+        # Check if the camera_ip_address is provided
+        if camera_ip_address is None or not isinstance(camera_ip_address, str) or len(camera_ip_address) == 0:
+            raise ValueError('Invalid camera_ip_address provided')
+        
+        # Check if camera_stream_path is provided
+        if stream_path is None or not isinstance(stream_path, str) or len(stream_path) == 0:
+            raise ValueError('Invalid stream_path provided')
+        
+        # Check IP is valid or not
+        if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', camera_ip_address):
+            raise ValueError('Invalid IP address provided')
+                
+        # Check if the camera_status is valid or not
+        if camera_status not in PREFERENCES.DEFINED_CAMERA_STATUSES:
+            raise ValueError(f"Invalid camera_status provided. Valid values are {PREFERENCES.DEFINED_CAMERA_STATUSES}")
+        
+        # Check if username and password are provided
+        if username is None or password is None:
+            raise ValueError('Username and password are required')
+                
+        # Format the camera_description and camera_region
+        if camera_description is not None and not isinstance(camera_description, str):
+            raise ValueError('Invalid camera_description provided')
+        
+        if camera_region is not None and not isinstance(camera_region, str):
+            raise ValueError('Invalid camera_region provided')
+
+        # Check if the camera_ip_address is unique or not
+        query = '''
+        SELECT id FROM camera_info_table WHERE camera_ip_address = ?
+        '''
+        cursor = self.conn.execute(query, (camera_ip_address,))
+        row = cursor.fetchone()
+        if row is not None:
+            raise ValueError('camera_ip_address already exists')
+        
+        # Create camera       
+        query = '''
+        INSERT INTO camera_info_table (camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        '''    
+        self.conn.execute(query, (camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status))       
+        self.conn.commit()
+
+        return {
+            "camera_uuid": camera_uuid,
+            "camera_ip_address": camera_ip_address,
+            "camera_region": camera_region,
+            "camera_description": camera_description,
+            "username": username,
+            "password": password,
+            "stream_path": stream_path,
+            "camera_status": camera_status
+        }
+
+    def update_camera_info_attribute(self, camera_uuid:str=None, attribute_name:str=None, attribute_value:str=None)-> dict:
+        # Check if the camera_uuid is valid or not
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
         regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
         if not regex.match(camera_uuid):
             raise ValueError('Invalid camera_uuid provided')
-                
-        # Ensure delta_count is proper
-        if not isinstance(delta_count, int):
-            raise ValueError('Invalid delta_count provided')
-               
-        previous_value = 0
-        query = '''
-        SELECT total_count FROM shift_counts_table WHERE camera_uuid = ? AND count_type = ? AND shift_date_ddmmyyyy = ? AND shift_no = ?
-        '''
-        cursor = self.conn.execute(query, (camera_uuid, count_type, shift_date_ddmmyyyy, shift_no))
-        row = cursor.fetchone()
-        if row is not None:
-            previous_value = row[0]
-            query = '''
-            UPDATE shift_counts_table SET total_count = ? WHERE camera_uuid = ? AND count_type = ?
-            '''
-            self.conn.execute(query, (previous_value + delta_count, camera_uuid, count_type))
-        else:
-            camera_info = self.fetch_camera_info_by_uuid(camera_uuid= camera_uuid)
-            if camera_info is None:
-                raise ValueError('No camera found with the provided camera_uuid')
-            query = '''
-            INSERT INTO shift_counts_table (camera_uuid, camera_ip, count_type, shift_date_ddmmyyyy, shift_no, total_count)
-            VALUES (?, ?, ?, ?, ?, ?)
-            '''
-            self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], count_type, shift_date_ddmmyyyy, str(shift_no), delta_count))
+        
+        # Check if the attribute is provided
+        if attribute_name is None or not isinstance(attribute_name, str): 
+            raise ValueError('Invalid attribute provided')
+        
+        # Check if the attribute is valid or not
+        if attribute_name not in ['camera_ip_address', 'camera_region', 'camera_description', 'username', 'password', 'stream_path', 'camera_status']:
+            raise ValueError(f'Invalid attribute provided {attribute_name}')
+        
+        # Check whether camera_region attribute is properly formatted
+        if not isinstance(attribute_value, str):
+            raise ValueError('Attribute value must be a string')
 
+        # Check if attribute is too long
+        if len(attribute_value) > 256:
+            raise ValueError('Attribute value is too long')
+        
+        if attribute_name == 'camera_ip_address':
+            if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', attribute_value):
+                raise ValueError('Invalid IP address provided')
+            
+            # Check if the camera_ip_address is unique or not
+            query = '''
+            SELECT id FROM camera_info_table WHERE camera_ip_address = ?
+            '''
+            cursor = self.conn.execute(query, (attribute_value,))
+            row = cursor.fetchone()
+            if row is not None:
+                raise ValueError('camera_ip_address already exists')
+        
+        if attribute_name == 'camera_status' and attribute_value not in PREFERENCES.DEFINED_CAMERA_STATUSES:
+            raise ValueError("Invalid camera_status provided. Valid values are 'active' or 'inactive'")
+        
+        query = f'''
+        UPDATE camera_info_table 
+        SET {attribute_name} = ?, date_updated = CURRENT_TIMESTAMP 
+        WHERE camera_uuid = ?
+        '''
+        self.conn.execute(query, (attribute_value, camera_uuid))
         self.conn.commit()
+
         return {
             "camera_uuid": camera_uuid,
-            "count_type": count_type,
-            "shift_date_ddmmyyyy": shift_date_ddmmyyyy,
-            "shift_no": shift_no,
-            "previous_value": previous_value,
-            "delta_count": delta_count,
+            attribute_name: attribute_value
         }
 
-    def get_shift_counts_between_dates(self, start_date: datetime.datetime=None, end_date: datetime.datetime=None) -> list:
-        # One can fetch for a relatively elastic start and end date with additional entries, then post-filter the results in the application
+    def delete_camera_info_by_uuid(self, camera_uuid:str=None)-> dict:
+        # Check if the camera_uuid is valid or not
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
         query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip, shift_date_ddmmyyyy, shift_no, count_type, total_count 
-        FROM shift_counts_table 
-        WHERE date_updated BETWEEN ? AND ?
+        DELETE FROM camera_info_table WHERE camera_uuid = ?
         '''
-        cursor = self.conn.execute(query, (start_date, end_date))
+        self.conn.execute(query, (camera_uuid,))
+        self.conn.commit()
+
+        return {
+            "camera_uuid": camera_uuid
+        }
+    
+    def fetch_all_camera_info(self)-> dict:
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status FROM camera_info_table
+        '''
+        cursor = self.conn.execute(query)
         rows = cursor.fetchall()
-
-        # Convert each row to a dictionary
+        
+        # Get column names from cursor description
         column_names = [description[0] for description in cursor.description]
+        
+        # Convert each row to a dictionary
         result = [dict(zip(column_names, row)) for row in rows]
+        
+        keys_to_delete = []
+        for d in result:
+            for key in keys_to_delete:
+                d.pop(key, None)  # Use pop with default to avoid KeyError if key is not present
+                
+        return {'all_camera_info':result}
 
-        return result
+    def fetch_camera_info_by_uuid(self, camera_uuid:str = None) -> dict:
+        if camera_uuid is None or not isinstance(camera_uuid, str) or len(camera_uuid) == 0:
+            raise ValueError('Invalid camera_uuid provided')
+        
+        regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
+        if not regex.match(camera_uuid):
+            raise ValueError('Invalid camera_uuid provided')
+        
+        query = '''
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, username, password, stream_path, camera_status FROM camera_info_table WHERE camera_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (camera_uuid,))
+        row = cursor.fetchone()
+        
+        if row is None:
+            raise ValueError('Camera not found')
+        else:
+            # Get column names from cursor description
+            column_names = [description[0] for description in cursor.description]
+            
+            # Create a dictionary using the column names and row data
+            return {'camera_info':dict(zip(column_names, row))}
+    
+    def fetch_camera_uuid_by_camera_ip_address(self, camera_ip_address:str=None)-> dict:
+        if camera_ip_address is None or not isinstance(camera_ip_address, str) or len(camera_ip_address) == 0:
+            raise ValueError('Invalid camera_ip_address provided')
+        
+        query = '''
+        SELECT camera_uuid FROM camera_info_table WHERE camera_ip_address = ?
+        '''
+        cursor = self.conn.execute(query, (camera_ip_address,))
+        row = cursor.fetchone()
+        
+        if row is None:
+            raise ValueError('Camera not found')
+        else:
+            return {'camera_uuid': row[0]}
+    
