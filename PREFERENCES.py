@@ -191,53 +191,37 @@ DEFINED_RULES = {
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}
 #TODO: set an interval for checking image integrity and remove images that are not in the database
 
-
-
-# Check for the external drive named SAFETY_AI
-drive_name = 'SAFETY_AI'
-
+DATA_FOLDER_PATH_EXTERNAL = None
+detector = USBDriveDetector()
+target_label = 'SAFETY_AI'  # Replace with your actual drive label
+target_drive = detector.find_drive_by_label(target_label)
+if target_drive:
+    if detector.os_type == 'Linux' or detector.is_docker:
+        DATA_FOLDER_PATH_EXTERNAL = target_drive.get('mountpoint') or target_drive.get('volume_abspath')
+    elif detector.os_type == 'Windows':
+        DATA_FOLDER_PATH_EXTERNAL = target_drive.get('drive_letter') or target_drive.get('volume_abspath')
+    else:
+        DATA_FOLDER_PATH_EXTERNAL = None
+    print(f"DATA_FOLDER_PATH_EXTERNAL set to: {DATA_FOLDER_PATH_EXTERNAL}")
+else:
+    print(f"Drive with label '{target_label}' not found. Please ensure it is connected and mounted.")
 
 if os.name == "nt":  # For Windows (i.e development environment)
     SERVER_IP_ADDRESS = "192.168.0.26"
     CLEAR_TERMINAL_COMMAND = "cls"
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent/ "api_server_2" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = True
-
-    detector = USBDriveDetector()
-    target_label = 'SAFETY_AI'  # Replace with your actual drive label
-    target_drive = detector.find_drive_by_label(target_label)
     
-    if target_drive:
-        if detector.os_type == 'Linux' or detector.is_docker:
-            EXPORT_IMAGE_FOLDER_EXTERNAL = target_drive.get('mountpoint') or target_drive.get('volume_abspath')
-        elif detector.os_type == 'Windows':
-            EXPORT_IMAGE_FOLDER_EXTERNAL = target_drive.get('drive_letter') or target_drive.get('volume_abspath')
-        else:
-            EXPORT_IMAGE_FOLDER_EXTERNAL = None
-        print(f"EXPORT_IMAGE_FOLDER_EXTERNAL set to: {EXPORT_IMAGE_FOLDER_EXTERNAL}")
-    else:
-        print(f"Drive with label '{target_label}' not found. Please ensure it is connected and mounted.")
-
-    def find_external_drive_by_name(drive_name:str = None):
-        # Iterate through all mounted partitions
-        for partition in psutil.disk_partitions():
-            # If the drive name matches and the device is removable, return the mount point
-            if drive_name in partition.mountpoint:
-                return partition.mountpoint
-        return None    
     DATA_FOLDER_PATH_LOCAL = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
-    DATA_FOLDER_PATH_EXTERNAL = find_external_drive_by_name(drive_name = "SAFETY_AI")
+    DATA_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL
 
-    EXPORT_IMAGE_FOLDER = None
-    ENCRYPTED_IMAGE_FOLDER_SSD = None
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     SERVER_IP_ADDRESS = "172.17.27.12"
     CLEAR_TERMINAL_COMMAND = "clear"
     SQL_DATABASE_PATH = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "safety_ai.db"
     PRINT_MOUSE_COORDINATES = False
-    ENCRYPTED_IMAGE_FOLDER = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
-    EXPORT_IMAGE_FOLDER = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "exported_images"
-    ENCRYPTED_IMAGE_FOLDER_SSD = None
+    DATA_FOLDER_PATH_LOCAL = PREFERENCES_FILE_PATH.parent.parent / "safety_AI_volume" / "api_server" / "encrypted_images"
+    DATA_FOLDER_PATH_EXTERNAL = DATA_FOLDER_PATH_EXTERNAL
 else:
     raise Exception("Unknown operating system")
 
