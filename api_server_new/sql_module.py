@@ -1264,7 +1264,7 @@ class SQLManager:
 
         # add the admin user all the permissions
         for authorization in PREFERENCES.DEFINED_AUTHORIZATIONS:
-            self.add_authorization(used_uuid = safety_ai_user_info['user_uuid'], authorization_name = authorization)
+            self.add_authorization(user_uuid = safety_ai_user_info['user_uuid'], authorization_name = authorization)
 
     def __create_admin_user(self):
         # Ensure the ADMIN_USER_INFO is properly set
@@ -1302,8 +1302,7 @@ class SQLManager:
 
         # add the admin user all the permissions
         for authorization in PREFERENCES.DEFINED_AUTHORIZATIONS:
-            self.add_authorization(used_uuid = admin_user_info['user_uuid'], authorization_name = authorization)
-
+            self.add_authorization(user_uuid = admin_user_info['user_uuid'], authorization_name = authorization)
 
     def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> dict:
         # Ensure username is proper
