@@ -1,4 +1,6 @@
-import os, psutil, platform, subprocess, win32api, win32file
+import os, psutil, platform, subprocess
+if os.name == "nt":
+    import win32api, win32file
 from pathlib import Path
 import psutil
 
