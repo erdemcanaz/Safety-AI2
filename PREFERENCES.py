@@ -210,3 +210,7 @@ SHOW_FRAMES = {
     "combined_violation_frame": True,
     "show_all_frames": True,
 }
+
+
+print(f"[INFO] The preferences file is loaded successfully")
+time.sleep(5) # Wait so that the user can read the printed information
