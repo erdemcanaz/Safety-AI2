@@ -3,7 +3,6 @@ if os.name == "nt": import win32api, win32file
 from pathlib import Path
 import psutil
 
-
 class USBDriveDetector:
     def __init__(self):
         self.os_type = platform.system()
@@ -108,10 +107,7 @@ class USBDriveDetector:
         # Define potential mount points inside Docker
         # You can customize this list based on how you mount volumes in your Docker setup
         potential_mount_points = [
-            '/mnt/SAFETY_AI',         # Example for Linux
-            '/media/SAFETY_AI',       # Another common mount point
-            '/data/SAFETY_AI',        # Custom mount point
-            '/SAFETY_AI'              # Root-level mount point
+            '/media/safety',       #NOTE: safety is the name of the ubuntu user
         ]
         
         external_drives = []
@@ -189,7 +185,6 @@ DEFINED_RULES = {
     ],
 }
 
-#============
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}
 #TODO: set an interval for checking image integrity and remove images that are not in the database
 
