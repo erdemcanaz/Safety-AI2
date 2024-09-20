@@ -70,7 +70,8 @@ class SQLManager:
         # rule_department       :(str) for example HSE, QUALITY, SECURITY etc.
         # rule_type             :(str) for example hardhat_violation, restricted_area_violation etc.
         # evaluation_method     :(str) There can be multiple methods to evaluate the same rule. This indicates the method to be used
-        # threshold_value       :(str,  [0, 1]) is the threshold value to evaluate the rule
+        # threshold_value       :(str,  [0, 1]) is the threshold value to report a violation to local server
+        # fol_threshold_value   :(str,  [0, 1]) is the threshold value to report a violation to the fol server
         # rule_polygon_str      :(str) is the polygon to indicate the area rule is applied. "x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn"
         # ========================================================================================================
         
@@ -85,6 +86,7 @@ class SQLManager:
             rule_type TEXT NOT NULL,
             evaluation_method TEXT NOT NULL,
             threshold_value TEXT NOT NULL,
+            fol_threshold_value TEXT NOT NULL,
             rule_polygon TEXT NOT NULL
         )
         '''
@@ -103,7 +105,7 @@ class SQLManager:
         self.conn.commit()
         if self.VERBOSE: print(f"Ensured 'rules_info_table' table exists")
 
-    def create_rule(self, camera_uuid:str=None, rule_department:str=None, rule_type:str=None, evaluation_method:str=None, threshold_value:str=None, rule_polygon:str=None)->dict:
+    def create_rule(self, camera_uuid:str=None, rule_department:str=None, rule_type:str=None, evaluation_method:str=None, threshold_value:str=None, fol_threshold_value:str=None, rule_polygon:str=None)->dict:
         # Ensure camera_uuid is proper
         regex = re.compile(r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')
         if not regex.match(camera_uuid):
@@ -132,10 +134,14 @@ class SQLManager:
         
         if  float(threshold_value) < 0 or float(threshold_value) > 1:
             raise ValueError('Invalid threshold_value provided')
-    
-        if not 0 <= float(threshold_value) <= 1:
-            raise ValueError('Invalid threshold_value provided, should be between 0 and 1')
         
+        # Ensure fol_threshold_value is proper
+        if fol_threshold_value is None or not isinstance(fol_threshold_value, str) or len(fol_threshold_value) == 0:
+            raise ValueError('Invalid fol_threshold_value provided')
+        
+        if  float(fol_threshold_value) < 0 or float(fol_threshold_value) > 1:
+            raise ValueError('Invalid fol_threshold_value provided')
+                
         # Ensure rule_polygon is proper
         # x0n,y0n,x1n,y1n,x2n,y2n,...,xmn,ymn
         rule_polygon_list = rule_polygon.split(',')
@@ -150,10 +156,10 @@ class SQLManager:
         rule_uuid = str(uuid.uuid4())
         
         query = '''
-        INSERT INTO rules_info_table (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO rules_info_table (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value,fol_threshold_value, rule_polygon)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         '''
-        self.conn.execute(query, (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon))
+        self.conn.execute(query, (camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, fol_threshold_value, rule_polygon))
         self.conn.commit()
 
         return {
@@ -163,6 +169,7 @@ class SQLManager:
             "rule_type": rule_type,
             "evaluation_method": evaluation_method,
             "threshold_value": threshold_value,
+            "fol_threshold_value": fol_threshold_value,
             "rule_polygon": rule_polygon
         }
     
@@ -205,7 +212,7 @@ class SQLManager:
             raise ValueError('Invalid camera_uuid provided')
         
         query = '''
-        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon FROM rules_info_table WHERE camera_uuid = ?
+        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, fol_threshold_value, rule_polygon FROM rules_info_table WHERE camera_uuid = ?
         '''
         cursor = self.conn.execute(query, (camera_uuid,))
         rows = cursor.fetchall()
@@ -218,7 +225,7 @@ class SQLManager:
     
     def fetch_all_rules(self)-> list:
         query = '''
-        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, rule_polygon FROM rules_info_table
+        SELECT date_created, date_updated, camera_uuid, rule_uuid, rule_department, rule_type, evaluation_method, threshold_value, fol_threshold_value, rule_polygon FROM rules_info_table
         '''
         cursor = self.conn.execute(query)
         rows = cursor.fetchall()

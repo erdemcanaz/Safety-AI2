@@ -231,11 +231,12 @@ test_rule = {
     "rule_type": choosen_type,
     "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
     "threshold_value": f"{random.uniform(0, 1):.3f}",
+    "fol_threshold_value": f"{random.uniform(0, 1):.3f}",
     "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
 }
 
-print(f"\n(1) Creating a rule with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\trule_polygon:'{test_rule['rule_polygon']}'")
-rule_dict_create_rule = sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], rule_polygon=test_rule['rule_polygon'])
+print(f"\n(1) Creating a rule with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\tfol_threshold_value:'{test_rule['fol_threshold_value']},\n\trule_polygon:'{test_rule['rule_polygon']}'")
+rule_dict_create_rule = sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], fol_threshold_value= test_rule['fol_threshold_value'], rule_polygon=test_rule['rule_polygon'])
 pprint.pprint(rule_dict_create_rule)
 
 print(f"\n(2) Fetching the rule by rule_uuid:'{rule_dict_create_rule['rule_uuid']}'")
@@ -264,10 +265,11 @@ for _ in range(random.randint(1, 5)):
         "rule_type": choosen_type,
         "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
         "threshold_value": f"{random.uniform(0, 1):.3f}",
+        "fol_threshold_value": f"{random.uniform(0, 1):.3f}",
         "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
     }
-    print(f"Creating a rule for camera-1 with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\trule_polygon:'{test_rule['rule_polygon']}'")
-    sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], rule_polygon=test_rule['rule_polygon'])
+    print(f"Creating a rule for camera-1 with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\tfol_threshold_value:'{test_rule['fol_threshold_value']},\n\trule_polygon:'{test_rule['rule_polygon']}'")
+    sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], fol_threshold_value= test_rule['fol_threshold_value'], rule_polygon=test_rule['rule_polygon'])
 
 for _ in range(random.randint(1, 5)):
     choosen_type = random.choice(list(PREFERENCES.DEFINED_RULES.keys()))
@@ -277,10 +279,11 @@ for _ in range(random.randint(1, 5)):
         "rule_type": choosen_type,
         "evaluation_method": random.choice(PREFERENCES.DEFINED_RULES[choosen_type]),
         "threshold_value": f"{random.uniform(0, 1):.3f}",
+        "fol_threshold_value": f"{random.uniform(0, 1):.3f}",
         "rule_polygon": ','.join([f"{random.uniform(0, 1):.3f},{random.uniform(0, 1):.3f}" for _ in range(random.randint(3, 4))]),
     }
-    print(f"Creating a rule for camera-2 with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\trule_polygon:'{test_rule['rule_polygon']}'")
-    sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], rule_polygon=test_rule['rule_polygon'])
+    print(f"Creating a rule for camera-2 with \n\tcamera_uuid:'{test_rule['camera_uuid']}'\n\trule_department:'{test_rule['rule_department']}'\n\trule_type:'{test_rule['rule_type']}'\n\tevaluation_method:'{test_rule['evaluation_method']}'\n\tthreshold_value:'{test_rule['threshold_value']}'\n\tfol_threshold_value:'{test_rule['fol_threshold_value']},\n\trule_polygon:'{test_rule['rule_polygon']}'")
+    sql_manager.create_rule(camera_uuid=test_rule['camera_uuid'], rule_department=test_rule['rule_department'], rule_type=test_rule['rule_type'], evaluation_method=test_rule['evaluation_method'], threshold_value=test_rule['threshold_value'], fol_threshold_value= test_rule['fol_threshold_value'], rule_polygon=test_rule['rule_polygon'])
 
 all_rules = sql_manager.fetch_all_rules()
 pprint.pprint(all_rules)
