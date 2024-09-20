@@ -160,7 +160,7 @@ if external_data_folder_size > MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL:
     raise Exception(f"External data folder size is {external_data_folder_size} GB which is greater than the allowed limit of {MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL} GB")
 
 print(f"[INFO] %{100*local_data_folder_size/MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_LOCAL:.2f} of the allowed | Size of the local data folder: {local_data_folder_size:.2f} GB")
-print(f"[INFO] %{100*local_data_folder_size/MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL:.2f} of the allowed | Size of the external data folder: {external_data_folder_size:.2f} GB")
+print(f"[INFO] %{100*external_data_folder_size/MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL:.2f} of the allowed | Size of the external data folder: {external_data_folder_size:.2f} GB")
 
 # Check if year is less than 2024, if so raise an error
 if datetime.datetime.now().year < 2024:
