@@ -144,6 +144,7 @@ class USBDriveDetector:
         """
         usb_drives = self.get_usb_drives()
         for drive in usb_drives:
+            print(drive)
             # Depending on OS and environment, the label key may vary
             label = drive.get('volume_name') or drive.get('Volume Name') or drive.get('label')
             if label and label.lower() == label_name.lower():
