@@ -112,6 +112,7 @@ class USBDriveDetector:
         
         external_drives = []
         for mount_point in potential_mount_points:
+            print(f"Checking mount point: {mount_point}")
             if os.path.ismount(mount_point):
                 device_path = mount_point  # In Docker, device paths might not be directly accessible
                 try:
