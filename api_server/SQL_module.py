@@ -90,6 +90,75 @@ class SQLManager:
         
         return cv2.imdecode(np.frombuffer(base64.b64decode(base_64_encoded_jpg_image_bytes), dtype=np.uint8), cv2.IMREAD_COLOR)
     
+    # ======================================= iot_device ========================================
+    def __ensure_iot_devices_table_exists(self):
+        # =======================================iot_devices===================================================
+        # A table to store the iot devices
+        # ====================================== TABLE STRUCTURE =================================================
+        # id                    :(int) is the primary key
+        # date_created          :(TIMESTAMP) is the date and time the record was created
+        # date_updated          :(TIMESTAMP) is the date and time the record was last updated
+        # device_uuid           :(str) is a unique identifier for the device
+        # device_name           :(str) is the name of the device
+        # device_id             :(str) is the id of the device, used to send data to the device (16 bit unsigned integer)
+        # ========================================================================================================
+        query = '''
+        CREATE TABLE IF NOT EXISTS iot_devices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            device_uuid TEXT NOT NULL,
+            device_name TEXT NOT NULL,
+            device_id TEXT NOT NULL,
+        )
+        '''
+        trigger_query = '''
+            CREATE TRIGGER IF NOT EXISTS update_date_updated_iot_devices
+            AFTER UPDATE ON iot_devices
+            FOR EACH ROW
+            BEGIN
+                UPDATE iot_devices 
+                SET date_updated = CURRENT_TIMESTAMP 
+                WHERE id = OLD.id;
+            END;
+        '''        
+        self.conn.execute(query)
+        self.conn.execute(trigger_query)
+        self.conn.commit()
+        if self.VERBOSE: print(f"Ensured 'iot_devices' table exists")
+    
+    def create_iot_device(self, device_name:str=None, device_id:str=None)->dict:
+        # Ensure device_name is proper
+        if device_name is None or not isinstance(device_name, str) or len(device_name) == 0:
+            raise ValueError('Invalid device_name provided')
+        
+        # Ensure device_id is proper
+        if device_id is None or not isinstance(device_id, str) or len(device_id) == 0:
+            raise ValueError('Invalid device_id provided')
+        
+        # Ensure device_id is a 16 bit unsigned integer
+        try:
+            device_id = int(device_id)
+            if device_id < 0 or device_id > 65535:
+                raise ValueError('Invalid device_id provided')
+        except:
+            raise ValueError('Invalid device_id provided')
+        
+        # Generate a unique device_uuid
+        device_uuid = str(uuid.uuid4())
+        
+        # Insert the device to the table
+        query = '''
+        INSERT INTO iot_devices (device_uuid, device_name, device_id)
+        VALUES (?, ?, ?)
+        '''
+        self.conn.execute(query, (device_uuid, device_name, device_id))
+        self.conn.commit()
+        return {
+            "device_uuid": device_uuid,
+            "device_name": device_name,
+            "device_id": device_id
+        }
     # ======================================= reported_violations ========================================
     def __ensure_reported_violations_table_exists(self):
         # ========================================reported_violations==================================================
@@ -137,7 +206,7 @@ class SQLManager:
         self.conn.commit()
         if self.VERBOSE: print(f"Ensured 'reported_violations' table exists")
 
-    def create_reported_violation(self, camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date:datetime.datetime=None, violation_type:str=None, violation_score:float=None, region_name:str=None, save_folder:str=None)->dict:
+    def create_reported_violation(self, camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date:datetime.datetime=None, violation_type:str=None, violation_score:float=None, region_name:str=None)->dict:
         #def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None)-> str:
         # Save the violation frame as a base64 encoded string and insert the path to the table
         violation_uuid = str(uuid.uuid4())

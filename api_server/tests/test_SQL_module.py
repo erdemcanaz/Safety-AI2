@@ -378,8 +378,78 @@ try:
 except Exception as e:
     print(f"Error raised: {e}")
 
-# TODO: print test results
-# TODO: delete the test database
+# ================================= Testing 'reported_violations' table functionality =================================
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
+print(f"{'='*100}\nTesting 'reported_violations' table functionality\n{'='*100}")
+print(f"\n(1) Creating a violation report")   
+   
+print("Creating a random frame with 640x480 resolution")
+random_frame = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+
+camera_ip = str(random.randint(0,255))+"."+str(random.randint(0,255))+"."+str(random.randint(0,255))+"."+str(random.randint(0,255))
+print(f"\nCreating a camera with \n\tcamera_ip_address:'{camera_ip}'\n\tcamera_region:'{test_camera_info['camera_region']}'\n\tcamera_description:'{test_camera_info['camera_description']}'\n\tusername:'{test_camera_info['username']}'\n\tpassword:'{test_camera_info['password']}'\n\tstream_path:'{test_camera_info['stream_path']}'\n\tcamera_status:'{test_camera_info['camera_status']}'")
+reported_violation_camera = sql_manager.create_camera_info(camera_ip_address=camera_ip, camera_region=test_camera_info['camera_region'], camera_description=test_camera_info['camera_description'], username=test_camera_info['username'], password=test_camera_info['password'], stream_path=test_camera_info['stream_path'], camera_status=test_camera_info['camera_status'])
+pprint.pprint(reported_violation_camera)
+
+reported_violation_info = {
+    "camera_uuid": reported_violation_camera['camera_uuid'],
+    "violation_frame": random_frame,
+    "violation_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "violation_type": "test_violation_type",
+    "violation_score": random.uniform(0, 1),
+    "region_name": "test_region",
+}
+created_reported_violation = sql_manager.create_reported_violation(**reported_violation_info)
+pprint.pprint(created_reported_violation)
+
+print(f"\n(2 - no match) Fetching the reported violation by start_date = '2021-01-01 00:00:00' and end_date = '2022-01-01 00:00:00'")
+start_date = datetime.datetime.strptime('2021-01-01 00:00:00', "%Y-%m-%d %H:%M:%S")
+end_date = datetime.datetime.strptime('2022-01-01 00:00:00', "%Y-%m-%d %H:%M:%S")
+reported_violations = sql_manager.fetch_reported_violations_between_dates(start_date=start_date, end_date=end_date)
+pprint.pprint(reported_violations)
+
+print(f"\n(3 - match) Fetching the reported violation by start_date = '1970-01-01 00:00:00' and end_date = '2099-01-01 00:00:00'")
+start_date = datetime.datetime.strptime('1970-01-01 00:00:00', "%Y-%m-%d %H:%M:%S")
+end_date = datetime.datetime.strptime('2099-01-01 00:00:00', "%Y-%m-%d %H:%M:%S")
+reported_violations = sql_manager.fetch_reported_violations_between_dates(start_date=start_date, end_date=end_date)
+pprint.pprint(reported_violations)
+
+
+violation_uuid = reported_violations['fetched_violations'][0]['violation_uuid']
+print(f"\n(4) Fetching the reported violation by violation_uuid:'{violation_uuid}'")
+reported_violation_by_uuid = sql_manager.fetch_reported_violation_by_violation_uuid(violation_uuid=violation_uuid)
+pprint.pprint(reported_violation_by_uuid)
+
+print(f"\n(5) Deleting the reported violation by violation_uuid:'{violation_uuid}'")
+print(f"fetching all violations between dates {start_date} - {end_date}")
+all_violations = sql_manager.fetch_reported_violations_between_dates(start_date=start_date, end_date=end_date)
+pprint.pprint(all_violations)
+
+is_deleted = sql_manager.delete_reported_violation_by_violation_uuid(violation_uuid=violation_uuid)
+pprint.pprint(is_deleted)
+
+print(f"fetching all violations between dates {start_date} - {end_date}")
+all_violations = sql_manager.fetch_reported_violations_between_dates(start_date=start_date, end_date=end_date)
+pprint.pprint(all_violations)
+
+print("trying to fetch corresponding image")
+try:
+    image_uuid = reported_violations['fetched_violations'][0]['image_uuid']
+    get_result = sql_manager.get_encrypted_image_by_image_uuid(image_uuid=image_uuid)
+    pprint.pprint(get_result)
+    cv2.imshow("image", get_result['image'])
+    cv2.waitKey(2500)
+except Exception as e:
+    print(f"Error raised: {e}")
+
+# ================================= Testing 'iot_devices' table functionality =================================
+# TODO:
+
+# ================================= Testing 'iot_device_and_rule' table functionality =================================
+#TODO:
+
+
+time.sleep(WAIT_TIME_BETWEEN_TESTS) if WAIT_TIME_BETWEEN_TESTS > 0 else input("Press Enter to continue...")
 cv2.destroyAllWindows()
 sql_manager.close() #otherwise the database will be locked and cannot be deleted
 
