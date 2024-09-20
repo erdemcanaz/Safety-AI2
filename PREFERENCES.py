@@ -97,7 +97,7 @@ if os.name == "nt":  # For Windows (i.e development environment)
     PRINT_MOUSE_COORDINATES = True
     
     # ENSURE THAT THE LOCAL SSD and EXTERNAL USB IS MOUNTED TO THE CONTAINER PROPERLY
-    DATA_FOLDER_PATH_LOCAL = Path(__file__).parent.resolve() /'api_server' / 'local_ssd_data_folder'
+    DATA_FOLDER_PATH_LOCAL = Path(__file__).parent.resolve() /'api_server_new' / 'local_ssd_data_folder'
     DATA_FOLDER_PATH_EXTERNAL = Path("E:")
     print(f"[INFO] The local data folder path is hardcoded to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is hardcoded to: '{DATA_FOLDER_PATH_EXTERNAL}'")

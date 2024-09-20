@@ -7,7 +7,7 @@ from pathlib import Path
 import PREFERENCES
 
 class SQLManager:
-    
+
     def __init__(self, db_path=None, verbose=False, overwrite_existing_db=False): 
         self.DB_PATH = db_path
         self.VERBOSE = verbose     
@@ -1257,8 +1257,14 @@ class SQLManager:
         if row is not None:
             return # Safety AI user already exists
         
-        self.create_user(username=PREFERENCES.SAFETY_AI_USER_INFO['username'], personal_fullname=PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], plain_password=PREFERENCES.SAFETY_AI_USER_INFO['password'])
+        safety_ai_user_info = self.create_user(username=PREFERENCES.SAFETY_AI_USER_INFO['username'], personal_fullname=PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], plain_password=PREFERENCES.SAFETY_AI_USER_INFO['password'])
         if(self.VERBOSE): print(f"Safety AI user created successfully")
+
+        #NOTE: If new permissions are added, Safety-ai is not updated with the new permissions
+
+        # add the admin user all the permissions
+        for authorization in PREFERENCES.DEFINED_AUTHORIZATIONS:
+            self.add_authorization(used_uuid = safety_ai_user_info['user_uuid'], authorization_name = authorization)
 
     def __create_admin_user(self):
         # Ensure the ADMIN_USER_INFO is properly set
@@ -1288,10 +1294,16 @@ class SQLManager:
         cursor = self.conn.execute(query, (PREFERENCES.ADMIN_USER_INFO['username'],))
         row = cursor.fetchone()
         if row is not None:
-            return # Safety AI user already exists
+            return # Admin user already exists
         
-        self.create_user(username=PREFERENCES.ADMIN_USER_INFO['username'], personal_fullname=PREFERENCES.ADMIN_USER_INFO['personal_fullname'], plain_password=PREFERENCES.ADMIN_USER_INFO['password'])
+        #NOTE: If new permissions are added, admin user is not updated with the new permissions
+        admin_user_info = self.create_user(username=PREFERENCES.ADMIN_USER_INFO['username'], personal_fullname=PREFERENCES.ADMIN_USER_INFO['personal_fullname'], plain_password=PREFERENCES.ADMIN_USER_INFO['password'])
         if(self.VERBOSE): print(f"Admin user created successfully")
+
+        # add the admin user all the permissions
+        for authorization in PREFERENCES.DEFINED_AUTHORIZATIONS:
+            self.add_authorization(used_uuid = admin_user_info['user_uuid'], authorization_name = authorization)
+
 
     def create_user(self, username:str=None, personal_fullname:str=None, plain_password:str=None)-> dict:
         # Ensure username is proper
