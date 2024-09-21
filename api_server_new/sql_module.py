@@ -53,6 +53,25 @@ class SQLManager:
         self.conn.close()
     
     @staticmethod
+    def encode_frame_for_url_body_b64_string(np_ndarray: np.ndarray = None):
+        if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
+            raise ValueError('Invalid np_ndarray provided')
+        
+        success, encoded_image = cv2.imencode('.jpg', np_ndarray)
+        if not success:
+            raise ValueError('Failed to encode image')
+        base64_encoded_jpg_image_string = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
+
+        return base64_encoded_jpg_image_string
+    
+    @staticmethod
+    def decode_url_body_b64_string_to_frame(base64_encoded_image_string: str = None):
+        if base64_encoded_image_string is None or not isinstance(base64_encoded_image_string, str):
+            raise ValueError('Invalid base64_encoded_jpg_image_string provided')
+        
+        return cv2.imdecode(np.frombuffer(base64.b64decode(base64_encoded_image_string), dtype=np.uint8), cv2.IMREAD_COLOR)
+    
+    @staticmethod
     def encode_frame_to_b64encoded_jpg_bytes(np_ndarray: np.ndarray = None):
         if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
             raise ValueError('Invalid np_ndarray provided')
@@ -767,12 +786,6 @@ class SQLManager:
         if camera_info is None:
             raise ValueError('No camera found with the provided camera_uuid')
         
-        # Ensure image is encoded properly as a JPEG image. It takes less space than PNG with minimal data loss
-        success, encoded_image = cv2.imencode('.jpg', last_frame)
-        if not success:
-            raise ValueError('Failed to encode image')    
-        base64_encoded_image = base64.b64encode(encoded_image.tobytes()) 
-
         base_64_encoded_jpg_image_bytes = SQLManager.encode_frame_to_b64encoded_jpg_bytes(np_ndarray = last_frame)
 
         # Save the last frame of the camera to the database as BLOB    
@@ -781,7 +794,7 @@ class SQLManager:
         '''
         cursor = self.conn.execute(query, (camera_uuid,))
         row = cursor.fetchone()        
-        if row is None:
+        if row is None: # No last frame found with the provided camera_uuid
             query = '''
             INSERT INTO camera_last_frames (camera_uuid, camera_ip_address, camera_region, is_violation_detected, is_person_detected, last_frame_b64_bytes)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -789,11 +802,10 @@ class SQLManager:
             self.conn.execute(query, (camera_uuid, camera_info["camera_ip_address"], camera_info["camera_region"], int(is_violation_detected), int(is_person_detected), sqlite3.Binary(base_64_encoded_jpg_image_bytes))
             )
         else:
-            is_person_detected = 1 if is_person_detected else 0
             query = '''
             UPDATE camera_last_frames SET is_violation_detected = ?, is_person_detected = ?, camera_ip_address = ?, last_frame_b64_bytes = ? WHERE camera_uuid = ?
             '''
-            self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), camera_info['camera_ip_address'], sqlite3.Binary(base64_encoded_image), camera_uuid))
+            self.conn.execute(query, (int(is_violation_detected), int(is_person_detected), camera_info['camera_ip_address'], sqlite3.Binary(base_64_encoded_jpg_image_bytes), camera_uuid))
         
         self.conn.commit()
         return {
@@ -819,7 +831,7 @@ class SQLManager:
 
         # No image found with the provided camera_uuid
         if row is None: 
-            return None
+            raise ValueError('No image found with the provided camera_uuid')
         
         # Unpack the row data
         date_created, date_updated, retrieved_camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, base_64_encoded_jpg_image_bytes = row
@@ -833,12 +845,10 @@ class SQLManager:
             "camera_region": camera_region,
             "is_violation_detected": is_violation_detected,
             "is_person_detected": is_person_detected,
-            "last_frame_b64_bytes": base_64_encoded_jpg_image_bytes,
             "last_frame_np_array": SQLManager.decode_b64encoded_jpg_bytes_to_np_ndarray(base_64_encoded_jpg_image_bytes=base_64_encoded_jpg_image_bytes)
         }
-        # Succes
         
-    def get_all_last_camera_frame_info_without_BLOB(self) -> list:
+    def get_all_last_camera_frame_info_without_frames(self) -> list:
         query = '''
         SELECT date_created, date_updated, camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected FROM camera_last_frames
         '''
@@ -1410,9 +1420,14 @@ class SQLManager:
             return {'is_authenticated' : False}
     
     def delete_user_by_username(self, username:str=None)->dict:
+        #HARDCODED: Safety AI user and Admin user cannot be deleted
+        if username == PREFERENCES.SAFETY_AI_USER_INFO['username'] or username == PREFERENCES.ADMIN_USER_INFO['username']:
+            raise ValueError('Safety AI user and Admin user cannot be deleted')
+
+        # Ensure username is proper
         if not isinstance(username, str) or len(username) == 0:
             raise ValueError('Invalid username provided')
-        
+                
         # Check if the user exists
         query = '''
         SELECT id FROM user_info WHERE username = ?
@@ -1430,7 +1445,15 @@ class SQLManager:
         self.conn.commit()
         return {'is_deleted' : True}
     
-    def delete_user_by_user_uuid(self, user_uuid:str=None)->dict:
+    def delete_user_by_user_uuid(self, user_uuid:str=None)->dict:        
+        #HARDCODED: Safety AI user and Admin user cannot be deleted
+        safety_ai_user_info = self.get_user_by_username(username=PREFERENCES.SAFETY_AI_USER_INFO['username'])
+        admin_user_info = self.get_user_by_username(username=PREFERENCES.ADMIN_USER_INFO['username'])
+
+        if user_uuid == safety_ai_user_info['user_uuid'] or user_uuid == admin_user_info['user_uuid']:
+            raise ValueError('Safety AI user and Admin user cannot be deleted')
+        
+        # Ensure user_uuid is proper
         if not isinstance(user_uuid, str) or len(user_uuid) == 0:
             raise ValueError('Invalid user_uuid provided')
         

@@ -6,9 +6,8 @@
 #     "detail": "Human readable message",
 #     "json_data": {...}
 # }
-# else if status code is not 200, either unknown error occurs or user is not authorized to access the resource.
+# else if HTTP-status code is not 200, either unknown error occurs or user is not authorized to access the resource.
 # In such a case ensure user is authorized and try to get a new token and re-try the request. If the error persists, then request is failed
-
 
 #Built-in Imports
 import os, sys, platform, time, json, base64, random, datetime, uuid, secrets, hashlib, pprint, traceback
@@ -215,11 +214,38 @@ async def get_user_by_uuid_api(user_uuid: str, authenticated_user = Depends(auth
             "json_data":  {}
         }
 
+class DeleteUser(BaseModel):
+    user_uuid: str
+@app.delete("/delete_user_by_username", response_model = default_response)
+async def delete_user_by_username_api( user_info : DeleteUser, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['MENAGE_USERS']
+    try:
+        if(authenticated_user['user_uuid'] != user_info.user_uuid):
+            user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+            if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+                raise Exception("User is not authorized to access this resource")
+        
+        user_info_dict = user_info.model_dump( exclude= {}, by_alias=False)
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":  "User is deleted successfully",
+            "json_data": database_manager.delete_user_by_user_uuid(**user_info_dict),
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+    
 # Camera Info Table API =================================================================================================
 @app.get("/fetch_all_camera_info", response_model = default_response)
 async def fetch_all_camera_info_api(authenticated_user: User = Depends(authenticate_user_by_token)):    
     REQUIRED_AUTHORIZATIONS = ['EDIT_RULES', 'UPDATE_CAMERAS']
     try:
+
         user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
         if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
             raise Exception("User is not authorized to access this resource")
@@ -370,3 +396,92 @@ async def fetch_camera_uuid_by_ip_api(camera_info: FetchCameraUUIDByIP, authenti
             "detail": str(e),
             "json_data":  {}
         }
+    
+# Last Frames Table API =================================================================================================
+@app.get("/fetch_last_frames_info_without_frames", response_model = default_response)
+async def fetch_last_frames_info_without_frames_api(authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES', 'UPDATE_CAMERAS', 'ISG_UI', 'SUMMARY_PAGE']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Last frames info fetched successfully",
+            "json_data": database_manager.get_all_last_camera_frame_info_without_frames()
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class UpdateLastFrameAs(BaseModel):
+    camera_uuid: str
+    is_violation_detected: bool # will be stored as int by int(bool) conversion in the dataset
+    is_person_detected: bool # will be stored as int by int(bool) conversion in the dataset
+    frame_b64_string: str
+@app.post("/update_last_camera_frame_as", response_model = default_response)
+async def update_last_camera_frame_as_api(last_frame_info: UpdateLastFrameAs, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES', 'UPDATE_CAMERAS', 'ISG_UI', 'SUMMARY_PAGE']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        last_frame_info_dict = last_frame_info.model_dump( exclude= {}, by_alias=False)
+        last_frame_info_dict['last_frame'] = database_manager.decode_url_body_b64_string_to_frame(base64_encoded_image_string=last_frame_info_dict['frame_b64_string'])
+        del last_frame_info_dict['frame_b64_string']
+
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Last frame info updated successfully",
+            "json_data": database_manager.update_last_camera_frame_as_by_camera_uuid(**last_frame_info_dict)
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class FetchLastFrameInfo(BaseModel):
+    camera_uuid: str
+@app.post("/fetch_last_camera_frame_info", response_model = default_response)
+async def fetch_last_camera_frame_info_api(last_frame_info: FetchLastFrameInfo, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES', 'UPDATE_CAMERAS', 'ISG_UI', 'SUMMARY_PAGE']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        last_frame_info_dict = last_frame_info.model_dump( exclude= {}, by_alias=False)
+        # Convert np array to base64 string for response
+        response_json_data = database_manager.get_last_camera_frame_by_camera_uuid(**last_frame_info_dict)
+        response_json_data['frame_b64_string'] = database_manager.encode_frame_for_url_body_b64_string(np_ndarray= response_json_data['last_frame_np_array'])
+        del response_json_data['last_frame_np_array']
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": False,
+            "detail":"Last frame info fetched successfully",
+            "json_data": response_json_data
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+# Reported Violations Table API =================================================================================================
+
+
+pass
