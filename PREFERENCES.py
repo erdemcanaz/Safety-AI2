@@ -38,8 +38,8 @@ def calculate_folder_size_gb(folder_path: Path = None):
 
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 # Definitions (Hardcoded)
-SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" #TODO: Used to encrypt-decrypt images. Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
-SERVER_JWT_KEY = "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a" #TODO: secrets.token_hex(32) 
+SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT"  #For production -> secrets.token_bytes(32) |||  For development, you can use static key as ->  b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" 
+SERVER_JWT_KEY = "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a" #For production -> secrets.token_hex(32) |||  For development, you can use static key as -> "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 # minutes
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_LOCAL = 250     # 250 GB
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL = 1500 # 1.5 TB

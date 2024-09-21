@@ -882,4 +882,146 @@ async def fetch_all_rules_api(authenticated_user: User = Depends(authenticate_us
             "json_data":  {}
         }
 
+# Authorizations Table API =================================================================================================
+#    def get_user_authorizations_by_user_uuid(self, user_uuid:str=None)->dict:
+@app.post("/fetch_user_authorizations_by_user_uuid", response_model =  default_response )
+class FetchUserAuthorizations(BaseModel):
+    user_uuid: str
+async def fetch_user_authorizations_by_user_uuid_api(user_uuid = FetchUserAuthorizations, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED = ['MENAGE_USERS']
+    try:
+        if(authenticated_user['user_uuid'] != user_uuid):
+            user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+            if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED):
+                raise Exception("User is not authorized to access this resource")
+        
+        user_uuid_dict = user_uuid.model_dump( exclude= {}, by_alias=False)
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"User authorizations fetched successfully",
+            "json_data": database_manager.get_user_authorizations_by_user_uuid(**user_uuid_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+# ======================================= iot_device ========================================
+
+class CreateIotDevice(BaseModel):
+    device_name: str
+    device_id: str
+@app.post("/create_iot_device", response_model = default_response)
+async def create_iot_device_api(iot_device_info: CreateIotDevice, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        iot_device_info_dict = iot_device_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Iot device created successfully",
+            "json_data": database_manager.create_iot_device(**iot_device_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+#    def update_device_by_device_uuid(self, device_uuid:str=None, device_name:str=None, device_id:str=None)-> dict:
+class UpdateIotDevice(BaseModel):
+    device_uuid: str
+    device_name: str
+    device_id: str
+@app.post("/update_iot_device", response_model = default_response)
+async def update_iot_device_api(iot_device_info: UpdateIotDevice, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        iot_device_info_dict = iot_device_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Iot device updated successfully",
+            "json_data": database_manager.update_device_by_device_uuid(**iot_device_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+    
+class DeleteIotDevice(BaseModel):
+    device_uuid: str
+@app.delete("/delete_iot_device", response_model = default_response)
+async def delete_iot_device_api(iot_device_info: DeleteIotDevice, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        iot_device_info_dict = iot_device_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Iot device deleted successfully",
+            "json_data": database_manager.delete_iot_device_by_device_uuid(**iot_device_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+#     def fetch_all_iot_devices(self)-> dict:
+@app.get("/fetch_all_iot_devices", response_model = default_response)
+async def fetch_all_iot_devices_api(authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"All iot devices fetched successfully",
+            "json_data": database_manager.fetch_all_iot_devices()
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+
 pass

@@ -277,12 +277,14 @@ class SQLManager:
         if device_id is None or not isinstance(device_id, str) or len(device_id) == 0:
             raise ValueError('Invalid device_id provided')
         
-        # Ensure device_id is integer castable
+        # Ensure device_id is integer castable and 16 bit unsigned integer
         try:
-            device_id = int(device_id)
+            uint16_t = int(device_id)
+            if not 0<=uint16_t<=65535:
+                raise ValueError('Invalid device_id provided')
         except:
             raise ValueError('Invalid device_id provided')
-               
+        
         # Generate a unique device_uuid
         device_uuid = str(uuid.uuid4())
         
@@ -292,6 +294,48 @@ class SQLManager:
         VALUES (?, ?, ?)
         '''
         self.conn.execute(query, (device_uuid, device_name, device_id))
+        self.conn.commit()
+        return {
+            "device_uuid": device_uuid,
+            "device_name": device_name,
+            "device_id": str(int(device_id))
+        }
+    
+    def update_device_by_device_uuid(self, device_uuid:str=None, device_name:str=None, device_id:str=None)-> dict:
+        # Ensure device_uuid is proper
+        if device_uuid is None or not isinstance(device_uuid, str) or len(device_uuid) == 0:
+            raise ValueError('Invalid device_uuid provided')
+        
+        # Ensure device_name is proper
+        if device_name is None or not isinstance(device_name, str) or len(device_name) == 0:
+            raise ValueError('Invalid device_name provided')
+        
+        # Ensure device_id is proper
+        if device_id is None or not isinstance(device_id, str) or len(device_id) == 0:
+            raise ValueError('Invalid device_id provided')
+        
+        # Ensure device_id is integer castable and 16 bit unsigned integer
+        try:
+            uint16_t = int(device_id)
+            if not 0<=uint16_t<=65535:
+                raise ValueError('Invalid device_id provided')
+        except:
+            raise ValueError('Invalid device_id provided')
+        
+        # Ensure the device exists
+        query = '''
+        SELECT device_uuid, device_name, device_id FROM iot_devices WHERE device_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (device_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Device not found')
+        
+        # Update the device in the table
+        query = '''
+        UPDATE iot_devices SET device_name = ?, device_id = ? WHERE device_uuid = ?
+        '''
+        self.conn.execute(query, (device_name, device_id, device_uuid))
         self.conn.commit()
         return {
             "device_uuid": device_uuid,
@@ -651,7 +695,7 @@ class SQLManager:
         if not PREFERENCES.check_if_folder_accesible(folder_path = encrypted_image_folder):
             raise ValueError('The folder containing the encrypted image file is not accessible')
         
-        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
+        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row        
         if not os.path.exists(encrypted_image_path):          
             query = '''
             DELETE FROM image_paths WHERE image_uuid = ?
