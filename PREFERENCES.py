@@ -1,7 +1,6 @@
-import os, psutil, platform, subprocess
-if os.name == "nt": import win32api, win32file
+import os
 from pathlib import Path
-import psutil, datetime, time
+import psutil, datetime, time, secrets
 
 def update_data_folder(data_folder_path:Path = None, must_existing_data_subfolder_paths = None):      
     if data_folder_path == None or not isinstance(data_folder_path, Path):
@@ -39,16 +38,17 @@ def calculate_folder_size_gb(folder_path: Path = None):
 
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 # Definitions (Hardcoded)
-SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" # Used to encrypt-decrypt images. Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
+SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" #TODO: Used to encrypt-decrypt images. Note that this is an UTF8 encoded byte string. Will be changed in the future, developers should not use this key in production
+SERVER_JWT_KEY = "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a" #TODO: secrets.token_hex(32) 
+ACCESS_TOKEN_EXPIRE_MINUTES = 30 # minutes
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_LOCAL = 250     # 250 GB
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL = 1500 # 1.5 TB
 DEFINED_CAMERA_STATUSES = ["active", "inactive"]
 DEFINED_DEPARTMENTS = ["ISG", "KALITE", "GUVENLIK"]
 DEFINED_AUTHORIZATIONS = [
+            'ADMIN_PRIVILEGES',
             'MENAGE_USERS',
             'ISG_UI',
-            'QUALITY_UI',
-            'SECURITY_UI',
             'EDIT_RULES',
             'REPORTED_VIOLATIONS',
             'SUMMARY_PAGE',

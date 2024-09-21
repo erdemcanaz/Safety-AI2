@@ -1,0 +1,1 @@
+uvicorn api_server:app --reload --port=80 --host=192.168.0.26

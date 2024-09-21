@@ -621,6 +621,11 @@ class SQLManager:
         # Unpack the row data
         retrieved_image_uuid, random_key, encrypted_image_path, image_category = row
        
+        # Ensure the folder containing the encrypted image file is accessible
+        encrypted_image_folder = Path(encrypted_image_path).parent
+        if not PREFERENCES.check_if_folder_accesible(folder_path = encrypted_image_folder):
+            raise ValueError('The folder containing the encrypted image file is not accessible')
+        
         # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
         if not os.path.exists(encrypted_image_path):          
             query = '''
@@ -681,17 +686,14 @@ class SQLManager:
         # Unpack the row data
         retrieved_image_uuid, random_key, encrypted_image_path, image_category = row
        
-        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
-        if not os.path.exists(encrypted_image_path):          
-            query = '''
-            DELETE FROM image_paths WHERE image_uuid = ?
-            '''
-            self.conn.execute(query, (retrieved_image_uuid,))
-            self.conn.commit()            
-            raise ValueError('Encrypted image file not found with the provided image_uuid, will be marked as deleted in the database')
+        # Ensure the folder containing the encrypted image file is accessible
+        encrypted_image_folder = Path(encrypted_image_path).parent
+        if not PREFERENCES.check_if_folder_accesible(folder_path = encrypted_image_folder):
+            raise ValueError('The folder containing the encrypted image file is not accessible')
         
-        # Delete the encrypted image file
-        os.remove(encrypted_image_path)
+        # Ensure the encrypted image file exists, if not, mark the image as deleted in the database and delete the row
+        if os.path.exists(encrypted_image_path):              
+            os.remove(encrypted_image_path)
 
         # Delete the row from the table
         query = '''
@@ -705,6 +707,7 @@ class SQLManager:
             "encrypted_image_path": encrypted_image_path,
             "image_category": image_category
         }    
+   
     # ========================================= camera_last_frames ==============================================
 
     def __ensure_camera_last_frames_table_exists(self):
@@ -1260,8 +1263,6 @@ class SQLManager:
         safety_ai_user_info = self.create_user(username=PREFERENCES.SAFETY_AI_USER_INFO['username'], personal_fullname=PREFERENCES.SAFETY_AI_USER_INFO['personal_fullname'], plain_password=PREFERENCES.SAFETY_AI_USER_INFO['password'])
         if(self.VERBOSE): print(f"Safety AI user created successfully")
 
-        #NOTE: If new permissions are added, Safety-ai is not updated with the new permissions
-
         # add the admin user all the permissions
         for authorization in PREFERENCES.DEFINED_AUTHORIZATIONS:
             self.add_authorization(user_uuid = safety_ai_user_info['user_uuid'], authorization_name = authorization)
@@ -1296,7 +1297,6 @@ class SQLManager:
         if row is not None:
             return # Admin user already exists
         
-        #NOTE: If new permissions are added, admin user is not updated with the new permissions
         admin_user_info = self.create_user(username=PREFERENCES.ADMIN_USER_INFO['username'], personal_fullname=PREFERENCES.ADMIN_USER_INFO['personal_fullname'], plain_password=PREFERENCES.ADMIN_USER_INFO['password'])
         if(self.VERBOSE): print(f"Admin user created successfully")
 
