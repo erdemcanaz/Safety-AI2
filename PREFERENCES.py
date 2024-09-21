@@ -122,7 +122,7 @@ if os.name == "nt":  # For Windows (i.e development environment)
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     #NOTE: assumes that the script runs on docker container
-    SERVER_IP_ADDRESS = "172.17.27.12"
+    SERVER_IP_ADDRESS = "172.17.27.62"
     CLEAR_TERMINAL_COMMAND = "clear"
     PRINT_MOUSE_COORDINATES = False
 
