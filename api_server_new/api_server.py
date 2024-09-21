@@ -216,7 +216,7 @@ async def get_user_by_uuid_api(user_uuid: str, authenticated_user = Depends(auth
 
 class DeleteUser(BaseModel):
     user_uuid: str
-@app.delete("/delete_user_by_username", response_model = default_response)
+@app.delete("/delete_user_by_uuid", response_model = default_response)
 async def delete_user_by_username_api( user_info : DeleteUser, authenticated_user: User = Depends(authenticate_user_by_token)):
     REQUIRED_AUTHORIZATIONS = ['MENAGE_USERS']
     try:
@@ -324,7 +324,7 @@ async def update_camera_info_attribute_api(camera_info: UpdateCameraInfoAttribut
     
 class DeleteCameraInfo(BaseModel):
     camera_uuid: str
-@app.post("/delete_camera_info", response_model = default_response)
+@app.delete("/delete_camera_info", response_model = default_response)
 async def delete_camera_info_api(camera_info: DeleteCameraInfo, authenticated_user: User = Depends(authenticate_user_by_token)):
     REQUIRED_AUTHORIZATIONS = ['UPDATE_CAMERAS']
     try:
@@ -482,6 +482,120 @@ async def fetch_last_camera_frame_info_api(last_frame_info: FetchLastFrameInfo, 
         }
 
 # Reported Violations Table API =================================================================================================
+class FetchReportedViolationsBetweenDates(BaseModel):
+    start_date: str # format: 'YYYY-MM-DD HH:MM:SS'
+    end_date: str # format: 'YYYY-MM-DD HH:MM:SS'
+@app.post("/fetch_reported_violations_between_dates", response_model = default_response)
+async def fetch_reported_violations_between_dates_api(report_info: FetchReportedViolationsBetweenDates, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['REPORTED_VIOLATIONS']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        # start date is older than end date, otherwise it will raise exception
+        report_info_dict = report_info.model_dump( exclude= {}, by_alias=False)
+        report_info_dict['start_date'] = datetime.datetime.strptime(report_info_dict['start_date'], '%Y-%m-%d %H:%M:%S')
+        report_info_dict['end_date'] = datetime.datetime.strptime(report_info_dict['end_date'], '%Y-%m-%d %H:%M:%S')
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":f"Reported violations fetched successfully between dates {report_info_dict['start_date']} and {report_info_dict['end_date']}",
+            "json_data": database_manager.fetch_reported_violations_between_dates(**report_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+    
+class CreateReportedViolation(BaseModel):
+    camera_uuid: str
+    violation_frame_b64_string: str
+    violation_date: str # format: 'YYYY-MM-DD HH:MM:SS'
+    violation_type: str
+    violation_score : float # between 0 and 1
+    region_name: str
+@app.post("/create_reported_violation", response_model = default_response)
+async def create_reported_violation_api(report_info: CreateReportedViolation, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = [] # only admin privilages can create reported violations 
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        report_info_dict = report_info.model_dump( exclude= {}, by_alias=False)
+        report_info_dict['violation_frame'] = database_manager.decode_url_body_b64_string_to_frame(base64_encoded_image_string=report_info_dict['violation_frame_b64_string'])
+        del report_info_dict['violation_frame_b64_string']
+        report_info_dict['violation_date'] = datetime.datetime.strptime(report_info_dict['violation_date'], '%Y-%m-%d %H:%M:%S')
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Reported violation created successfully",
+            "json_data": database_manager.create_reported_violation(**report_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
 
+class FetchReportedViolation(BaseModel):
+    violation_uuid: str
+@app.post("/fetch_reported_violation", response_model = default_response)
+async def fetch_reported_violation_api(report_info: FetchReportedViolation, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['REPORTED_VIOLATIONS']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        report_info_dict = report_info.model_dump( exclude= {}, by_alias=False)
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Reported violation fetched successfully",
+            "json_data": database_manager.fetch_reported_violation_by_uuid(**report_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class DeleteReportedViolation(BaseModel):
+    violation_uuid: str
+@app.delete("/delete_reported_violation", response_model = default_response)
+async def delete_reported_violation_api(report_info: DeleteReportedViolation, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['REPORTED_VIOLATIONS'] 
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        report_info_dict = report_info.model_dump( exclude= {}, by_alias=False)
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Reported violation deleted successfully",
+            "json_data": database_manager.delete_reported_violation_by_violation_uuid(**report_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
 
 pass

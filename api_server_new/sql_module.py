@@ -415,7 +415,9 @@ class SQLManager:
         }
     
     def fetch_reported_violations_between_dates(self, start_date: datetime.datetime = None, end_date: datetime.datetime = None, query_limit: int = 9999) -> dict:
-        
+        if start_date > end_date:
+            raise ValueError('Start date cannot be recent than end date')
+
         query = '''
         SELECT violation_uuid, violation_date, region_name, violation_type, violation_score, camera_uuid, image_uuid
         FROM reported_violations

@@ -18,3 +18,5 @@
 # if external ssd is connected, save images and PDF reports to the external ssd otherwise save to the local drive. Check each time trying to save images and PDF reports
 # manually trigger rule
 # check passwords
+# clear all database API
+# only one authorization of same name can be added check
