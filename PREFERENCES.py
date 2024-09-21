@@ -65,7 +65,7 @@ DEFINED_RULES = {
     ],
     }
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
-ADMIN_USER_INFO = {"username": "admin", "password": "admin_password", "personal_fullname": "Admin User"}
+ADMIN_USER_INFO = {"username": "a", "password": "a", "personal_fullname": "Admin User"}
 MUST_EXISTING_DATA_SUBFOLDER_PATHS = { 
         #NOTE: NEVER EVER CHANGE THE KEY NAMES
 

@@ -534,12 +534,14 @@ class SQLManager:
         rows = cursor.fetchall()
         for row in rows:
             image_uuid, encrypted_image_path = row
-            if not os.path.exists(encrypted_image_path):
+            if not os.path.exists(Path(encrypted_image_path)):
                 query = '''
                 DELETE FROM image_paths WHERE image_uuid = ?
                 '''
                 self.conn.execute(query, (image_uuid,))
+                print(f"Deleted image_path row with no corresponding encrypted image: {image_uuid}")
         self.conn.commit()
+
 
         # Delete the encrypted images that are not in the table
         all_existing_file_paths_inside_encrypted_images_folder = []
@@ -554,14 +556,16 @@ class SQLManager:
             all_existing_file_paths_inside_encrypted_images_folder.extend(local_encrypted_images_path.rglob('*.bin')
         )
 
-        # Iterate over all collected file paths
+        # Iterate over all collected file paths        
         for file_path in all_existing_file_paths_inside_encrypted_images_folder:
+            str_file_path = str(Path(file_path).resolve())
             query = '''
             SELECT image_uuid FROM image_paths WHERE encrypted_image_path = ?
             '''
-            cursor = self.conn.execute(query, (str(file_path),))  # Ensure the path is a string if required by the DB
+
+            cursor = self.conn.execute(query, (str_file_path,))  # Ensure the path is a string if required by the DB
             row = cursor.fetchone()
-            
+
             if row is None:
                 try:
                     os.remove(file_path)
@@ -684,14 +688,14 @@ class SQLManager:
 
         # Ensure the image is proper
         if image is None:
-            return None
+            raise ValueError('Failed to decode the image from the encrypted data')
 
         # Return both the image and the row data as a dictionary
         return {
             "image_uuid": retrieved_image_uuid,
             "encrypted_image_path": encrypted_image_path,
             "image_category": image_category,
-            "image": image
+            "frame": image
         }
 
     def delete_image_path_and_encrypted_image_by_image_uuid(self, image_uuid: str) -> dict:
@@ -972,6 +976,7 @@ class SQLManager:
         self.conn.commit()
 
         return {
+            "last_time_triggered": '1970-01-01 00:00:00',
             "camera_uuid": camera_uuid,
             "rule_uuid": rule_uuid,
             "rule_department": rule_department,
@@ -1643,6 +1648,7 @@ class SQLManager:
             "authorization_name": row[1]
         } for row in rows]
         }
+    
     # ========================================= camera_info_table ========================================
     
     def __ensure_camera_info_table_exists(self):

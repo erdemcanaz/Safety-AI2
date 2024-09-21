@@ -22,7 +22,6 @@ import jwt, cv2
 import numpy as np
 
 # Local imports
-
 API_SERVER_DIRECTORY = Path(__file__).resolve().parent
 SAFETY_AI2_DIRECTORY = API_SERVER_DIRECTORY.parent
 print(f"API_SERVER_DIRECTORY: {API_SERVER_DIRECTORY}")
@@ -561,7 +560,7 @@ async def fetch_reported_violation_api(report_info: FetchReportedViolation, auth
             "status":status.HTTP_200_OK,
             "is_task_successful": True,
             "detail":"Reported violation fetched successfully",
-            "json_data": database_manager.fetch_reported_violation_by_uuid(**report_info_dict)
+            "json_data": database_manager.fetch_reported_violation_by_violation_uuid(**report_info_dict)
         }
     
     except Exception as e:
@@ -588,6 +587,291 @@ async def delete_reported_violation_api(report_info: DeleteReportedViolation, au
             "is_task_successful": True,
             "detail":"Reported violation deleted successfully",
             "json_data": database_manager.delete_reported_violation_by_violation_uuid(**report_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+# Image Paths Table API =================================================================================================
+class GetImage(BaseModel):
+    image_uuid: str
+
+@app.post("/get_image", response_model = default_response)
+async def get_image_api(image_info: GetImage, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['REPORTED_VIOLATIONS']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        image_info_dict = image_info.model_dump( exclude= {}, by_alias=False) 
+        json_data = database_manager.get_encrypted_image_by_image_uuid(**image_info_dict)  
+        json_data['frame_b64_string'] = database_manager.encode_frame_for_url_body_b64_string(np_ndarray= json_data['frame'])
+        del json_data['frame']
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Image fetched successfully",
+            "json_data": json_data
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+# Counts Table API =================================================================================================
+
+class UpdateCount(BaseModel):
+    count_key: str
+    count_subkey: str
+    delta_count: float
+@app.post("/update_count", response_model = default_response)
+async def update_count_api(count_info: UpdateCount, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = [] # only admin privilages
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        count_info_dict = count_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Count updated successfully",
+            "json_data": database_manager.update_count(**count_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class GetCountsByCountKey(BaseModel):
+    count_key: str
+@app.post("/get_counts_by_count_key", response_model = default_response)
+async def get_counts_by_count_key_api(count_info: GetCountsByCountKey, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = [] # only admin privilages
+
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        count_info_dict = count_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":f"Counts fetched successfully for count_key: {count_info_dict['count_key']}",
+            "json_data": database_manager.get_counts_by_count_key(**count_info_dict)
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class GetCountByCountKeyAndSubkey(BaseModel):
+    count_key: str
+    count_subkey: str
+@app.post("/get_count_by_count_key_and_subkey", response_model = default_response)
+async def get_count_by_count_key_and_subkey_api(count_info: GetCountByCountKeyAndSubkey, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = [] # only admin privilages
+
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        count_info_dict = count_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":f"Count fetched successfully for count_key: {count_info_dict['count_key']} and count_subkey: {count_info_dict['count_subkey']}",
+            "json_data": database_manager.get_total_count_by_count_key_and_count_subkey(**count_info_dict)
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+@app.get("/get_all_counts", response_model = default_response)
+async def get_all_counts_api(authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = [] # only admin privilages
+
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"All counts fetched successfully",
+            "json_data": database_manager.fetch_all_counts()
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+    
+# Rules Info Table API =================================================================================================
+
+class CreateRule(BaseModel):
+    camera_uuid: str
+    rule_department: str
+    rule_type: str
+    evaluation_method: str
+    threshold_value: float
+    fol_threshold_value: float
+    rule_polygon: str
+@app.post("/create_rule", response_model = default_response)
+async def create_rule_api(rule_info: CreateRule, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        rule_info_dict = rule_info.model_dump( exclude= {}, by_alias=False) 
+        rule_info_dict['threshold_value'] = str(rule_info_dict['threshold_value'])
+        rule_info_dict['fol_threshold_value'] = str(rule_info_dict['fol_threshold_value'])
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Rule created successfully",
+            "json_data": database_manager.create_rule(**rule_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class TriggerRule(BaseModel):
+    rule_uuid: str
+@app.post("/trigger_rule", response_model = default_response)
+async def trigger_rule_api(rule_info: TriggerRule, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        rule_info_dict = rule_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Rule triggered successfully",
+            "json_data": database_manager.trigger_rule_by_rule_uuid(**rule_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class DeleteRule(BaseModel):
+    rule_uuid: str
+@app.delete("/delete_rule", response_model = default_response)
+async def delete_rule_api(rule_info: DeleteRule, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        rule_info_dict = rule_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Rule deleted successfully",
+            "json_data": database_manager.delete_rule_by_rule_uuid(**rule_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class FetchRulesByCameraUUID(BaseModel):
+    camera_uuid: str
+@app.post("/fetch_rules_by_camera_uuid", response_model = default_response)
+async def fetch_rules_by_camera_uuid_api(rule_info: FetchRulesByCameraUUID, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        rule_info_dict = rule_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Rules fetched successfully",
+            "json_data": database_manager.fetch_rules_by_camera_uuid(**rule_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+@app.get("/fetch_all_rules", response_model = default_response)
+async def fetch_all_rules_api(authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['EDIT_RULES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"All rules fetched successfully",
+            "json_data": database_manager.fetch_all_rules()
         }
     
     except Exception as e:
