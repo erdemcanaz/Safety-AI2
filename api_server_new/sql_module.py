@@ -9,6 +9,7 @@ import PREFERENCES
 class SQLManager:
 
     def __init__(self, db_path=None, verbose=False, overwrite_existing_db=False): 
+        self.last_time_old_violations_cleaned_up = 0 #time.time(), so that it is cleaned up during the first run
         self.DB_PATH = db_path
         self.VERBOSE = verbose     
 
@@ -42,6 +43,7 @@ class SQLManager:
         #Ensure a user is registered for the admin     | second user !
         self.__create_admin_user()
         self.__sync_encrypted_images_and_image_paths_table() # Delete the encrypted images that are not in the table, and delete the image paths with no corresponding encrypted image
+        self.__delete_timeouted_violations() # Delete the violations and images that are older than PREFERENCES.VIOLATIONS_AND_IMAGES_TIME_TO_LIVE_DAYS
 
         #Initialize image folders
         self.DATA_FOLDER_PATH_LOCAL = PREFERENCES.DATA_FOLDER_PATH_LOCAL
@@ -432,8 +434,37 @@ class SQLManager:
         self.conn.commit()
         if self.VERBOSE: print(f"Ensured 'reported_violations' table exists")
 
+    def __delete_timeouted_violations(self):
+        #Deletes both the violations and violation corresponding images that are older than PREFERENCES.VIOLATIONS_TIME_TO_LIVE_DAYS
+        current_time = time.time()
+        if current_time - self.last_time_old_violations_cleaned_up < PREFERENCES.VIOLATIONS_CLEANUP_CHECK_INTERVAL_SECONDS:
+            return # The time to clean up the old violations and images has not come yet
+    
+        #Delete the violations and images that are older than PREFERENCES.VIOLATIONS_AND_IMAGES_TIME_TO_LIVE_DAYS
+        self.last_time_old_violations_cleaned_up = current_time
+        
+        print(f"[INFO] Cleaning up the old violations and images that are older than {PREFERENCES.VIOLATIONS_TIME_TO_LIVE_DAYS:.3f} days")
+      
+        current_date = datetime.datetime.now(datetime.timezone.utc) # Server uses UTC time
+        threshold_date = current_date - datetime.timedelta(days=PREFERENCES.VIOLATIONS_TIME_TO_LIVE_DAYS)
+        
+        query = '''
+        SELECT violation_uuid FROM reported_violations WHERE date_created < ?
+        '''
+        cursor = self.conn.execute(query, (threshold_date,))
+        rows = cursor.fetchall()
+        print(f"[INFO] Found {len(rows)} violations to delete due to timeout")
+        for row in rows:
+            violation_uuid = row[0]
+            try:
+                self.delete_reported_violation_by_violation_uuid(violation_uuid)
+                print(f"\t[SUBINFO] Deleted violation with violation_uuid {violation_uuid}")
+            except Exception as e:
+                print(f"\t[SUBINFO] Error deleting violation with violation_uuid {violation_uuid}: {e}")
+
     def create_reported_violation(self, camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date:datetime.datetime=None, violation_type:str=None, violation_score:float=None, region_name:str=None)->dict:
-        #def save_encrypted_image_and_insert_path_to_table(self, save_folder:str=None, image:np.ndarray = None, image_category:str = "no-category", image_uuid:str=None)-> str:
+        self.__delete_timeouted_violations() # Triggered once in a while to delete the violations and images that are older than PREFERENCES.VIOLATIONS_TIME_TO_LIVE_DAYS
+
         # Save the violation frame as a base64 encoded string and insert the path to the table
         violation_uuid = str(uuid.uuid4())
         image_uuid = str(uuid.uuid4())

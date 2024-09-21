@@ -941,7 +941,6 @@ async def create_iot_device_api(iot_device_info: CreateIotDevice, authenticated_
             "json_data":  {}
         }
 
-#    def update_device_by_device_uuid(self, device_uuid:str=None, device_name:str=None, device_id:str=None)-> dict:
 class UpdateIotDevice(BaseModel):
     device_uuid: str
     device_name: str
@@ -998,7 +997,6 @@ async def delete_iot_device_api(iot_device_info: DeleteIotDevice, authenticated_
             "json_data":  {}
         }
 
-#     def fetch_all_iot_devices(self)-> dict:
 @app.get("/fetch_all_iot_devices", response_model = default_response)
 async def fetch_all_iot_devices_api(authenticated_user: User = Depends(authenticate_user_by_token)):
     REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
@@ -1023,5 +1021,85 @@ async def fetch_all_iot_devices_api(authenticated_user: User = Depends(authentic
             "json_data":  {}
         }
 
+# ================================iot_device_and_rule_relations==============================
+class AddIotDeviceAndRuleRelation(BaseModel):
+    device_uuid: str
+    rule_uuid: str
+    which_action: str
+@app.post("/add_iot_device_and_rule_relation", response_model = default_response)
+async def add_iot_device_and_rule_relation_api(iot_device_and_rule_relation_info: AddIotDeviceAndRuleRelation, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        iot_device_and_rule_relation_info_dict = iot_device_and_rule_relation_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Iot device and rule relation added successfully",
+            "json_data": database_manager.add_iot_device_and_rule_relation(**iot_device_and_rule_relation_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+@app.get("/fetch_all_iot_device_and_rule_relations", response_model = default_response)
+async def fetch_all_iot_device_and_rule_relations_api(authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"All iot device and rule relations fetched successfully",
+            "json_data": database_manager.fetch_all_iot_device_and_rule_relations()
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+class RemoveIotDeviceAndRuleRelation(BaseModel):
+    relation_uuid: str
+@app.delete("/remove_iot_device_and_rule_relation", response_model = default_response)
+async def remove_iot_device_and_rule_relation_api(iot_device_and_rule_relation_info: RemoveIotDeviceAndRuleRelation, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['IOT_DEVICES']
+    try:
+        # Check if user is authorized to access this resource
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        iot_device_and_rule_relation_info_dict = iot_device_and_rule_relation_info.model_dump( exclude= {}, by_alias=False) 
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Iot device and rule relation removed successfully",
+            "json_data": database_manager.remove_iot_device_and_rule_relation_by_relation_uuid(**iot_device_and_rule_relation_info_dict)
+        }
+    
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
 
 pass
