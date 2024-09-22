@@ -467,7 +467,7 @@ async def fetch_last_camera_frame_info_api(last_frame_info: FetchLastFrameInfo, 
         del response_json_data['last_frame_np_array']
         return {
             "status":status.HTTP_200_OK,
-            "is_task_successful": False,
+            "is_task_successful": True,
             "detail":"Last frame info fetched successfully",
             "json_data": response_json_data
         }

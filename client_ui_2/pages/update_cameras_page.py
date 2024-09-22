@@ -337,11 +337,11 @@ class UpdateCamerasPage:
                 camera_uuid = self.UUID_text_field.get_text()
                 result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
                 if result[0]:
-                    self.last_camera_frame_info = result[2]["last_frame_info"]
+                    self.last_camera_frame_info = result[2]
                     if self.last_camera_frame_info is None:
                         self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
                     else:
-                        self.last_camera_frame_info['decoded_last_frame'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.last_camera_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR)
+                        self.last_camera_frame_info['decoded_last_frame'] =  self.api_dealer.decode_url_body_b64_string_to_frame(base64_encoded_image_string =result[2]['frame_b64_string'])
                 else:
                     self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
                 self.reset_page_frame()
@@ -367,11 +367,11 @@ class UpdateCamerasPage:
                 camera_uuid = self.UUID_text_field.get_text()
                 result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
                 if result[0]:
-                    self.last_camera_frame_info = result[2]["last_frame_info"]
+                    self.last_camera_frame_info = result[2]
                     if self.last_camera_frame_info is None:
                         self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
                     else:
-                        self.last_camera_frame_info['decoded_last_frame'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.last_camera_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR)
+                        self.last_camera_frame_info['decoded_last_frame'] =  self.api_dealer.decode_url_body_b64_string_to_frame(base64_encoded_image_string =result[2]['frame_b64_string'])
                 else:
                     self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
 

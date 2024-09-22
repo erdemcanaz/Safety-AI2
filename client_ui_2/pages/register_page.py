@@ -138,7 +138,7 @@ class RegisterPage:
                 password = self.password_textinput.get_text()
                 personal_fullname = self.personal_fullname_textinput.get_text()
                 result = self.api_dealer.create_user_api(username, password, personal_fullname)
-                 #[True/False, response.status_code, response.json()]
+                #[True/False, response.status_code, response.json()]
                 if result[0]:
                     program_state[0] = 0 # Go to the login page
                     self.popup_dealer.append_popup(
@@ -155,7 +155,7 @@ class RegisterPage:
                             "background_color": (0, 0, 255),
                             "created_at": time.time(),
                             "duration": 3,
-                            "text": str(result[2]["detail"])
+                            "text": str(result[1])
                         }
                     )               
                 return

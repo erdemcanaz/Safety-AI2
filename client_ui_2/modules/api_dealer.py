@@ -6,8 +6,19 @@ import json, pprint
 import jwt
 import time
 import functools
+import cv2
+import numpy as np
+import base64
 
 class ApiDealer():
+    @staticmethod
+    def decode_url_body_b64_string_to_frame(base64_encoded_image_string: str = None):
+        #NOTE: This function is copied directly from the SQL module. Never Change
+        if base64_encoded_image_string is None or not isinstance(base64_encoded_image_string, str):
+            raise ValueError('Invalid base64_encoded_jpg_image_string provided')
+        
+        return cv2.imdecode(np.frombuffer(base64.b64decode(base64_encoded_image_string), dtype=np.uint8), cv2.IMREAD_COLOR)
+    
     def __init__(self, server_ip_address):
         self.SERVER_IP_ADDRESS = server_ip_address   
         self.USERNAME = None
@@ -182,6 +193,21 @@ class ApiDealer():
 
     def get_last_camera_frame_by_camera_uuid(self, camera_uuid:str = None):
         """
+        json_data: {
+            "status": 200,
+            "is_task_successful": false,
+            "detail": "Last frame info fetched successfully",
+            "json_data": {
+                "date_created": "2024-09-22 21:15:02",
+                "date_updated": "2024-09-22 21:15:02",
+                "camera_uuid": "d2040d78-cb94-4a3f-b9cf-b63bdbc2faa5",
+                "camera_ip_address": "1.1.1.1",
+                "camera_region": "string",
+                "is_violation_detected": 1,
+                "is_person_detected": 1,
+                "frame_b64_string": "/9j/4AAQSkZJRgABAQAAAQAB..."
+                }
+        }
         """
         def request_to_try():
             try:
@@ -204,48 +230,168 @@ class ApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
 
+    def update_camera_info_attribute(self, camera_uuid:str = None, attribute:str = None, value:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'camera_uuid': camera_uuid,
+                    'attribute_name': attribute,
+                    'attribute_value': value
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_camera_info_attribute", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
 
-    # def create_user_api(self, username: str, password: str, personal_fullname: str) -> bool:
-    #     payload = {'username': username, 'plain_password': password, 'personal_fullname': personal_fullname}
-    #     try:
-    #         response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_user", json=payload, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, -1, str(e), {"detail": str(e)}]
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
 
-        
+            except Exception as e:
+                return [False , str(e), []]
 
-    # def update_camera_info_attribute(self, camera_uuid:str = None, attribute:str = None, value:str = None):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     payload = {}
-    #     payload.update({'camera_uuid': camera_uuid})
-    #     payload.update({'attribute': attribute})
-    #     payload.update({'value': value})
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.update_camera_info_attribute.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
 
-    #     try:
-    #         response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_camera_info_attribute", headers=header, json=payload, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
-        
+    def delete_camera_info_by_uuid(self, camera_uuid:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'camera_uuid': camera_uuid
+                }                    
+                response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/delete_camera_info", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
 
-    # def delete_camera_info_by_uuid(self, camera_uuid:str = None):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     try:
-    #         response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/delete_camera_info_by_uuid/{camera_uuid}", headers=header, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
-        
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.delete_camera_info_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
+    def create_user_api(self, username: str, password: str, personal_fullname: str):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'username': username,
+                    'plain_password': password,
+                    'personal_fullname': personal_fullname
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_user", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.delete_camera_info_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
+    def fetch_rules_by_camera_uuid(self, camera_uuid:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'camera_uuid': camera_uuid
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/fetch_rules_by_camera_uuid", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']['camera_rules']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.delete_camera_info_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+    
+    def create_rule_for_camera(self, camera_uuid:str = None, rule_department:str = None, rule_type:str = None, evaluation_method:str = None, threshold_value:float = None, fol_threshold_value:float = None, rule_polygon:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'camera_uuid': camera_uuid,
+                    'rule_department': rule_department,
+                    'rule_type': rule_type,
+                    'evaluation_method': evaluation_method,
+                    'threshold_value': threshold_value,
+                    'fol_threshold_value': fol_threshold_value,
+                    'rule_polygon': rule_polygon
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_rule", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.delete_camera_info_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
+    def delete_rule_by_rule_uuid(self, rule_uuid:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'rule_uuid': rule_uuid
+                }                    
+                response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/delete_rule", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                print(response_body)
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.delete_camera_info_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
     # def get_all_last_camera_frame_info_without_BLOB(self):
     #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
     #     try:
@@ -267,37 +413,7 @@ class ApiDealer():
     #             return [False, response.status_code, response.json()]
     #     except Exception as e:
     #         return [False, None, {"detail": str(e)}]
-        
-    # def delete_rule_by_rule_uuid(self, rule_uuid:str = None):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     try:
-    #         response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/delete_rule_by_rule_uuid/{rule_uuid}", headers=header, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
-    
-    # def create_rule_for_camera(self, camera_uuid:str = None, rule_department:str = None, rule_type:str = None, evaluation_method:str = None, threshold_value:float = None, rule_polygon:str = None):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     payload = {}
-    #     payload.update({'camera_uuid': camera_uuid})
-    #     payload.update({'rule_department': rule_department})
-    #     payload.update({'rule_type': rule_type})
-    #     payload.update({'evaluation_method': evaluation_method})
-    #     payload.update({'threshold_value': float(threshold_value)})
-    #     payload.update({'rule_polygon': rule_polygon})
 
-    #     try:
-    #         response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_rule", headers=header, json=payload, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
-        
     # def fetch_reported_violations_between_dates(self, start_date_ddmmyyyy:str = None, end_date_ddmmyyyy:str = None):
     #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
     #     start_date_ddmmyyyy = "1.1.1970" if start_date_ddmmyyyy is None or start_date_ddmmyyyy == "" else start_date_ddmmyyyy

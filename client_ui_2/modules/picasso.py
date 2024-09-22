@@ -226,7 +226,11 @@ def draw_frame_on_frame(frame:np.ndarray=None, frame_to_draw:np.ndarray=None, x:
         frame[roi_y1:roi_y2, roi_x1:roi_x2] = image_roi
 
 def draw_polygon_on_frame( frame: np.ndarray = None, points: list = None, color: tuple = (0, 0, 255), thickness: int = 2, last_dot_color: tuple = (255, 0, 0), first_last_line_color: tuple = (0, 255, 0)):
-    if len(points) < 2:
+    if len(points) < 1:
+        return    
+    elif len(points) == 1:
+        print(points)
+        cv2.circle(frame, tuple(points[0]), radius=thickness * 2, color=last_dot_color, thickness=-1)
         return
     # Ensure points are numpy array in the correct shape
     points = np.array(points)

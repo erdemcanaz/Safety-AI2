@@ -12,7 +12,7 @@ class EditRulesPage:
         self.background = ui_items.Background(background_name="edit_rules_page_template", default_resolution=(1920,1080))
         self.page_frame = None 
         
-        self.all_camera_info_list = None # [{'username':'sdsa', 'password':'sdfsf', date_created': '2024-08-26 08:44:56', 'date_updated': '2024-08-26 08:44:56', 'camera_uuid': '92051d28-3402-46cd-952b-d2ba2782443e', 'camera_ip_address': '1.1.1.1', 'camera_region': 'Henüz Atanmadı', 'camera_description': 'Henüz Atanmadı', 'NVR_ip_address': '', 'stream_path': '/asdaf', 'camera_status': 'active'}, ...]
+        self.all_camera_info_list = None
         
         self.selected_camera_info:dict = None # username, password, date_created, date_updated, camera_uuid, camera_ip_address, camera_region, camera_description, NVR_ip_address, stream_path, camera_status
         self.selected_camera_last_frame_info:dict = None #  camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected, last_frame_b64, decoded_last_frame
@@ -215,8 +215,26 @@ class EditRulesPage:
             }
         )
 
+        self.fol_threshold_value = ui_items.TextInput(
+            identifier = "text_input_"+str(uuid.uuid4()),
+
+            pos_n=(0.29, 0.74),
+            size_n=(0.275, 0.05),
+            text_input_render_configs={   
+                "text_input_style": "basic",     
+                "text_input_default_text": "Fol Eşik Değeri",
+                "text_input_default_text_color": (200, 200, 200),
+                "text_input_text_font_scale": [1.1, 1.1],
+                "text_input_text_thickness": [2, 2],
+                "text_input_text_color": [(169, 96, 0), (255, 255, 255)],
+                "text_input_background_color": [(225, 225, 225), (169, 96, 0)],
+                "text_input_border_color": [(255, 255, 255), (255, 255, 255)],
+                "text_input_border_thickness": [2, 2]
+            }
+        )
+
         self.page_ui_items = [self.polygon_click_area, self.cameras_list_item, self.rules_list_item, self.previous_page_button , self.clear_button, self.create_button, self.get_sample_image_button,
-                              self.rule_department, self.rule_type, self.evaluation_method, self.threshold_value]
+                              self.rule_department, self.rule_type, self.evaluation_method, self.threshold_value, self.fol_threshold_value]
                               
         self.reset_page_frame_required_callbacks = []
         for item in self.page_ui_items:
@@ -228,7 +246,7 @@ class EditRulesPage:
     def reset_page_frame(self):
         self.page_frame = self.background.get_background_frame()
         
-        self.all_camera_info_list = self.api_dealer.fetch_all_camera_info()[2]['camera_info'] 
+        self.all_camera_info_list = self.api_dealer.fetch_all_camera_info()[2]
         formatted_cameras_for_list = [ {"COLUMN_0": camera['camera_ip_address'] if camera['camera_region'] == "" else camera['camera_region'], "camera_info":camera} for camera in self.all_camera_info_list]
         self.cameras_list_item.set_list_items(items = formatted_cameras_for_list)
 
@@ -278,6 +296,7 @@ class EditRulesPage:
                 self.rule_type.set_text("")
                 self.evaluation_method.set_text("")
                 self.threshold_value.set_text("")
+                self.fol_threshold_value.set_text("")
                 self.new_rule_polygon = []
                 self.reset_page_frame()
                 return
@@ -288,12 +307,27 @@ class EditRulesPage:
                 rule_type = self.rule_type.get_text()
                 evaluation_method = self.evaluation_method.get_text()
                 threshold_value = self.threshold_value.get_text()
+                fol_threshold_value = self.fol_threshold_value.get_text()
                 rule_polygon = ",".join([str(point) for point in [item for sublist in self.new_rule_polygon for item in sublist]])
-                result = self.api_dealer.create_rule_for_camera(camera_uuid=camera_uuid, rule_department=rule_department, rule_type=rule_type, evaluation_method=evaluation_method, threshold_value=float(threshold_value), rule_polygon=rule_polygon)
+                result = self.api_dealer.create_rule_for_camera(camera_uuid=camera_uuid, rule_department=rule_department, rule_type=rule_type, evaluation_method=evaluation_method, threshold_value=float(threshold_value), fol_threshold_value = float(fol_threshold_value), rule_polygon=rule_polygon)
                 if result[0]:
                     self.popup_dealer.append_popup({"background_color":(0,255,0), "created_at":time.time(), "duration":2, "text":"Kural eklendi"})
                 else:
-                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
+                
+
+                # update the rules list
+                result = self.api_dealer.fetch_rules_by_camera_uuid(camera_uuid=self.selected_camera_info['camera_uuid'])
+                if result[2] is None:
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Kamera için kural(lar) bulunamadı"})
+                else:
+                    self.selected_camera_rules_info = result[2]                
+                    self.selected_camera_active_rule_polygons = []
+                    for rule in self.selected_camera_rules_info:
+                        parsed_rule = rule['rule_polygon'].split(",")
+                        rule_polygon = [ [float(parsed_rule[i]), float(parsed_rule[i+1])] for i in range(0,len(parsed_rule),2)]
+                        self.selected_camera_active_rule_polygons.append(rule["rule_polygon"])
+                
                 self.reset_page_frame()
                 return
             elif callback == ["left_clicked_callback", self.get_sample_image_button.identifier, True]:
@@ -301,23 +335,21 @@ class EditRulesPage:
                 camera_uuid = self.selected_camera_info["camera_uuid"]
                 result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
                 if result[0]:
-                    self.selected_camera_last_frame_info = result[2]["last_frame_info"]
+                    self.selected_camera_last_frame_info = result[2]
                     if self.selected_camera_last_frame_info is None:
                         self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
                     else:
-                        self.selected_camera_last_frame_info['decoded_last_frame'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.selected_camera_last_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR)
+                        self.selected_camera_last_frame_info['decoded_last_frame'] =  self.api_dealer.decode_url_body_b64_string_to_frame(base64_encoded_image_string =result[2]['frame_b64_string'])
                 else:
-                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
                 self.reset_page_frame()
-                return
-            
+                return        
             elif callback[0] == 'left_clicked_callback' and self.polygon_click_area.identifier == callback[1]:
                 xn = round(callback[3][0],3)
                 yn = round(callback[3][1],3)
                 self.new_rule_polygon.append([xn, yn])
                 # draw last frame 
-                self.reset_page_frame()
-            
+                self.reset_page_frame()          
             elif callback[0] == "item_clicked_callback" and callback[1] == self.cameras_list_item.identifier:
                 self.new_rule_polygon = []
                 selected_index = callback[3]
@@ -326,7 +358,7 @@ class EditRulesPage:
                 if result[2] is None:
                     self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Kamera için kural(lar) bulunamadı"})
                 else:
-                    self.selected_camera_rules_info = result[2]["rules"]                    
+                    self.selected_camera_rules_info = result[2]                
                     self.selected_camera_active_rule_polygons = []
                     for rule in self.selected_camera_rules_info:
                         parsed_rule = rule['rule_polygon'].split(",")
@@ -337,13 +369,13 @@ class EditRulesPage:
                     camera_uuid = self.selected_camera_info["camera_uuid"]
                     result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
                     if result[0]:
-                        self.selected_camera_last_frame_info = result[2]["last_frame_info"]
+                        self.selected_camera_last_frame_info = result[2]
                         if self.selected_camera_last_frame_info is None:
                             self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
                         else:
-                            self.selected_camera_last_frame_info['decoded_last_frame'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.selected_camera_last_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR)
+                            self.selected_camera_last_frame_info['decoded_last_frame'] =  self.api_dealer.decode_url_body_b64_string_to_frame(base64_encoded_image_string =result[2]['frame_b64_string'])
                     else:
-                        self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                        self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
                 
                 self.reset_page_frame()
                 return
@@ -354,6 +386,7 @@ class EditRulesPage:
                 self.rule_type.set_text(selected_rule_info["rule_type"])
                 self.evaluation_method.set_text(selected_rule_info["evaluation_method"])
                 self.threshold_value.set_text(str(selected_rule_info["threshold_value"]))
+                self.fol_threshold_value.set_text(str(selected_rule_info["fol_threshold_value"]))
                 parsed_rule = selected_rule_info['rule_polygon'].split(",")
                 self.new_rule_polygon = [ [float(parsed_rule[i]), float(parsed_rule[i+1])] for i in range(0,len(parsed_rule),2)]
                 self.reset_page_frame()
@@ -365,9 +398,19 @@ class EditRulesPage:
                 if result[0]:
                     self.popup_dealer.append_popup({"background_color":(0,255,0), "created_at":time.time(), "duration":2, "text":"Kural silindi"})
                 else:
-                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
                 
-
+                # update the rules list
+                result = self.api_dealer.fetch_rules_by_camera_uuid(camera_uuid=self.selected_camera_info['camera_uuid'])
+                if result[2] is None:
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Kamera için kural(lar) bulunamadı"})
+                else:
+                    self.selected_camera_rules_info = result[2]                
+                    self.selected_camera_active_rule_polygons = []
+                    for rule in self.selected_camera_rules_info:
+                        parsed_rule = rule['rule_polygon'].split(",")
+                        rule_polygon = [ [float(parsed_rule[i]), float(parsed_rule[i+1])] for i in range(0,len(parsed_rule),2)]
+                        self.selected_camera_active_rule_polygons.append(rule["rule_polygon"])
             
 
 
