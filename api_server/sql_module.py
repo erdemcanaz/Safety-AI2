@@ -55,6 +55,17 @@ class SQLManager:
         self.conn.close()
     
     @staticmethod
+    def delete_database():   
+        db_path = PREFERENCES.SQL_DATABASE_FILE_PATH_LOCAL
+        local_database_backups_folder_path = PREFERENCES.DATA_FOLDER_PATH_LOCAL / PREFERENCES.MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database_backups']
+        if PREFERENCES.check_if_folder_accesible(folder_path=local_database_backups_folder_path):
+            backup_db_path = local_database_backups_folder_path / f"{db_path.stem}_backup_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}{db_path.suffix}"
+            os.rename(db_path, backup_db_path)
+            print(f"Backed up database at '{backup_db_path}'")
+        os.remove(db_path) if os.path.exists(db_path) else None
+        print(f"Deleted database at '{db_path}'")
+
+    @staticmethod
     def encode_frame_for_url_body_b64_string(np_ndarray: np.ndarray = None):
         if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
             raise ValueError('Invalid np_ndarray provided')
@@ -1627,6 +1638,15 @@ class SQLManager:
         row = cursor.fetchone()
         if row is None:
             raise ValueError('User not found')
+        
+        # Ensure the authorization does not already exist
+        query = '''
+        SELECT id FROM authorization_table WHERE user_uuid = ? AND authorization_name = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid, authorization_name))
+        row = cursor.fetchone()
+        if row is not None:
+            raise ValueError('Authorization already exists')
         
         # Generate a UUID for the authorization
         authorization_uuid = str(uuid.uuid4())

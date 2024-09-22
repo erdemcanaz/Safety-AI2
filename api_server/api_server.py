@@ -35,7 +35,7 @@ import sql_module
 ALGORITHM = "HS256"
 
 app = FastAPI()
-sql_database_path_local = PREFERENCES.SQL_DATABASE_FOLDER_PATH_LOCAL / "api_server_database.db"
+sql_database_path_local = PREFERENCES.SQL_DATABASE_FILE_PATH_LOCAL
 database_manager = sql_module.SQLManager(db_path = sql_database_path_local, overwrite_existing_db= False)
 
 # OAuth2 scheme
@@ -739,7 +739,6 @@ async def get_all_counts_api(authenticated_user: User = Depends(authenticate_use
             "json_data":  {}
         }
 
-    
 # Rules Info Table API =================================================================================================
 
 class CreateRule(BaseModel):
@@ -884,26 +883,28 @@ async def fetch_all_rules_api(authenticated_user: User = Depends(authenticate_us
 
 # Authorizations Table API =================================================================================================
 #    def get_user_authorizations_by_user_uuid(self, user_uuid:str=None)->dict:
-@app.post("/fetch_user_authorizations_by_user_uuid", response_model =  default_response )
 class FetchUserAuthorizations(BaseModel):
     user_uuid: str
-async def fetch_user_authorizations_by_user_uuid_api(user_uuid = FetchUserAuthorizations, authenticated_user: User = Depends(authenticate_user_by_token)):
-    REQUIRED = ['MENAGE_USERS']
+@app.post("/fetch_user_authorizations_by_user_uuid", response_model =  default_response )
+async def fetch_user_authorizations_by_user_uuid_api(user_info: FetchUserAuthorizations, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = []
     try:
+        user_info_dict = user_info.model_dump(exclude= {}, by_alias=False)
+        user_uuid = user_info_dict['user_uuid']
         if(authenticated_user['user_uuid'] != user_uuid):
             user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
-            if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED):
+            if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
                 raise Exception("User is not authorized to access this resource")
         
-        user_uuid_dict = user_uuid.model_dump( exclude= {}, by_alias=False)
         return {
             "status":status.HTTP_200_OK,
             "is_task_successful": True,
             "detail":"User authorizations fetched successfully",
-            "json_data": database_manager.get_user_authorizations_by_user_uuid(**user_uuid_dict)
+            "json_data": database_manager.get_user_authorizations_by_user_uuid(**user_info_dict)
         }
     
     except Exception as e:
+        raise e
         return {
             "status": status.HTTP_400_BAD_REQUEST,
             "is_task_successful": False,

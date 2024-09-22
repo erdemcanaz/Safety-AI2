@@ -38,11 +38,12 @@ def calculate_folder_size_gb(folder_path: Path = None):
 
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 # Definitions (Hardcoded)
-SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT"  #For production -> secrets.token_bytes(32) |||  For development, you can use static key as ->  b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" 
+IS_EXTERNAL_DRIVE_REQUIRED = False # If yes, then if external drive is not connected, the script will raise an error
+SQL_MANAGER_SECRET_KEY = secrets.token_bytes(32)  #For production -> secrets.token_bytes(32) |||  For development, you can use static key as ->  b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" 
 SERVER_JWT_KEY = "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a" #For production -> secrets.token_hex(32) |||  For development, you can use static key as -> "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"
 VIOLATIONS_CLEANUP_CHECK_INTERVAL_SECONDS = 5*60 #5 min  # Keep this value low, since the fetching from database is fast but the deletion is slow, thus it is better to check more frequently. Also since the reports are deleted, the number of rows in the database is bounded
 VIOLATIONS_TIME_TO_LIVE_DAYS = 30 # 30 days
-ACCESS_TOKEN_EXPIRE_MINUTES = 30 # minutes
+ACCESS_TOKEN_EXPIRE_MINUTES = 1 # minutes
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_LOCAL = 250     # 250 GB
 MAX_SIZE_ALLOWED_GB_DATA_FOLDER_PATH_EXTERNAL = 1500 # 1.5 TB
 DEFINED_CAMERA_STATUSES = ["active", "inactive"]
@@ -55,8 +56,20 @@ DEFINED_AUTHORIZATIONS = [
             'REPORTED_VIOLATIONS',
             'SUMMARY_PAGE',
             'UPDATE_CAMERAS',
-            'IOT_DEVICES'
+            'IOT_DEVICES',
+            "EXPORT_PDF_REPORTS",
     ]
+APPLICATION_AUTHORIZATIONS =  [ # The UI will consider these authorizations as applications
+            'MENAGE_USERS',
+            'ISG_UI',
+            'EDIT_RULES',
+            'REPORTED_VIOLATIONS',
+            'SUMMARY_PAGE',
+            'UPDATE_CAMERAS',
+            'IOT_DEVICES',
+            "EXPORT_PDF_REPORTS",
+    ]
+
 DEFINED_RULES = {
     "hardhat_violation": [
         "v1", # People are detected via pose detection. Then their head is centered with 320x320 image. Image is then resized to 640x640 and fed to the hardhat detection model.
@@ -96,10 +109,10 @@ if os.name == "nt":  # For Windows (i.e development environment)
     print("[INFO] Windows OS detected")
     SERVER_IP_ADDRESS = "192.168.0.26"
     CLEAR_TERMINAL_COMMAND = "cls"
-    PRINT_MOUSE_COORDINATES = True
+    PRINT_MOUSE_COORDINATES = False
     
     # ENSURE THAT THE LOCAL SSD and EXTERNAL USB IS MOUNTED TO THE CONTAINER PROPERLY
-    DATA_FOLDER_PATH_LOCAL = Path(__file__).parent.resolve() /'api_server_new' / 'local_ssd_data_folder'
+    DATA_FOLDER_PATH_LOCAL = Path(__file__).parent.resolve() /'api_server' / 'local_ssd_data_folder'
     DATA_FOLDER_PATH_EXTERNAL = Path("E:")
     print(f"[INFO] The local data folder path is hardcoded to:'{DATA_FOLDER_PATH_LOCAL}'")
     print(f"[INFO] The external data folder path is hardcoded to: '{DATA_FOLDER_PATH_EXTERNAL}'")
@@ -112,7 +125,7 @@ if os.name == "nt":  # For Windows (i.e development environment)
 
     if not is_local_available:
         raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
-    if not is_external_available:
+    if not is_external_available and IS_EXTERNAL_DRIVE_REQUIRED:
         raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
 
     print(f"[INFO] Ensuring the data folder's subfolders are created")
@@ -120,6 +133,7 @@ if os.name == "nt":  # For Windows (i.e development environment)
     update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
 
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
+    SQL_DATABASE_FILE_PATH_LOCAL = SQL_DATABASE_FOLDER_PATH_LOCAL / "api_server_database.db"
 elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     #NOTE: assumes that the script runs on docker container
     SERVER_IP_ADDRESS = "172.17.27.62"
@@ -148,6 +162,7 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
     update_data_folder( data_folder_path= DATA_FOLDER_PATH_EXTERNAL, must_existing_data_subfolder_paths=MUST_EXISTING_DATA_SUBFOLDER_PATHS)
    
     SQL_DATABASE_FOLDER_PATH_LOCAL = DATA_FOLDER_PATH_LOCAL / MUST_EXISTING_DATA_SUBFOLDER_PATHS['api_server_database']  # NOTE: Technically, database folder should be in the external SSD, but local SSD is more reliable since external SSD can be disconnected. Thus no such option is provided for external SSD.
+    SQL_DATABASE_FILE_PATH_LOCAL = SQL_DATABASE_FOLDER_PATH_LOCAL / "api_server_database.db"
 
     # NOTE: When the external volume is disconnected, inside the Docker container, the directory 
     # /home/external_ssd_data_folder is still present as a bind mount. However, its contents are 
