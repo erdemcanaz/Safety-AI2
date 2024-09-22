@@ -1670,15 +1670,18 @@ class SQLManager:
         if not isinstance(authorization_uuid, str) or len(authorization_uuid) == 0 or not regex.match(authorization_uuid):
             raise ValueError('Invalid authorization_uuid provided')
         
-        # Check if the authorization exists
+        # Check if the authorization exists and it is not 'ADMIN_PRIVILEGES'
         query = '''
-        SELECT id FROM authorization_table WHERE authorization_uuid = ?
+        SELECT id, authorization_name FROM authorization_table WHERE authorization_uuid = ?
         '''
         cursor = self.conn.execute(query, (authorization_uuid,))
         row = cursor.fetchone()
         if row is None:
             raise ValueError('Authorization not found')
+        if row[1] == 'ADMIN_PRIVILEGES':
+            raise ValueError('ADMIN_PRIVILEGES cannot be removed')
         
+
         # Delete the authorization
         query = '''
         DELETE FROM authorization_table WHERE authorization_uuid = ?

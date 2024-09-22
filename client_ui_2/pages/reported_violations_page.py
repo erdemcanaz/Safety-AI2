@@ -167,7 +167,7 @@ class ReportedViolationsPage:
                 end_date = self.end_date_input.get_text()
                 result = self.api_dealer.fetch_reported_violations_between_dates(start_date_ddmmyyyy= start_date, end_date_ddmmyyyy = end_date)
                 if result[0]:
-                    self.fetched_violations = result[2]['reported_violations'] # camera_uuid, image_uuid, region_name, violation_date, violation_score, violation_type, violation_uuid
+                    self.fetched_violations = result[2] # camera_uuid, image_uuid, region_name, violation_date, violation_score, violation_type, violation_uuid
                     formatted_violations = []
                     for ind, violation in enumerate(self.fetched_violations):                        
                         formatted_violations.append({
@@ -182,19 +182,19 @@ class ReportedViolationsPage:
                         })
                     self.reported_violations_list_ui_item.set_list_items(formatted_violations)
                 else:
-                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
 
             elif callback[0] == "item_clicked_callback" and callback[1] == self.reported_violations_list_ui_item.identifier:
                 selected_index = callback[3]
                 image_uuid = self.fetched_violations[selected_index]["image_uuid"] # violation
                 result = self.api_dealer.get_encrypted_image_by_uuid(image_uuid)
                 if result[0]:
-                    self.last_shown_violation_frame_info = result[2]["image_info"]
+                    self.last_shown_violation_frame_info = result[2]
                     if self.last_shown_violation_frame_info is None:
                         self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Görüntü bulunamadı."})
                     else:
                         # last_shown_violation_frame_info -> image_b64, image, image_uuid, encrypted_image_path, is_deleted, image_category
-                        self.last_shown_violation_frame_info['image'] =  cv2.imdecode(np.frombuffer(base64.b64decode(self.last_shown_violation_frame_info['image_b64']),np.uint8), cv2.IMREAD_COLOR)
+                        self.last_shown_violation_frame_info['image'] =  self.api_dealer.decode_url_body_b64_string_to_frame(base64_encoded_image_string = result[2]['frame_b64_string'])
                         resized_image = cv2.resize(self.last_shown_violation_frame_info['image'], (960, 720), interpolation = cv2.INTER_AREA)
 
                         # Put text on the topleft of the image: kamera uuid, ihlal uuid, vioaltion date, Region name, violation type, Talep eden kişi, talep edilme tarihi
@@ -215,7 +215,7 @@ class ReportedViolationsPage:
                         cv2.resizeWindow("Violation Image", resized_image.shape[1], resized_image.shape[0])
                         cv2.imshow("Violation Image", resized_image)
                 else:
-                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[1]})
                 self.reset_page_frame()
              
     

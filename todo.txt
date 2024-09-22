@@ -2,6 +2,10 @@
 # (DONE) Eule trigger checks table -> implemented into the rules table as a new column
 # (DONE: just use randomly generated JWT and SQL password from PREFERENCES)check passwords
 
+#yazılım son haline geldiğinde admin şifrelerini koddan değiştir (github da olmasın)
+
+# Preferences'i client için çalıştığında server kurmayacak şekilde ayarla
+
 # Save database backups
 # check rule
 # zoom rule
