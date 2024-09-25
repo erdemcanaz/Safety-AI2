@@ -60,30 +60,29 @@ class default_response(BaseModel):
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-
-    # Check if user exists by username
-    db_user_dict = database_manager.get_user_by_username(form_data.username)
-    if db_user_dict is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )        
-    
-    # Check if password hash matches
-    if not db_user_dict["hashed_password"] == hashlib.sha256(form_data.password.encode('utf-8')).hexdigest():
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Create JWT token
-    del db_user_dict["hashed_password"]    
-    expire = time.time() + 60*PREFERENCES.ACCESS_TOKEN_EXPIRE_MINUTES
-    db_user_dict.update({"exp": expire})
-    encoded_jwt = jwt.encode(db_user_dict, PREFERENCES.SERVER_JWT_KEY, algorithm=ALGORITHM)
-    return {"access_token":encoded_jwt, "token_type":"bearer"}
+        # Check if user exists by username
+        db_user_dict = database_manager.get_user_by_username(form_data.username)
+        if db_user_dict is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )        
+        
+        # Check if password hash matches
+        if not db_user_dict["hashed_password"] == hashlib.sha256(form_data.password.encode('utf-8')).hexdigest():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Create JWT token
+        del db_user_dict["hashed_password"]    
+        expire = time.time() + 60*PREFERENCES.ACCESS_TOKEN_EXPIRE_MINUTES
+        db_user_dict.update({"exp": expire})
+        encoded_jwt = jwt.encode(db_user_dict, PREFERENCES.SERVER_JWT_KEY, algorithm=ALGORITHM)
+        return {"access_token":encoded_jwt, "token_type":"bearer"}
 
 async def authenticate_user_by_token(token: str = Depends(oauth2_scheme)):
     # Decodes JWT token and returns user if token is valid, else raises exception
@@ -924,6 +923,68 @@ async def fetch_all_authorizations_api(authenticated_user: User = Depends(authen
             "is_task_successful": True,
             "detail":"All authorizations fetched successfully",
             "json_data": database_manager.fetch_all_authorizations()
+        }
+     
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+#def add_authorization(self, user_uuid:str=None, authorization_name:str=None)-> dict:
+class AddAuthorization(BaseModel):
+    username: str
+    authorization_name: str
+@app.post("/add_authorization_by_username", response_model = default_response)
+async def add_authorization_api(authorization_info: AddAuthorization, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED = ['MANAGE_USERS']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED):
+            raise Exception("User is not authorized to access this resource")
+        
+        request_info_dict = authorization_info.model_dump( exclude= {}, by_alias=False)
+
+        user_info = database_manager.get_user_by_username(username= request_info_dict['username'])
+
+        authorization_info_dict = {
+            "user_uuid": user_info['user_uuid'],
+            "authorization_name": request_info_dict['authorization_name']
+        }         
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"Authorization added successfully",
+            "json_data": database_manager.add_authorization(**authorization_info_dict)
+        }
+    except Exception as e:
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+#    def remove_authorization(self, authorization_uuid:str = None)->dict:
+class RemoveAuthorization(BaseModel):
+    authorization_uuid: str
+@app.delete("/remove_authorization", response_model = default_response)
+async def remove_authorization_api(authorization_info: RemoveAuthorization, authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['MANAGE_USERS']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]       
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        authorization_info_dict = authorization_info.model_dump( exclude= {}, by_alias=False)
+
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"All authorizations fetched successfully",
+            "json_data": database_manager.remove_authorization(authorization_uuid= authorization_info_dict['authorization_uuid'])
         }
      
     except Exception as e:

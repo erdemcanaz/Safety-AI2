@@ -65,6 +65,7 @@ class ApiDealer():
             try:
                 header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
                 payload = {'user_uuid': self.DECODED_TOKEN['user_uuid']}
+     
                 response = requests.post(
                     f"http://{self.SERVER_IP_ADDRESS}/fetch_user_authorizations_by_user_uuid", 
                     headers = header, 
@@ -85,6 +86,78 @@ class ApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
 
+    def fetch_all_authorizations(self):
+        """      
+        """
+
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_authorizations", headers=header, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
+                
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']['all_authorizations']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+            
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.fetch_all_authorizations.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()    
+
+    def add_authorization(self, username:str = None, authorization_name:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {'username':username,  'authorization_name':authorization_name}
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/add_authorization_by_username", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                raise e
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.add_authorization.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+    
+    def remove_authorization_by_uuid(self, authorization_uuid:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {'authorization_uuid': authorization_uuid}
+                response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/remove_authorization", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.remove_authorization_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+    
     def fetch_all_camera_info(self):
         """
         Returns a list of all camera info.

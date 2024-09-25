@@ -10,6 +10,7 @@ IMAGE_PATHS = {
     "isg_ui_page_template": "src/templates/isg_ui_page_template.png",
     "edit_rules_page_template": "src/templates/edit_rules_page_template.png",
     "reported_violations_page_template": "src/templates/reported_violations_page_template.png",
+    "manage_users_page_template": "src/templates/manage_users_page_template.png",
 
     "anil_right_looking": "src/icons/anil_right_looking.png",
     "anil_left_looking": "src/icons/anil_left_looking.png",

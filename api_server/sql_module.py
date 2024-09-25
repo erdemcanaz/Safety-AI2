@@ -1681,7 +1681,25 @@ class SQLManager:
         if row[1] == 'ADMIN_PRIVILEGES':
             raise ValueError('ADMIN_PRIVILEGES cannot be removed')
         
-
+        #check if authorization is linked to an user with admin privileges
+        query = '''
+        SELECT user_uuid FROM authorization_table WHERE authorization_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (authorization_uuid,))
+        row = cursor.fetchone()
+        if row is None:
+            raise ValueError('Authorization not linked to any user')
+        
+        user_uuid = row[0]
+        query = '''
+        SELECT authorization_name FROM authorization_table WHERE user_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (user_uuid,))
+        rows = cursor.fetchall()
+        for row in rows:
+            if row[0] == 'ADMIN_PRIVILEGES':
+                raise ValueError('Authorization linked to an user with admin privileges')
+        
         # Delete the authorization
         query = '''
         DELETE FROM authorization_table WHERE authorization_uuid = ?
@@ -1753,12 +1771,12 @@ class SQLManager:
         FROM authorization_table
         '''
         cursor = self.conn.execute(query)
-        rows = cursor.fetchall()
+        authorization_rows = cursor.fetchall()
         
         final_rows = []
         # Only append authorizations corresponding to the user
         # Check if user exists, otherwise delete all the authorizations related to that user
-        for row in rows:
+        for row in authorization_rows:
             user_uuid = row[0]
             # Fetch username
             query = '''
@@ -1766,10 +1784,8 @@ class SQLManager:
             '''
             cursor = self.conn.execute(query, (user_uuid,))
             row = cursor.fetchone()
-            if row is not None:
-                row.append(row[0])
-            else:
-                # Delete the authorization
+            if row is None:
+                # Delete all the authorizations corresponding to the user since the user does not exist
                 query = '''
                 DELETE FROM authorization_table WHERE user_uuid = ?
                 '''
