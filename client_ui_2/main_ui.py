@@ -1,6 +1,8 @@
 import time, sys
 from pathlib import Path
 
+from pages import manage_users_page
+
 # Local imports
 CLIENT_UI_DIRECTORY = Path(__file__).resolve().parent
 SAFETY_AI2_DIRECTORY = CLIENT_UI_DIRECTORY.parent
@@ -26,6 +28,7 @@ from pages import (
     isg_ui_page,
     edit_rules_page,
     reported_violations_page,
+    manage_users_page
 )
 
 def check_for_ui_item_callbacks(frame:np.ndarray, page_ui_items:List=[], mouse_tracker:MouseTracker=None, keyboard_tracker:KeyboardTracker=None):
@@ -161,7 +164,18 @@ while True:
         callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
         released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
         DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+    
+    elif DYNAMIC_PROGRAM_STATE[0] == 7: #MENAGE USERS PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, manage_users_page.ManageUsersPage):
+            DYNAMIC_PAGE_DEALER = manage_users_page.ManageUsersPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+            DYNAMIC_PAGE_DEALER.reset_page_frame()
+
+        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
         
+
     # Draw popups
     final_frame = DYNAMIC_PAGE_DEALER.get_page_frame()
     is_popup_poped = popup_dealer.draw_popups(final_frame)

@@ -50,7 +50,7 @@ DEFINED_CAMERA_STATUSES = ["active", "inactive"]
 DEFINED_DEPARTMENTS = ["ISG", "KALITE", "GUVENLIK"]
 DEFINED_AUTHORIZATIONS = [
             'ADMIN_PRIVILEGES',
-            'MENAGE_USERS',
+            'MANAGE_USERS',
             'ISG_UI',
             'EDIT_RULES',
             'REPORTED_VIOLATIONS',
@@ -60,7 +60,7 @@ DEFINED_AUTHORIZATIONS = [
             "EXPORT_PDF_REPORTS",
     ]
 APPLICATION_AUTHORIZATIONS =  [ # The UI will consider these authorizations as applications
-            'MENAGE_USERS',
+            'MANAGE_USERS',
             'ISG_UI',
             'EDIT_RULES',
             'REPORTED_VIOLATIONS',
@@ -107,7 +107,7 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
 
 if os.name == "nt":  # For Windows (i.e development environment)
     print("[INFO] Windows OS detected")
-    SERVER_IP_ADDRESS = "192.168.0.26"
+    SERVER_IP_ADDRESS = "192.168.7.76"
     CLEAR_TERMINAL_COMMAND = "cls"
     PRINT_MOUSE_COORDINATES = False
     

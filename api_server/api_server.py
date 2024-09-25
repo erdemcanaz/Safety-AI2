@@ -148,7 +148,7 @@ async def create_user_api(user_info: UserCreate):
 
 @app.get("/get_all_users", response_model = default_response)
 async def get_all_users_api(authenticated_user: User = Depends(authenticate_user_by_token)):
-    REQUIRED_AUTHORIZATIONS = ['MENAGE_USERS']
+    REQUIRED_AUTHORIZATIONS = ['MANAGE_USERS']
     try:
         user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
         if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
@@ -170,7 +170,7 @@ async def get_all_users_api(authenticated_user: User = Depends(authenticate_user
 
 @app.get("/get_user_by_username", response_model = default_response)
 async def get_user_by_username_api(username: str, authenticated_user: User = Depends(authenticate_user_by_token)):
-    REQUIRED_AUTHORIZATIONS = ['MENAGE_USERS']
+    REQUIRED_AUTHORIZATIONS = ['MANAGE_USERS']
     try:
         if(authenticated_user['username'] != username):
             user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
@@ -192,7 +192,7 @@ async def get_user_by_username_api(username: str, authenticated_user: User = Dep
     
 @app.get("/get_user_by_uuid")
 async def get_user_by_uuid_api(user_uuid: str, authenticated_user = Depends(authenticate_user_by_token)):   
-    REQUIRED_AUTHORIZATIONS = ['MENAGE_USERS']
+    REQUIRED_AUTHORIZATIONS = ['MANAGE_USERS']
     try:
         if(authenticated_user['user_uuid'] != user_uuid):
             user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
@@ -217,7 +217,7 @@ class DeleteUser(BaseModel):
     user_uuid: str
 @app.delete("/delete_user_by_uuid", response_model = default_response)
 async def delete_user_by_username_api( user_info : DeleteUser, authenticated_user: User = Depends(authenticate_user_by_token)):
-    REQUIRED_AUTHORIZATIONS = ['MENAGE_USERS']
+    REQUIRED_AUTHORIZATIONS = ['MANAGE_USERS']
     try:
         if(authenticated_user['user_uuid'] != user_info.user_uuid):
             user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
@@ -904,7 +904,29 @@ async def fetch_user_authorizations_by_user_uuid_api(user_info: FetchUserAuthori
         }
     
     except Exception as e:
-        raise e
+        return {
+            "status": status.HTTP_400_BAD_REQUEST,
+            "is_task_successful": False,
+            "detail": str(e),
+            "json_data":  {}
+        }
+
+@app.get("/fetch_all_authorizations", response_model = default_response)
+async def fetch_all_authorizations_api(authenticated_user: User = Depends(authenticate_user_by_token)):
+    REQUIRED_AUTHORIZATIONS = ['MANAGE_USERS']
+    try:
+        user_authorizations = [ auth_dict['authorization_name'] for auth_dict in  database_manager.get_user_authorizations_by_user_uuid(user_uuid= authenticated_user['user_uuid'])['user_authorizations']]
+        if 'ADMIN_PRIVILEGES' not in user_authorizations and not all (auth in user_authorizations for auth in REQUIRED_AUTHORIZATIONS):
+            raise Exception("User is not authorized to access this resource")
+        
+        return {
+            "status":status.HTTP_200_OK,
+            "is_task_successful": True,
+            "detail":"All authorizations fetched successfully",
+            "json_data": database_manager.fetch_all_authorizations()
+        }
+     
+    except Exception as e:
         return {
             "status": status.HTTP_400_BAD_REQUEST,
             "is_task_successful": False,

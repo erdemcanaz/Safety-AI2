@@ -11,6 +11,10 @@
 #define EBYTE_E32_TX_PIN 4  //Software serial RX
 #define EBYTE_E32_AUX_PIN 6
 
+#define NMOS_GATE_LED 11
+#define DEFINED_DEVICE_ADDRESS 58427 //same for all the devices
+#define DEFINED_DEVICE_ID 175 // unique to device
+
 /* TODO: PUT COMMAND PACKAGE INDICATING WHICH BIT IS WHICH*/
 #define UART_PARITY_MODE_8O1 1
 #define UART_PARITY_MODE_8E1 2
@@ -53,6 +57,6 @@
 #define POWER_MODE_14Dbm 2
 #define POWER_MODE_10Dbm 3
 
-
+#define DEVICE_CHANNEL_E32_900T_868MHZ 6
 
 

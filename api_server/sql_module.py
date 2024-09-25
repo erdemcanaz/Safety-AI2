@@ -1747,6 +1747,50 @@ class SQLManager:
         } for row in rows]
         }
     
+    def fetch_all_authorizations(self)->dict:
+        query = '''
+        SELECT user_uuid, authorization_uuid, authorization_name
+        FROM authorization_table
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+        
+        final_rows = []
+        # Only append authorizations corresponding to the user
+        # Check if user exists, otherwise delete all the authorizations related to that user
+        for row in rows:
+            user_uuid = row[0]
+            # Fetch username
+            query = '''
+            SELECT username FROM user_info WHERE user_uuid = ?
+            '''
+            cursor = self.conn.execute(query, (user_uuid,))
+            row = cursor.fetchone()
+            if row is not None:
+                row.append(row[0])
+            else:
+                # Delete the authorization
+                query = '''
+                DELETE FROM authorization_table WHERE user_uuid = ?
+                '''
+                self.conn.execute(query, (user_uuid,))
+                self.conn.commit()
+
+        # Fetch all the authorizations again
+        query = '''
+        SELECT user_uuid, authorization_uuid, authorization_name
+        FROM authorization_table
+        '''
+        cursor = self.conn.execute(query)
+        rows = cursor.fetchall()
+
+        return {'all_authorizations':[{
+            "user_uuid": row[0],
+            "authorization_uuid": row[1],
+            "authorization_name": row[2]
+        } for row in rows]
+        }
+    
     # ========================================= camera_info_table ========================================
     
     def __ensure_camera_info_table_exists(self):

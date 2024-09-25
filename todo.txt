@@ -1,3 +1,5 @@
+NOT: Manage users sayfasını yapıyordun en son. Fetch all user & authorizations apisineydin. Sonra arayüzü güncelleyecektin.
+
 # (DONE -> preferences ) delete images if they are older than 30 days
 # (DONE) Eule trigger checks table -> implemented into the rules table as a new column
 # (DONE: just use randomly generated JWT and SQL password from PREFERENCES)check passwords

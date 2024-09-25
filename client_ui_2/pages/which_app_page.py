@@ -108,6 +108,9 @@ class WhichAppPage:
                 elif clicked_app == "REPORTED_VIOLATIONS":
                     program_state[0] = 6
                     return
+                elif clicked_app == "MANAGE_USERS":
+                    program_state[0] = 7
+                    return
                 
           
 

@@ -7,16 +7,18 @@ void setup() {
   Serial.begin(9600);
   EBYTESerial.begin(9600);  
 
+  pinMode(NMOS_GATE_LED, OUTPUT);
+  delay(2500);
+
   configure_ebyte_pins();
   set_ebyte_parameters(); 
 
-  delay(5000); 
 
 }
 
 void loop() {
   //transmit_fixed_package();  
-  //delay(2500);
+  //delay(5000);
 
   listen_package();
 }
