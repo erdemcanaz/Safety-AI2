@@ -16,7 +16,6 @@ class ISG_UIpage:
         self.page_frame = None         
         self.last_frames_without_BLOB:List = None
         self.selected_indexes = []
-        self.fetched_images = []
 
         self.previous_page_button = ui_items.Button(
             identifier = "but"+str(uuid.uuid4()),
@@ -39,9 +38,65 @@ class ISG_UIpage:
         self.reset_page_frame_required_callbacks = []
         for item in self.page_ui_items:
             self.reset_page_frame_required_callbacks.extend(item.get_reset_page_frame_required_callbacks())
+
+        self.last_frames_info_without_frame = []
+        self.violation_detected_camera_uuids = []
+        self.other_camera_uuids = []
+        self.fetched_images = []
+
         
+        self.update_last_frame_info_without_frame()
         # ========================== #
         self.reset_page_frame()
+
+    def update_last_frame_info_without_frame(self):
+        fetch_last_frames_info_result = self.api_dealer.fetch_last_frames_info_without_frames()
+        self.last_frames_info_without_frame = []
+        if not fetch_last_frames_info_result[0]:
+            self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":fetch_last_frames_info_result[1]})
+            return
+        self.last_frames_info_without_frame = fetch_last_frames_info_result[2]
+
+        #decide on cameras to be shown 
+        self.violation_detected_camera_uuids = []
+        self.other_camera_uuids = []
+
+        for frame_info in self.last_frames_info_without_frame:
+            if frame_info["is_violation_detected"]:
+                self.violation_detected_camera_uuids.append(frame_info["camera_uuid"])
+            else:
+                self.other_camera_uuids.append(frame_info["camera_uuid"])
+        
+        NUMBER_OF_CAMERAS_TO_SHOW = 6
+
+        selected_camera_uuids = []
+
+        if len(self.violation_detected_camera_uuids) <= NUMBER_OF_CAMERAS_TO_SHOW:
+            selected_camera_uuids.extend(self.violation_detected_camera_uuids)
+            if len(self.other_camera_uuids) <= NUMBER_OF_CAMERAS_TO_SHOW - len(self.violation_detected_camera_uuids):
+                selected_camera_uuids.extend(self.other_camera_uuids)
+            elif len(self.other_camera_uuids) > NUMBER_OF_CAMERAS_TO_SHOW - len(self.violation_detected_camera_uuids):
+                selected_camera_uuids.extend(random.sample(self.other_camera_uuids, NUMBER_OF_CAMERAS_TO_SHOW - len(self.violation_detected_camera_uuids)))
+        elif len(self.violation_detected_camera_uuids) > NUMBER_OF_CAMERAS_TO_SHOW:
+            selected_camera_uuids.extend(random.sample(self.violation_detected_camera_uuids, 6))
+
+        pprint.pprint(selected_camera_uuids)
+    
+    def fetch_selected_frames(self):
+        self.fetched_images = {}
+
+        selected_camera_uuids = self.violation_detected_camera_uuids + self.other_camera_uuids
+        #TODO: fetch the frames of the selected cameras
+        for camera_uuid in self.selected_camera_uuids:
+            result = self.api_dealer.get_last_camera_frame_by_camera_uuid(camera_uuid=camera_uuid)
+            if result[0]:
+                last_camera_frame_info = result[2]["last_frame_info"]
+                if last_camera_frame_info is None:
+                    self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":"Henüz kamera görüntüsü yüklenmemiş"})
+                else:
+                    self.fetched_images.append(cv2.imdecode(np.frombuffer(base64.b64decode(last_camera_frame_info['last_frame_b64']),np.uint8), cv2.IMREAD_COLOR))
+            else:
+                self.popup_dealer.append_popup({"background_color":(255,0,0), "created_at":time.time(), "duration":2, "text":result[2]["detail"]})
 
     def __determine_indexes_to_display_and_fetch(self):
         violation_and_person_indexes = []
@@ -82,8 +137,8 @@ class ISG_UIpage:
         self.page_frame = self.background.get_background_frame()
        
         # Get the last frames without BLOB ========================================
-        self.last_frames_without_BLOB = self.api_dealer.get_all_last_camera_frame_info_without_BLOB()[2]["last_frame_info"]
-        self.__determine_indexes_to_display_and_fetch()
+        # self.last_frames_without_BLOB = self.api_dealer.get_all_last_camera_frame_info_without_BLOB()[2]["last_frame_info"]
+        # self.__determine_indexes_to_display_and_fetch()
 
         display_frame_width = self.page_frame.shape[1]*0.20
         display_frame_height = self.page_frame.shape[0]*0.20
@@ -92,103 +147,103 @@ class ISG_UIpage:
         main_frame_width = self.page_frame.shape[1]*0.48
         main_frame_height = self.page_frame.shape[0]*0.48
 
-        for i, image in enumerate(self.fetched_images):
-            # Calculate the top-left corner position of the frame
-            top_left_x = int(frame_locations[i][0] * self.page_frame.shape[1])
-            top_left_y = int(frame_locations[i][1] * self.page_frame.shape[0])
+        # for i, image in enumerate(self.fetched_images):
+        #     # Calculate the top-left corner position of the frame
+        #     top_left_x = int(frame_locations[i][0] * self.page_frame.shape[1])
+        #     top_left_y = int(frame_locations[i][1] * self.page_frame.shape[0])
             
-            # Calculate the bottom-right corner position of the frame
-            bottom_right_x = int(top_left_x + display_frame_width)
-            bottom_right_y = int(top_left_y + display_frame_height)
+        #     # Calculate the bottom-right corner position of the frame
+        #     bottom_right_x = int(top_left_x + display_frame_width)
+        #     bottom_right_y = int(top_left_y + display_frame_height)
             
-            # Draw the image on the frame
-            picasso.draw_frame_on_frame(
-                self.page_frame, image, 
-                top_left_x, top_left_y, 
-                width=int(display_frame_width), 
-                height=int(display_frame_height), 
-                maintain_aspect_ratio=False
-            )
+        #     # Draw the image on the frame
+        #     picasso.draw_frame_on_frame(
+        #         self.page_frame, image, 
+        #         top_left_x, top_left_y, 
+        #         width=int(display_frame_width), 
+        #         height=int(display_frame_height), 
+        #         maintain_aspect_ratio=False
+        #     )
            
-            # Fetch information about the image
-            image_index = self.selected_indexes[i]
-            camera_ip = self.last_frames_without_BLOB[image_index]["camera_ip"]
-            camera_region = self.last_frames_without_BLOB[image_index]["camera_region"]
-            is_violation_detected = self.last_frames_without_BLOB[image_index]["is_violation_detected"]
-            is_person_detected = self.last_frames_without_BLOB[image_index]["is_person_detected"]            
-            camera_name_text = f"{camera_ip}" if camera_region == "Henüz Atanmadı" else f"{camera_region}"
+        #     # Fetch information about the image
+        #     image_index = self.selected_indexes[i]
+        #     camera_ip = self.last_frames_without_BLOB[image_index]["camera_ip"]
+        #     camera_region = self.last_frames_without_BLOB[image_index]["camera_region"]
+        #     is_violation_detected = self.last_frames_without_BLOB[image_index]["is_violation_detected"]
+        #     is_person_detected = self.last_frames_without_BLOB[image_index]["is_person_detected"]            
+        #     camera_name_text = f"{camera_ip}" if camera_region == "Henüz Atanmadı" else f"{camera_region}"
 
-            #def draw_text_on_frame(frame: np.ndarray, text: str, position: tuple, area_size: tuple, alignment: str = 'center', font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, text_color=(255, 255, 255), thickness=2, padding=10):
+        #     #def draw_text_on_frame(frame: np.ndarray, text: str, position: tuple, area_size: tuple, alignment: str = 'center', font=cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, text_color=(255, 255, 255), thickness=2, padding=10):
 
-            picasso.draw_text_on_frame(
-                self.page_frame, 
-                text=camera_name_text, 
-                position=(top_left_x, top_left_y + int(display_frame_height) + 15),
-                area_size=(int(display_frame_width), int(20)),
-                alignment='center', 
-                font=cv2.FONT_HERSHEY_SIMPLEX, 
-                font_scale = 1, 
-                text_color=(169, 69, 0), 
-                thickness=2, 
-                padding=10
-            )
+        #     picasso.draw_text_on_frame(
+        #         self.page_frame, 
+        #         text=camera_name_text, 
+        #         position=(top_left_x, top_left_y + int(display_frame_height) + 15),
+        #         area_size=(int(display_frame_width), int(20)),
+        #         alignment='center', 
+        #         font=cv2.FONT_HERSHEY_SIMPLEX, 
+        #         font_scale = 1, 
+        #         text_color=(169, 69, 0), 
+        #         thickness=2, 
+        #         padding=10
+        #     )
 
-            if i == 0:
-                picasso.draw_frame_on_frame(
-                    self.page_frame, image, 
-                    int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0]), 
-                    width=int(main_frame_width), 
-                    height=int(main_frame_height), 
-                    maintain_aspect_ratio=False
-                )              
-                picasso.draw_text_on_frame(
-                    self.page_frame,
-                    text=camera_name_text,
-                    position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 15)),
-                    area_size=(int(main_frame_width), int(20)),
-                    alignment='center',
-                    font=cv2.FONT_HERSHEY_SIMPLEX,
-                    font_scale=1,
-                    text_color=(169, 69, 0),
-                    thickness=2,
-                    padding=10                    
-                )
+        #     if i == 0:
+        #         picasso.draw_frame_on_frame(
+        #             self.page_frame, image, 
+        #             int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0]), 
+        #             width=int(main_frame_width), 
+        #             height=int(main_frame_height), 
+        #             maintain_aspect_ratio=False
+        #         )              
+        #         picasso.draw_text_on_frame(
+        #             self.page_frame,
+        #             text=camera_name_text,
+        #             position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 15)),
+        #             area_size=(int(main_frame_width), int(20)),
+        #             alignment='center',
+        #             font=cv2.FONT_HERSHEY_SIMPLEX,
+        #             font_scale=1,
+        #             text_color=(169, 69, 0),
+        #             thickness=2,
+        #             padding=10                    
+        #         )
 
 
-            # Check for violation and draw text and rectangle
-            if is_violation_detected or is_person_detected:
-                # Draw text above the rectangle
-                color = (0, 0, 255) if is_violation_detected else (255, 0, 0)
-                picasso.draw_text_on_frame(
-                    self.page_frame, 
-                    text="İhlal ve Insan Tespit Edildi" if is_violation_detected and is_person_detected else "İnsan Tespit Edildi" if is_person_detected else "İhlal Tespit Edildi", 
-                    position=(top_left_x, top_left_y -25),
-                    area_size=(int(display_frame_width), int(20)),
-                    alignment='center', 
-                    font=cv2.FONT_HERSHEY_SIMPLEX, 
-                    font_scale = 0.75, 
-                    text_color=color, 
-                    thickness=1, 
-                    padding=10
-                )
+        #     # Check for violation and draw text and rectangle
+        #     if is_violation_detected or is_person_detected:
+        #         # Draw text above the rectangle
+        #         color = (0, 0, 255) if is_violation_detected else (255, 0, 0)
+        #         picasso.draw_text_on_frame(
+        #             self.page_frame, 
+        #             text="İhlal ve Insan Tespit Edildi" if is_violation_detected and is_person_detected else "İnsan Tespit Edildi" if is_person_detected else "İhlal Tespit Edildi", 
+        #             position=(top_left_x, top_left_y -25),
+        #             area_size=(int(display_frame_width), int(20)),
+        #             alignment='center', 
+        #             font=cv2.FONT_HERSHEY_SIMPLEX, 
+        #             font_scale = 0.75, 
+        #             text_color=color, 
+        #             thickness=1, 
+        #             padding=10
+        #         )
                 
-                # Draw a rectangle as a border around the frame
-                cv2.rectangle(
-                    self.page_frame, 
-                    (top_left_x, top_left_y), 
-                    (bottom_right_x, bottom_right_y), 
-                    color, 
-                    5
-                )
+        #         # Draw a rectangle as a border around the frame
+        #         cv2.rectangle(
+        #             self.page_frame, 
+        #             (top_left_x, top_left_y), 
+        #             (bottom_right_x, bottom_right_y), 
+        #             color, 
+        #             5
+        #         )
 
-                if i == 0:
-                    cv2.rectangle(
-                    self.page_frame, 
-                    (int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0])), 
-                    (int(main_frame_location[0] * self.page_frame.shape[1] + main_frame_width), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height)), 
-                    color, 
-                    5
-                )
+        #         if i == 0:
+        #             cv2.rectangle(
+        #             self.page_frame, 
+        #             (int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0])), 
+        #             (int(main_frame_location[0] * self.page_frame.shape[1] + main_frame_width), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height)), 
+        #             color, 
+        #             5
+        #         )
                     
         for ui_item in self.page_ui_items:
             ui_item.draw(self.page_frame)
@@ -203,6 +258,8 @@ class ISG_UIpage:
         # Periodically fetch the frames ========================================
         if time.time() - self.last_time_frames_fetched > self.frame_fetching_interval:
             self.last_time_frames_fetched = time.time()
+            self.update_last_frame_info_without_frame()
+            self.fetch_selected_frames()
             self.reset_page_frame()
 
         # Update the page frame ========================================

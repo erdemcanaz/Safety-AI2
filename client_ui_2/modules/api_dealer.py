@@ -22,9 +22,9 @@ class ApiDealer():
     
     def __init__(self, server_ip_address):
         self.SERVER_IP_ADDRESS = server_ip_address   
-        self.USERNAME = None
+        self.USERNAME = "a" #TODO: change this to None
         self.PERSONAL_FULLNAME = None
-        self.PASSWORD = None
+        self.PASSWORD = "a" #TODO change this to None
         self.JWT_TOKEN = None
         self.DECODED_TOKEN = None
 
@@ -541,6 +541,29 @@ class ApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
 
+    def fetch_last_frames_info_without_frames(self):
+        """
+        """
+
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+          
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_last_frames_info_without_frames", headers=header, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']['last_frames_info']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result   
+        print(f"Refreshing token and retrying once more... {self.fetch_last_frames_info_without_frames.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
 
     # def get_all_last_camera_frame_info_without_BLOB(self):
     #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}

@@ -942,7 +942,7 @@ class SQLManager:
         
     def get_all_last_camera_frame_info_without_frames(self) -> list:
         query = '''
-        SELECT date_created, date_updated, camera_uuid, camera_ip, camera_region, is_violation_detected, is_person_detected FROM camera_last_frames
+        SELECT date_created, date_updated, camera_uuid, camera_ip_address, camera_region, is_violation_detected, is_person_detected FROM camera_last_frames
         '''
         cursor = self.conn.execute(query)
         rows = cursor.fetchall()
@@ -951,8 +951,10 @@ class SQLManager:
         column_names = [description[0] for description in cursor.description]
         
         # Convert each row to a dictionary
-        result = [dict(zip(column_names, row)) for row in rows]
-        
+        result = {
+            "last_frames_info": [dict(zip(column_names, row)) for row in rows]
+        }
+        pprint.pprint(result)
         return result
               
     # ========================================= rules_info_table ==============================================
