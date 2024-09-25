@@ -107,7 +107,7 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
 
 if os.name == "nt":  # For Windows (i.e development environment)
     print("[INFO] Windows OS detected")
-    SERVER_IP_ADDRESS = "192.168.53.241"
+    SERVER_IP_ADDRESS = "192.168.1.107"
     CLEAR_TERMINAL_COMMAND = "cls"
     PRINT_MOUSE_COORDINATES = False
     

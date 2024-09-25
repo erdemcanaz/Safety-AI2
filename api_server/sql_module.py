@@ -954,7 +954,6 @@ class SQLManager:
         result = {
             "last_frames_info": [dict(zip(column_names, row)) for row in rows]
         }
-        pprint.pprint(result)
         return result
               
     # ========================================= rules_info_table ==============================================

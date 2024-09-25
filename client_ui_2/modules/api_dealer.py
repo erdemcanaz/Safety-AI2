@@ -289,7 +289,6 @@ class ApiDealer():
                 payload = { 'camera_uuid': camera_uuid}                    
                 response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/fetch_last_camera_frame_info", headers=header, json=payload, timeout=1)
                 response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
-
                 if response_body['is_task_successful']:                
                     return [True,  response_body['detail'] , response_body['json_data']]
                 else:
