@@ -4,6 +4,9 @@
 
 #define VERBOSE_EBYTE_MODULE true
 
+//FREQUENTLY CHANGED PARAMETERS
+#define DEFINED_DEVICE_ID 179 // unique to device
+
 // ========================= PACKAGE FORMAT =========================
 // | DEV_ADDRS_SIG | DEV_ADDRS_LST | DEV_CHANL | 
 #define NUMBER_OF_PACKAGE_BYTES 9 // Please consider that during fixed transmission, first 3 bytes are reserved
@@ -16,7 +19,6 @@
 
 #define NMOS_GATE 11
 #define DEFINED_DEVICE_ADDRESS 58427 //same for all the devices
-#define DEFINED_DEVICE_ID 178 // unique to device
 
 // CONSTANT PARAMETER DEFINITIONS OF THE EBYTE MODULE
 /* TODO: PUT COMMAND PACKAGE INDICATING WHICH BIT IS WHICH*/

@@ -134,60 +134,59 @@ bool transmit_fixed_package() {
 }
 
 void animate_alert(uint8_t animation_no) {  //5 second 0 Hz blink
-
-  if (animation_no == 0) {  //5 second 0 Hz blink
-    digitalWrite(NMOS_GATE, HIGH);
-    delay(5000);
-    digitalWrite(NMOS_GATE, LOW);
-  } else if (animation_no == 1) {  //5 second 0.5 Hz blink
-    for (uint8_t i = 0; i < 3; i++) {
+    if (animation_no == 0) {  //5 second 0 Hz blink
       digitalWrite(NMOS_GATE, HIGH);
-      delay(1000);
+      delay(5000);
       digitalWrite(NMOS_GATE, LOW);
-      delay(1000);
-    }
-  } else if (animation_no == 2) {  //5 second 1 Hz blink
-    for (uint8_t i = 0; i < 5; i++) {
+    } else if (animation_no == 1) {  //5 second 0.5 Hz blink
+      for (uint8_t i = 0; i < 3; i++) {
+        digitalWrite(NMOS_GATE, HIGH);
+        delay(1000);
+        digitalWrite(NMOS_GATE, LOW);
+        delay(1000);
+      }
+    } else if (animation_no == 2) {  //5 second 1 Hz blink
+      for (uint8_t i = 0; i < 5; i++) {
+        digitalWrite(NMOS_GATE, HIGH);
+        delay(500);
+        digitalWrite(NMOS_GATE, LOW);
+        delay(500);
+      }
+    } else if (animation_no == 3) {  //5 second 4 Hz blink
+      for (uint8_t i = 0; i < 20; i++) {
+        digitalWrite(NMOS_GATE, HIGH);
+        delay(125);
+        digitalWrite(NMOS_GATE, LOW);
+        delay(125);
+      }
+    } else if (animation_no == 4) {  //15 second 0 Hz blink
       digitalWrite(NMOS_GATE, HIGH);
-      delay(500);
+      delay(15000);
       digitalWrite(NMOS_GATE, LOW);
-      delay(500);
+    } else if (animation_no == 5) {  //15 second 0.5 Hz blink
+      for (uint8_t i = 0; i < 8; i++) {
+        digitalWrite(NMOS_GATE, HIGH);
+        delay(1000);
+        digitalWrite(NMOS_GATE, LOW);
+        delay(1000);
+      }
+    } else if (animation_no == 6) {  //15 second 1 Hz blink
+      for (uint8_t i = 0; i < 15; i++) {
+        digitalWrite(NMOS_GATE, HIGH);
+        delay(500);
+        digitalWrite(NMOS_GATE, LOW);
+        delay(500);
+      }
+    } else if (animation_no == 7) {  //15 second 4 Hz blink
+      for (uint8_t i = 0; i < 75; i++) {
+        digitalWrite(NMOS_GATE, HIGH);
+        delay(125);
+        digitalWrite(NMOS_GATE, LOW);
+        delay(125);
+      }
+    }else{
+      //DO NOTHING
     }
-  } else if (animation_no == 3) {  //5 second 4 Hz blink
-    for (uint8_t i = 0; i < 20; i++) {
-      digitalWrite(NMOS_GATE, HIGH);
-      delay(125);
-      digitalWrite(NMOS_GATE, LOW);
-      delay(125);
-    }
-  } else if (animation_no == 4) {  //15 second 0 Hz blink
-    digitalWrite(NMOS_GATE, HIGH);
-    delay(15000);
-    digitalWrite(NMOS_GATE, LOW);
-  } else if (animation_no == 5) {  //15 second 0.5 Hz blink
-    for (uint8_t i = 0; i < 8; i++) {
-      digitalWrite(NMOS_GATE, HIGH);
-      delay(1000);
-      digitalWrite(NMOS_GATE, LOW);
-      delay(1000);
-    }
-  } else if (animation_no == 6) {  //15 second 1 Hz blink
-    for (uint8_t i = 0; i < 15; i++) {
-      digitalWrite(NMOS_GATE, HIGH);
-      delay(500);
-      digitalWrite(NMOS_GATE, LOW);
-      delay(500);
-    }
-  } else if (animation_no == 7) {  //15 second 4 Hz blink
-    for (uint8_t i = 0; i < 75; i++) {
-      digitalWrite(NMOS_GATE, HIGH);
-      delay(125);
-      digitalWrite(NMOS_GATE, LOW);
-      delay(125);
-    }
-  }else{
-    //DO NOTHING
-  }
 }
 
 void listen_and_execute_usb_serial_commands() {
