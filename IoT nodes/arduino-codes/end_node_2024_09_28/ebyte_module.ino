@@ -130,7 +130,6 @@ bool transmit_fixed_package() {
   while (digitalRead(EBYTE_E32_AUX_PIN) == 0)
     ;  // AUX pin is 0 during transmission
 
-  Serial.println("T");
 }
 
 void animate_alert(uint8_t animation_no) {  //5 second 0 Hz blink
