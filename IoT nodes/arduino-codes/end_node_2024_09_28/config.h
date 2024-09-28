@@ -3,7 +3,10 @@
 // 2) Buffer size of the module is 64Byte. Data greater than this will overflow
 
 #define VERBOSE_EBYTE_MODULE true
-#define NUMBER_OF_PACKAGE_BYTES 4 // Please consider that during fixed transmission, first 3 bytes are reserved
+
+// ========================= PACKAGE FORMAT =========================
+// | DEV_ADDRS_SIG | DEV_ADDRS_LST | DEV_CHANL | 
+#define NUMBER_OF_PACKAGE_BYTES 9 // Please consider that during fixed transmission, first 3 bytes are reserved
 // pin close to antenna (7) is GND, (1): MO, (2): M1, (3): E32-RX, (4): E32-TX, (5): AUX, (6): VCC, (7): GND
 #define EBYTE_E32_M0_PIN 2 
 #define EBYTE_E32_M1_PIN 3
@@ -11,10 +14,11 @@
 #define EBYTE_E32_TX_PIN 4  //Software serial RX
 #define EBYTE_E32_AUX_PIN 6
 
-#define NMOS_GATE_LED 11
+#define NMOS_GATE 11
 #define DEFINED_DEVICE_ADDRESS 58427 //same for all the devices
 #define DEFINED_DEVICE_ID 178 // unique to device
 
+// CONSTANT PARAMETER DEFINITIONS OF THE EBYTE MODULE
 /* TODO: PUT COMMAND PACKAGE INDICATING WHICH BIT IS WHICH*/
 #define UART_PARITY_MODE_8O1 1
 #define UART_PARITY_MODE_8E1 2
