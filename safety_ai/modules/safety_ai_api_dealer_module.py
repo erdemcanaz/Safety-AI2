@@ -202,3 +202,4 @@ class SafetyAIApiDealer():
         except Exception as e:        
             return [False, None, {"detail": str(e)}]
                   
+

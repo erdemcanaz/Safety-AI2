@@ -1,2 +1,2 @@
-uvicorn api_server:app --reload --port=80 --host=192.168.1.107
+uvicorn api_server:app --reload --port=80 --host=192.168.0.26
 uvicorn api_server:app --reload --port=80 --host=172.17.27.62

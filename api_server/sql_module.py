@@ -298,6 +298,15 @@ class SQLManager:
         except:
             raise ValueError('Invalid device_id provided')
         
+        # Ensure device_id is unique
+        query = '''
+        SELECT device_uuid, device_name, device_id FROM iot_devices WHERE device_id = ?
+        '''
+        cursor = self.conn.execute(query, (device_id,))
+        row = cursor.fetchone()
+        if row is not None:
+            raise ValueError('Device with the provided device_id already exists')
+        
         # Generate a unique device_uuid
         device_uuid = str(uuid.uuid4())
         

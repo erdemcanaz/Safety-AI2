@@ -28,7 +28,8 @@ from pages import (
     isg_ui_page,
     edit_rules_page,
     reported_violations_page,
-    manage_users_page
+    manage_users_page,
+    iot_devices_page,
 )
 
 def check_for_ui_item_callbacks(frame:np.ndarray, page_ui_items:List=[], mouse_tracker:MouseTracker=None, keyboard_tracker:KeyboardTracker=None):
@@ -175,6 +176,15 @@ while True:
         released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
         DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
         
+    elif DYNAMIC_PROGRAM_STATE[0] == 8: #IOT DEVICES PAGE
+        if not isinstance(DYNAMIC_PAGE_DEALER, iot_devices_page.IoTDevicesPage):
+            DYNAMIC_PAGE_DEALER = iot_devices_page.IoTDevicesPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+            DYNAMIC_PAGE_DEALER.reset_page_frame()
+
+        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
 
     # Draw popups
     final_frame = DYNAMIC_PAGE_DEALER.get_page_frame()
@@ -186,5 +196,6 @@ while True:
     keyboard_tracker.check_key_pressed()
     if keyboard_tracker.get_last_pressed_key(then_reset=False) == 27: # ESC key
         break
+    
 
 cv2.destroyAllWindows()

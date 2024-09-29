@@ -564,41 +564,77 @@ class ApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
 
-    # def get_all_last_camera_frame_info_without_BLOB(self):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     try:
-    #         response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_all_last_camera_frame_info_without_BLOB", headers=header, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
+    def fetch_all_iot_devices(self):
+        """"
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+          
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_iot_devices", headers=header, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']['all_iot_devices']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result   
+        print(f"Refreshing token and retrying once more... {self.fetch_all_iot_devices.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
+    def create_iot_device(self,device_name:str = None, device_id:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'device_name': device_name,
+                    'device_id': device_id
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_iot_device", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.create_iot_device.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
+    def delete_iot_device(self, device_uuid:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'device_uuid': device_uuid
+                }                    
+                response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/delete_iot_device", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.delete_iot_device_api.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
     
-    # def fetch_reported_violations_between_dates(self, start_date_ddmmyyyy:str = None, end_date_ddmmyyyy:str = None):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     start_date_ddmmyyyy = "1.1.1970" if start_date_ddmmyyyy is None or start_date_ddmmyyyy == "" else start_date_ddmmyyyy
-    #     end_date_ddmmyyyy = "1.1.2099" if end_date_ddmmyyyy is None or end_date_ddmmyyyy == "" else end_date_ddmmyyyy
-    #     try:
-    #         response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_reported_violations_between_dates?start_date={start_date_ddmmyyyy}&end_date={end_date_ddmmyyyy}", headers=header, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
-        
-    # def get_encrypted_image_by_uuid(self, image_uuid:str = None):
-    #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
-    #     try:
-    #         response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/get_encrypted_image_by_uuid?image_uuid={image_uuid}", headers=header, timeout=1)
-    #         if response.status_code == 200:
-    #             return [True, response.status_code, response.json()]
-    #         else:
-    #             return [False, response.status_code, response.json()]
-    #     except Exception as e:
-    #         return [False, None, {"detail": str(e)}]
-
-
-
-

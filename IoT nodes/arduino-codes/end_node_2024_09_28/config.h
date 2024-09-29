@@ -5,7 +5,7 @@
 #define VERBOSE_EBYTE_MODULE true
 
 //FREQUENTLY CHANGED PARAMETERS
-#define DEFINED_DEVICE_ID 177 // unique to device
+#define DEFINED_DEVICE_ID 182 // unique to device
 
 // ========================= PACKAGE FORMAT =========================
 // | DEV_ADDRS_SIG | DEV_ADDRS_LST | DEV_CHANL | 

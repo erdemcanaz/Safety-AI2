@@ -111,6 +111,9 @@ class WhichAppPage:
                 elif clicked_app == "MANAGE_USERS":
                     program_state[0] = 7
                     return
+                elif clicked_app == "IOT_DEVICES":
+                    program_state[0] = 8
+                    return
                 
           
 
