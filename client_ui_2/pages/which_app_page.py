@@ -19,7 +19,7 @@ class WhichAppPage:
             size_n=(0.275, 0.5),
             list_render_configs = {
                 "list_style": "basic",
-                "item_per_page":6, 
+                "item_per_page":9, 
                 "padding_precentage_per_item": 0.05,
                 "colum_slicing_ratios":[1],
                 "list_background_color": [(225, 225, 225), (169, 96, 0)],
@@ -36,7 +36,20 @@ class WhichAppPage:
                 "arrow_icon_height_n": 0.1,
             }
         )
-        authorized_apps = [ {"COLUMN_0": app['authorization_name']} for app in self.user_authorizations if app['authorization_name'] in PREFERENCES.APPLICATION_AUTHORIZATIONS]
+
+        self.app_name_mappings = {
+            'UPDATE_CAMERAS': 'Kameraları Güncelle',
+            'ISG_UI': 'ISG UI',
+            'EDIT_RULES': 'Kuralları Düzenle',
+            'REPORTED_VIOLATIONS': 'Raporlanan İhlaller',
+            'MANAGE_USERS': 'Kullanıcı Yönetimi',
+            'IOT_DEVICES': 'IOT Cihazları',
+            'LINK_IOT_AND_RULE': 'IOT ve Kural Eşlemeleri',
+            'SUMMARY_PAGE': 'Özet Sayfası',
+            'EXPORT_PDF_REPORTS': 'PDF Raporlarını Dışa Aktar'
+        }
+
+        authorized_apps = [ {"COLUMN_0": self.app_name_mappings[app['authorization_name']]} for app in self.user_authorizations if app['authorization_name'] in PREFERENCES.APPLICATION_AUTHORIZATIONS]
         self.app_list_item.set_list_items(items = authorized_apps)
 
         self.previous_page_button = ui_items.Button(
@@ -96,6 +109,8 @@ class WhichAppPage:
             
             elif callback[0]  == "item_clicked_callback" and callback[1] == self.app_list_item.identifier:                
                 clicked_app = self.app_list_item.get_list_item_info(callback[3])['COLUMN_0']
+
+                clicked_app = [key for key, value in self.app_name_mappings.items() if value == clicked_app][0]
                 if clicked_app == 'UPDATE_CAMERAS':
                     program_state[0] = 3
                     return

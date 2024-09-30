@@ -179,12 +179,22 @@ class SQLManager:
         query = '''
         SELECT * FROM rules_info_table WHERE rule_uuid = ?
         '''
+
+        # Ensure the rule exists
         cursor = self.conn.execute(query, (rule_uuid,))
         row = cursor.fetchone()
         if row is None:
             raise ValueError('Rule not found')
                
-
+        # Ensure the device-rule combination does not already exist
+        query = '''
+        SELECT relation_uuid, device_uuid, rule_uuid, which_action FROM iot_device_and_rule_relations WHERE device_uuid = ? AND rule_uuid = ?
+        '''
+        cursor = self.conn.execute(query, (device_uuid, rule_uuid))
+        row = cursor.fetchone()
+        if row is not None:
+            raise ValueError('The device-rule combination already exists')
+        
         # Insert the device-rule relation to the table
         relation_uuid = str(uuid.uuid4())
         query = '''

@@ -12,6 +12,7 @@ IMAGE_PATHS = {
     "reported_violations_page_template": "src/templates/reported_violations_page_template.png",
     "manage_users_page_template": "src/templates/manage_users_page_template.png",
     "iot_devices_page_template": "src/templates/iot_devices_page_template.png",
+    "link_iot_and_rule_page_template": "src/templates/link_iot_and_rule_page_template.png",
 
     "anil_right_looking": "src/icons/anil_right_looking.png",
     "anil_left_looking": "src/icons/anil_left_looking.png",

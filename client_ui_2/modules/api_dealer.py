@@ -430,7 +430,6 @@ class ApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
     
-
     def create_rule_for_camera(self, camera_uuid:str = None, rule_department:str = None, rule_type:str = None, evaluation_method:str = None, threshold_value:float = None, fol_threshold_value:float = None, rule_polygon:str = None):
         """
         """
@@ -660,4 +659,105 @@ class ApiDealer():
         print(f"Refreshing token and retrying once more... {self.delete_iot_device_api.__name__}")
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
+    
+    def trigger_rule(self, rule_uuid: str):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'rule_uuid': rule_uuid
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/trigger_rule", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.trigger_rule.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+    
+    def fetch_all_iot_device_and_rule_relations(self):
+        """"
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+          
+                response = requests.get(f"http://{self.SERVER_IP_ADDRESS}/fetch_all_iot_device_and_rule_relations", headers=header, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']['all_iot_device_and_rule_relations']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result   
+        print(f"Refreshing token and retrying once more... {self.fetch_all_iot_device_and_rule_relations.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
+    def add_iot_device_and_rule_relation(self, rule_uuid: str= None, device_uuid: str= None, which_action:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'rule_uuid': rule_uuid,
+                    'device_uuid': device_uuid,
+                    'which_action': which_action
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/add_iot_device_and_rule_relation", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.add_iot_device_and_rule_relation.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+    
+    def remove_iot_device_and_rule_relation(self, relation_uuid:str = None):
+        """
+        """
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'relation_uuid': relation_uuid
+                }                    
+                response = requests.delete(f"http://{self.SERVER_IP_ADDRESS}/remove_iot_device_and_rule_relation", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.remove_iot_device_and_rule_relation.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+    
     

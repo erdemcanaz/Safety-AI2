@@ -200,6 +200,7 @@ while True:
             DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
 
     except Exception as e:
+        raise e
         print(f"Error in main_ui.py: {e}")
         DYNAMIC_PROGRAM_STATE = [0,0,0]
 
