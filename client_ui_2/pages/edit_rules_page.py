@@ -65,17 +65,17 @@ class EditRulesPage:
                 "list_style": "basic",
                 "item_per_page":4, 
                 "padding_precentage_per_item": 0.05,
-                "colum_slicing_ratios":[1,2,1,0.5],
+                "colum_slicing_ratios":[0.75, 1.25 , 0.5 ,0.75, 0.75, 2],
                 "list_background_color": [(225, 225, 225), (169, 96, 0)],
                 "list_border_color": [(255, 255, 255), (255, 255, 255)],
                 "list_border_thickness": [2, 2],
-                "list_item_text_font_scale": [0.5, 0.5],
-                "list_item_text_thickness": [2, 2],
+                "list_item_text_font_scale": [0.6, 0.6],
+                "list_item_text_thickness": [1, 1],
                 "list_item_text_color": [(169, 96, 0), (255, 255, 255)],
                 "list_item_background_color": [(238, 236, 125), (169, 96, 0)],
                 "list_item_border_color": [(255, 255, 255), (255, 255, 255)],
                 "list_item_border_thickness": [2, 2],
-                "padding_n" : 0.005,
+                "padding_n" : 0.000,
                 "scroll_bar_width_n": 0.03,
                 "arrow_icon_height_n": 0.2,
             }
@@ -251,7 +251,8 @@ class EditRulesPage:
         self.cameras_list_item.set_list_items(items = formatted_cameras_for_list)
 
         if self.selected_camera_info is not None:
-            formatted_rules_for_list = [ {"COLUMN_0": rule['rule_department'], "COLUMN_1": rule['rule_type'], "COLUMN_2": rule['evaluation_method'], "COLUMN_3": str(rule['threshold_value']), "rule_info":rule} for rule in self.selected_camera_rules_info]
+            formatted_rules_for_list = [ {"COLUMN_0": rule['rule_department'], "COLUMN_1": rule['rule_type'], "COLUMN_2": rule['evaluation_method'], "COLUMN_3": f"{float(rule['threshold_value']):.2f}", "COLUMN_4": f"{float(rule['fol_threshold_value']):.2f}", "COLUMN_5":rule['rule_uuid'], "rule_info":rule} for rule in self.selected_camera_rules_info]
+            pprint.pprint(formatted_rules_for_list)
             self.rules_list_item.set_list_items(items = formatted_rules_for_list)
 
         # draw last frame 

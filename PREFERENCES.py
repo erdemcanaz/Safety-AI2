@@ -109,9 +109,9 @@ MUST_EXISTING_DATA_SUBFOLDER_PATHS = {
 
 if os.name == "nt":  # For Windows (i.e development environment)
     print("[INFO] Windows OS detected")
-    SERVER_IP_ADDRESS = "192.168.0.26"
+    SERVER_IP_ADDRESS = "144.122.141.67"
     CLEAR_TERMINAL_COMMAND = "cls"
-    PRINT_MOUSE_COORDINATES = False
+    PRINT_MOUSE_COORDINATES = True
     
     # ENSURE THAT THE LOCAL SSD and EXTERNAL USB IS MOUNTED TO THE CONTAINER PROPERLY
     DATA_FOLDER_PATH_LOCAL = Path(__file__).parent.resolve() /'api_server' / 'local_ssd_data_folder'

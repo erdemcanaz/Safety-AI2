@@ -30,6 +30,7 @@ from pages import (
     reported_violations_page,
     manage_users_page,
     iot_devices_page,
+    link_iot_and_rule_page,
 )
 
 def check_for_ui_item_callbacks(frame:np.ndarray, page_ui_items:List=[], mouse_tracker:MouseTracker=None, keyboard_tracker:KeyboardTracker=None):
@@ -98,93 +99,110 @@ DYNAMIC_PAGE_DEALER = None
 
 # MAIN LOOP ============================================================================================================
 while True:
-    if DYNAMIC_PROGRAM_STATE[0] == 0: # LOGIN PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, login_page.LoginPage):
-            DYNAMIC_PAGE_DEALER = login_page.LoginPage(api_dealer=api_dealer, popup_dealer=popup_dealer)   
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
 
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()  
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+    try:
+        if DYNAMIC_PROGRAM_STATE[0] == 0: # LOGIN PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, login_page.LoginPage):
+                DYNAMIC_PAGE_DEALER = login_page.LoginPage(api_dealer=api_dealer, popup_dealer=popup_dealer)   
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
 
-    elif DYNAMIC_PROGRAM_STATE[0] == 1: # REGISTER PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, register_page.RegisterPage):
-            DYNAMIC_PAGE_DEALER = register_page.RegisterPage( api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()  
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+
+        elif DYNAMIC_PROGRAM_STATE[0] == 1: # REGISTER PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, register_page.RegisterPage):
+                DYNAMIC_PAGE_DEALER = register_page.RegisterPage( api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
+            
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
         
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
-    
-    elif DYNAMIC_PROGRAM_STATE[0] == 2: # WHICH APP PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, which_app_page.WhichAppPage):
-            DYNAMIC_PAGE_DEALER = which_app_page.WhichAppPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+        elif DYNAMIC_PROGRAM_STATE[0] == 2: # WHICH APP PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, which_app_page.WhichAppPage):
+                DYNAMIC_PAGE_DEALER = which_app_page.WhichAppPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
 
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=False, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
-    elif DYNAMIC_PROGRAM_STATE[0] == 3: # UPDATE CAMERAS PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, update_cameras_page.UpdateCamerasPage):
-            DYNAMIC_PAGE_DEALER = update_cameras_page.UpdateCamerasPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=False, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+        elif DYNAMIC_PROGRAM_STATE[0] == 3: # UPDATE CAMERAS PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, update_cameras_page.UpdateCamerasPage):
+                DYNAMIC_PAGE_DEALER = update_cameras_page.UpdateCamerasPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
+            
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+        elif DYNAMIC_PROGRAM_STATE[0] == 4: # ISG UI PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, isg_ui_page.ISG_UIpage):
+                DYNAMIC_PAGE_DEALER = isg_ui_page.ISG_UIpage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
+            
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+
+        elif DYNAMIC_PROGRAM_STATE[0] == 5: # EDIT RULES PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, edit_rules_page.EditRulesPage):
+                DYNAMIC_PAGE_DEALER = edit_rules_page.EditRulesPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
+
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+            
+        elif DYNAMIC_PROGRAM_STATE[0] == 6: # REPORTED VIOLATIONS PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, reported_violations_page.ReportedViolationsPage):
+                DYNAMIC_PAGE_DEALER = reported_violations_page.ReportedViolationsPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
+
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
         
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
-    elif DYNAMIC_PROGRAM_STATE[0] == 4: # ISG UI PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, isg_ui_page.ISG_UIpage):
-            DYNAMIC_PAGE_DEALER = isg_ui_page.ISG_UIpage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
-        
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+        elif DYNAMIC_PROGRAM_STATE[0] == 7: #MENAGE USERS PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, manage_users_page.ManageUsersPage):
+                DYNAMIC_PAGE_DEALER = manage_users_page.ManageUsersPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
 
-    elif DYNAMIC_PROGRAM_STATE[0] == 5: # EDIT RULES PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, edit_rules_page.EditRulesPage):
-            DYNAMIC_PAGE_DEALER = edit_rules_page.EditRulesPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+            
+        elif DYNAMIC_PROGRAM_STATE[0] == 8: #IOT DEVICES PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, iot_devices_page.IoTDevicesPage):
+                DYNAMIC_PAGE_DEALER = iot_devices_page.IoTDevicesPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
 
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
-        
-    elif DYNAMIC_PROGRAM_STATE[0] == 6: # REPORTED VIOLATIONS PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, reported_violations_page.ReportedViolationsPage):
-            DYNAMIC_PAGE_DEALER = reported_violations_page.ReportedViolationsPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
 
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
-    
-    elif DYNAMIC_PROGRAM_STATE[0] == 7: #MENAGE USERS PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, manage_users_page.ManageUsersPage):
-            DYNAMIC_PAGE_DEALER = manage_users_page.ManageUsersPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+        elif DYNAMIC_PROGRAM_STATE[0] == 9: #LINK IOT AND RULE PAGE
+            if not isinstance(DYNAMIC_PAGE_DEALER, link_iot_and_rule_page.LinkIoTAndRulePage):
+                DYNAMIC_PAGE_DEALER = link_iot_and_rule_page.LinkIoTAndRulePage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
+                DYNAMIC_PAGE_DEALER.reset_page_frame()
 
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
-        
-    elif DYNAMIC_PROGRAM_STATE[0] == 8: #IOT DEVICES PAGE
-        if not isinstance(DYNAMIC_PAGE_DEALER, iot_devices_page.IoTDevicesPage):
-            DYNAMIC_PAGE_DEALER = iot_devices_page.IoTDevicesPage(api_dealer=api_dealer, popup_dealer=popup_dealer)    
-            DYNAMIC_PAGE_DEALER.reset_page_frame()
+            page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
+            callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
+            released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
+            DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
 
-        page_ui_items = DYNAMIC_PAGE_DEALER.get_ui_items()
-        callback_results = check_for_ui_item_callbacks(DYNAMIC_PAGE_DEALER.get_page_frame(), page_ui_items, mouse_tracker, keyboard_tracker)
-        released_focus_identifiers = release_previously_focused_ui_items(page_ui_items, callback_results)
-        DYNAMIC_PAGE_DEALER.apply_callbacks(redraw_items=True, program_state = DYNAMIC_PROGRAM_STATE, callback_results = callback_results, released_focus_identifiers = released_focus_identifiers)
+    except Exception as e:
+        print(f"Error in main_ui.py: {e}")
+        DYNAMIC_PROGRAM_STATE = [0,0,0]
+
 
     # Draw popups
     final_frame = DYNAMIC_PAGE_DEALER.get_page_frame()
