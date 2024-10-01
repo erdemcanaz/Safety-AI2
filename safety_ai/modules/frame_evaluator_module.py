@@ -137,15 +137,8 @@ class FrameEvaluator():
             self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
         
         # Draw the violation bboxes on the processed frame
-        for violation_person_nbbox in evaluation_result['violation_person_nbboxes']:
-            self.__draw_rect_on_frame(violation_person_nbbox['nbbox'], evaluation_result['processed_cv2_frame'], color=[0, 0, 255], thickness=8)
-            # "nbbox": detection['normalized_bbox'],
-            # "violation_type": rule_info['rule_type'],
-            # "violation_score": violation_score,
-            # "threshold_value": rule_info['threshold_value'],
-            # "fol_threshold_value": rule_info['fol_threshold_value']
-            
-            # put VIOLATION icon on the top right (outside) corner of the bbox
+        for violation_person_nbbox in evaluation_result['violation_person_nbboxes']:            
+            self.__draw_rect_on_frame(violation_person_nbbox['nbbox'], evaluation_result['processed_cv2_frame'], color=[0, 0, 255], thickness=8)         
             bbox = self.__translate_normalized_bbox_to_frame_bbox(violation_person_nbbox['nbbox'], evaluation_result['processed_cv2_frame'])
             icon_max_size = (bbox[3]-bbox[1])//3
             padding = icon_max_size // 3
@@ -171,6 +164,7 @@ class FrameEvaluator():
 
         violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
             "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+            "rule_uuid": rule_info['rule_uuid'],
             "region_name": evaluation_result['frame_info']['region_name'],
             "violation_type": rule_info['rule_type'],
             "evaluation_method": rule_info['evaluation_method'],
@@ -236,6 +230,7 @@ class FrameEvaluator():
         #================================================================================================
         violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
             "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+            "rule_uuid": rule_info['rule_uuid'],
             "region_name": evaluation_result['frame_info']['region_name'],
             "violation_type": rule_info['rule_type'],
             "evaluation_method": rule_info['evaluation_method'],
@@ -308,6 +303,7 @@ class FrameEvaluator():
         #================================================================================================
         violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
             "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
+            "rule_uuid": rule_info['rule_uuid'],
             "region_name": evaluation_result['frame_info']['region_name'],
             "violation_type": rule_info['rule_type'],
             "evaluation_method": rule_info['evaluation_method'],

@@ -143,6 +143,32 @@ class SafetyAIApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
 
+    def trigger_rule(self, rule_uuid:str=None):
+        """
+        """
+        def request_to_try():
+            try:
+                url_b64_frame = self.encode_frame_for_url_body_b64_string(frame)
+                print()
+                payload = {
+                    'rule_uuid': rule_uuid,
+                }
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}             
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/trigger_rule", headers=header, data = json.dumps(payload), timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.trigger_rule.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
 
     # def fetch_all_camera_info(self):
     #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}

@@ -29,21 +29,6 @@ best_violations_wrt_camera = {
 
 }
 
-def update_server_last_frames(recent_frames):
-    global last_time_server_last_frame_updated
-    if time.time() - last_time_server_last_frame_updated < 300: return
-    last_time_server_last_frame_updated = time.time()
-
-    for frame_info in recent_frames:
-        #def update_camera_last_frame_api(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, base64_encoded_image:str=None):
-        camera_uuid = frame_info["camera_uuid"]
-        is_violation_detected = False
-        is_person_detected = False
-        frame = frame_info["cv2_frame"]
-        
-        result = api_dealer.update_camera_last_frame_api(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
-        print(f"update_server_last_frames: {result}")
-
 while True:
     #(1) Update the cameras and the rules for each camera
     #(2) Get all the recent frames from the cameras
@@ -79,10 +64,28 @@ while True:
 
         api_dealer.update_last_camera_frame_as(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
 
+    #() Trigger rules 
+    for evaluation_result in evaluation_results:
+        for violation_report in evaluation_result['violation_reports']:
+            rule_uuid = violation_report['rule_uuid']
+            api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(5) Update the counts for each camera (to be used for statistics)
     for evaluation_result in evaluation_results:
+        # All time statistics
+        # key: camera_uuid | subkey:detected_people_count
+        # key: camera_uuid | subkey:detected_hardhat_count
+        # key: camera_uuid | subkey:detected_restricted_area_count
+        # key: camera_uuid | subkey:check_person_count
+        
+        # Hourly statistics
+        # key: camera_uuid | subkey:detected_people_count_yyyy_mm_dd_hh
+        # key: camera_uuid | subkey:detected_hardhat_count_yyyy_mm_dd_hh
+        # key: camera_uuid | subkey:detected_restricted_area_count_yyyy_mm_dd_hh
+        # key: camera_uuid | subkey:check_person_count_yyyy_mm_dd_hh
+
         pprint.pprint(evaluation_result['violation_reports'])
+
 
 
     continue
