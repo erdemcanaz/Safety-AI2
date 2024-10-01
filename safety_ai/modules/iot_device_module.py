@@ -9,6 +9,8 @@ class IoTDevicemanager:
         self.api_dealer = api_dealer
         self.iot_devices = {} # key: iot_device_uuid | device_uuid (str), device_name (str),  device_id (str), linked_rule_uuids_and_actions (List[str, str])
         self.last_time_iot_devices_updated = 0
+
+        self.last_time_signal_sent_to_iot_devices = {} #  key: iot_device_uuid | value: time.time() to prevent sending signals to iot devices too frequently
         pass
 
     def update_iot_devices(self, update_interval_seconds:float = 60):
@@ -38,7 +40,10 @@ class IoTDevicemanager:
         else:
             print("Error: ", response[1])
 
-        pprint.pprint(self.iot_devices)
+    def send_signal_to_iot_devices_if_rule_triggered_recently(self):
+        response = self.api_dealer.fetch_all_rules()
+        pprint.pprint(response)
+        pass
 
         
         

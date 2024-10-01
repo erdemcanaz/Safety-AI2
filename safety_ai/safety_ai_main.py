@@ -44,7 +44,7 @@ while True:
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS) # updates the rules for each camera no matter what.
     iot_device_manager.update_iot_devices(update_interval_seconds = PREFERENCES.IOT_DEVICE_UPDATE_INTERVAL_SECONDS) # updates the iot devices
-    
+
     #(2) Get all the recent frames from the cameras
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
@@ -134,6 +134,7 @@ while True:
             api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(8) Ping IoT devices if their rules are triggered in recent 
+    iot_device_manager.send_signal_to_iot_devices_if_rule_triggered_recently()
         
     
        
