@@ -117,7 +117,7 @@ class FrameEvaluator():
                 max_y = max([point[1] for point in active_rule['rule_polygon']])
 
                 n_zoomed_bbox = [min_x, min_y, max_x, max_y]                
-                zoomed_bbox =  self.__translate_normalized_bbox_to_frame_bbox(self, normalized_bbox = n_zoomed_bbox, frame= frame_info['cv2_frame'])
+                zoomed_bbox =  self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox = n_zoomed_bbox, frame= frame_info['cv2_frame'])
                 zoomed_frame = frame_info['cv2_frame'][zoomed_bbox[1]:zoomed_bbox[3], zoomed_bbox[0]:zoomed_bbox[2]]
                 zoomed_frames.append({"frame": zoomed_frame, "zoomed_bbox": n_zoomed_bbox})
                 cv2.imshow("zoomed_frame", zoomed_frame)
