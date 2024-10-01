@@ -3,12 +3,15 @@ import time,pprint,copy, uuid, pprint, math, time, os
 from pathlib import Path
 from typing import List, Dict, Tuple #for python3.8 compatibility
 #3rd party imports
-from ultralytics import YOLO
+from ultralytics import YOLO, settings
 import numpy as np
 import cv2
 
 #Local imports
 import PREFERENCES
+
+# Disable analytics and crash reporting | Refer to -> https://docs.ultralytics.com/help/privacy/#inspecting-settings
+settings.update({"sync": False})
 
 class PoseDetector():
     def __init__(self, model_name: str = None ) -> None:   

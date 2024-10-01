@@ -203,6 +203,7 @@ MAXIMUM_NUMBER_OF_STORED_FRAMES = 10 # The maximum number of previous frames tha
 MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 32 # The maximum number of camera stream fetchers that is fetching RTSP streams at the same time
 CAMERA_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera information
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
+IOT_DEVICE_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the iot devices
 
 CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 10] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
 
