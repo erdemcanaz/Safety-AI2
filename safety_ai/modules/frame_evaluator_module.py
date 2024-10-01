@@ -181,10 +181,9 @@ class FrameEvaluator():
         for detection in evaluation_result['pose_detection_results']['detections']:
 
             # Check if the person is inside the forklift, if so, continue
-            normalized_bbox = detection['normalized_bbox']
             is_person_inside_forklift = False
             for normalized_forklift_bbox in normalized_forklift_bboxes:
-                if self.__is_inside_another_bbox(normalized_bbox, normalized_forklift_bbox, intersection_percentage_threshold = 0.5):
+                if self.__is_inside_another_bbox(detection['normalized_bbox'], normalized_forklift_bbox, intersection_percentage_threshold = 0.5):
                     is_person_inside_forklift = True
                     break
             if is_person_inside_forklift: continue
@@ -201,7 +200,7 @@ class FrameEvaluator():
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
                 evaluation_result['violation_person_nbboxes'].append(
                     {
-                        "bbox": detection['bbox'],
+                        "bbox": detection['normalized_bbox'],
                         "violation_type": rule_info['rule_type'],
                         "violation_score": violation_score,
                         "threshold_value": rule_info['threshold_value'],
@@ -261,7 +260,7 @@ class FrameEvaluator():
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
                 evaluation_result['violation_person_nbboxes'].append(
                     {
-                        "bbox": detection['bbox'],
+                        "bbox": detection['normalized_bbox'],
                         "violation_type": rule_info['rule_type'],
                         "violation_score": violation_score,
                         "threshold_value": rule_info['threshold_value'],
