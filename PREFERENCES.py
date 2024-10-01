@@ -232,7 +232,7 @@ USED_MODELS = {
     }
 SHOW_FRAMES = {
     "combined_violation_frame": True,
-    "show_all_frames": True,
+    "show_all_frames": False,
     }
 
 print(f"[INFO] The preferences file is loaded successfully")
