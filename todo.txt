@@ -4,6 +4,9 @@ NOT: Manage users sayfasını yapıyordun en son. Fetch all user & authorization
 # (DONE) Eule trigger checks table -> implemented into the rules table as a new column
 # (DONE: just use randomly generated JWT and SQL password from PREFERENCES)check passwords
 
+#analytics'i kapa
+
+
 #yazılım son haline geldiğinde admin şifrelerini koddan değiştir (github da olmasın)
 
 # Preferences'i client için çalıştığında server kurmayacak şekilde ayarla
@@ -27,7 +30,5 @@ NOT: Manage users sayfasını yapıyordun en son. Fetch all user & authorization
 # manually trigger rule
 
 # clear all database API
-
-# only one authorization of same name can be added check
 
 # status reports 

@@ -81,10 +81,7 @@ DEFINED_RULES = {
         "v2",  # People are detected via pose detection. If thier bbox-center is inside the restricted area, then it is a violation.
     ],
     "check_person": [
-        "v1", # People are detected via pose detection. If there is a person in the frame, then it is a violation.
-    ],
-    "zoom":[
-        "v1", # this section is zoomed and detections are also done in this section seperately
+        "v1", # People are detected via pose detection. If thier bbox-center is inside the polygon, triggered. No violation, just check if person is present or not.
     ]
     
     }
