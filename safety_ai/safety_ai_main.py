@@ -111,7 +111,7 @@ while True:
             camera_uuid = evaluation_result['frame_info']['camera_uuid']
 
             if camera_uuid not in last_time_camera_violation_is_reported: last_time_camera_violation_is_reported[camera_uuid] = 0
-            if time.time() - last_time_camera_violation_is_reported[camera_uuid] < 20: continue # Report the violation every 20 seconds
+            if time.time() - last_time_camera_violation_is_reported[camera_uuid] < 60: continue # Report the violation every 60 seconds
             last_time_camera_violation_is_reported[camera_uuid] = time.time()
 
             violation_frame = evaluation_result['processed_cv2_frame']
@@ -121,7 +121,7 @@ while True:
             region_name = violation_report['region_name']
 
             # 
-            if violation_score > violation_report['violation_threshold_value']:
+            if violation_score > violation_report['threshold_value']:
                 api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
                 print(f"Reported violation for camera_uuid: {camera_uuid}")
             if violation_score > violation_report['fol_threshold_value']:
