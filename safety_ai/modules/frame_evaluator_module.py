@@ -102,7 +102,6 @@ class FrameEvaluator():
 
         # No matter what, the pose detection is done for each frame
         evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame = None, frame_info= frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-        evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         evaluation_result['number_of_people_detected'] = len(evaluation_result['pose_detection_results']['detections'])
 
         for detection in evaluation_result['pose_detection_results']['detections']:
@@ -228,20 +227,17 @@ class FrameEvaluator():
         violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
             "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
             "region_name": evaluation_result['frame_info']['region_name'],
-            "violation_frame": None, # Will be added after the person blur is applied at the end of the evaluation, all rules share the same frame
-            "violation_date_ddmmyyy_hhmmss": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
             "violation_type": rule_info['rule_type'],
-            "violation_score": None, # will be added if a violation is detected           
+            "evaluation_method": rule_info['evaluation_method'],
+            "violation_score": None, # will be added if a violation is detected   
+            "threshold_value": rule_info['threshold_value'],
+            "fol_threshold_value": rule_info['fol_threshold_value'],      
+            "violation_datetime": datetime.datetime.now(),
         }
                 
         frame_info = evaluation_result['frame_info']
-        processed_cv2_frame = evaluation_result['processed_cv2_frame']
-
         rule_polygon = rule_info['rule_polygon']   
 
-        # Ensure that the pose detection results are available
-        if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the restricted area violation evaluation")
-        
         # Get the forklift bboxes so that we can exclude them from the violation detection
         evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
@@ -262,22 +258,19 @@ class FrameEvaluator():
             
             is_person_in_restricted_area = self.__is_normalized_point_inside_polygon(normalized_bbox_center, rule_polygon)
             if is_person_in_restricted_area:
-                violation_score = detection["bbox_confidence"]
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
 
-                # Draw the bbox of the violating person, and the violation_type
-                self.__draw_rect_on_frame(normalized_bbox, processed_cv2_frame, color=[0, 0, 255], thickness=8)
-                # put RA icon on the bottom right corner (outside) of the bbox
-                bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
-                icon_max_size = (bbox[3]-bbox[1])//3
-                padding = icon_max_size // 3
-                picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_restricted_area_transparent_with_background", x = bbox[2] + padding , y = bbox[3]-icon_max_size, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
+                violation_score = detection["bbox_confidence"]
+                evaluation_result['violation_person_nbboxes'].append(
+                    {
+                        "bbox": detection['bbox'],
+                        "violation_type": rule_info['rule_type'],
+                        "violation_score": violation_score,
+                        "threshold_value": rule_info['threshold_value'],
+                        "fol_threshold_value": rule_info['fol_threshold_value']
+                    }
+                )
                 
-                resized_frame = cv2.resize(processed_cv2_frame, (500, 500))
-                #cv2.imshow("violation_v2", resized_frame) #TODO: make this parametric
-
-                evaluation_result['flags']['is_violation_detected'] = True
-
                 if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
                     violation_report_info['violation_score'] = violation_score
 
