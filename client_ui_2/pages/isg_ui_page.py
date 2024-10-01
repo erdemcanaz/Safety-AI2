@@ -186,6 +186,7 @@ class ISG_UIpage:
                 if response[0]:
                     counts_list = response[2]
                     for count_dict in counts_list:
+                        print("count_dict: ", count_dict)
                         if "evaluated_frame_count" in count_dict:
                             evaluated_frame_count = count_dict['evaluated_frame_count']
                             picasso.draw_text_on_frame(
@@ -200,6 +201,9 @@ class ISG_UIpage:
                                 thickness=1, 
                                 padding=10
                             )
+                            print("evaluated_frame_count: ", evaluated_frame_count)
+
+
 
                         if "detected_people_count" in count_dict:
                             detected_people_count = count_dict['detected_people_count']
