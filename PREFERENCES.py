@@ -197,7 +197,7 @@ HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
 
 MAXIMUM_NUMBER_OF_STORED_FRAMES = 10 # The maximum number of previous frames that are stored for each camera. (RAM usage is proportional to this number)
 MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 32 # The maximum number of camera stream fetchers that is fetching RTSP streams at the same time
-CAMERA_UPDATE_INTERVAL_SECONDS = 900 # The interval in seconds for updating the camera information
+CAMERA_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera information
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
 
 CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 7.5] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
