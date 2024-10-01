@@ -130,28 +130,7 @@ while True:
             # 
             if violation_score > violation_report['threshold_value']:
                 number_of_previous_frames = len(last_frames_for_timelapse[camera_uuid])
-                if number_of_previous_frames > 0:
-                    # Calculate target height based on the number of frames
-                    target_height = violation_frame.shape[0] // number_of_previous_frames
-
-                    resized_frames = []
-                    for f in last_frames_for_timelapse[camera_uuid]:
-                        # Maintain aspect ratio while resizing
-                        original_height, original_width, _ = f.shape
-                        aspect_ratio = original_width / original_height
-                        new_width = int(target_height * aspect_ratio)
-                        resized_frame = cv2.resize(f, (new_width, target_height))
-                        resized_frames.append(resized_frame)
-
-                    # Stack the resized previous frames vertically
-                    timelapse_frame = np.vstack(resized_frames)
-
-                    # Concatenate the main frame and the timelapse frame horizontally
-                    frame = cv2.resize(violation_frame, (timelapse_frame.shape[1], violation_frame.shape[0]))
-                    combined_frame = np.hstack((frame, timelapse_frame))
-                else:
-                    combined_frame = frame
-                api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=combined_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
+                api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
                 print(f"Reported violation for camera_uuid: {camera_uuid}")
             if violation_score > violation_report['fol_threshold_value']:
                 pass #TODO: report the violation to the fol-server
