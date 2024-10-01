@@ -173,7 +173,7 @@ class FrameEvaluator():
         rule_polygon = rule_info['rule_polygon']   
         
         # Get the forklift bboxes so that we can exclude them from the violation detection
-        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame= None, frame_info= frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
 
         # Check if the ankle of the person is inside the restricted area
@@ -239,7 +239,7 @@ class FrameEvaluator():
         rule_polygon = rule_info['rule_polygon']   
 
         # Get the forklift bboxes so that we can exclude them from the violation detection
-        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame = None, frame_info=frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
 
         # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
@@ -270,7 +270,7 @@ class FrameEvaluator():
                         "fol_threshold_value": rule_info['fol_threshold_value']
                     }
                 )
-                
+
                 if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
                     violation_report_info['violation_score'] = violation_score
 
@@ -313,7 +313,7 @@ class FrameEvaluator():
         if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the hardhat violation evaluation")
 
         # Get the forklift bboxes so that we can exclude them from the violation detection
-        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame = None, frame_info = frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
 
         for detection in evaluation_result['pose_detection_results']['detections']:
