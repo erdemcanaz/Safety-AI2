@@ -66,8 +66,10 @@ while True:
 
     #() Trigger rules 
     for evaluation_result in evaluation_results:
+        print(f"evaluation_result['violation_reports']: {evaluation_result['violation_reports']}")
         for violation_report in evaluation_result['violation_reports']:
             rule_uuid = violation_report['rule_uuid']
+            print(f"Triggering rule_uuid: {rule_uuid}")
             api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(5) Update the counts for each camera (to be used for statistics)
@@ -84,7 +86,8 @@ while True:
         # key: camera_uuid | subkey:detected_restricted_area_count_yyyy_mm_dd_hh
         # key: camera_uuid | subkey:check_person_count_yyyy_mm_dd_hh
 
-        pprint.pprint(evaluation_result['violation_reports'])
+        #pprint.pprint(evaluation_result['violation_reports'])
+        pass
 
 
 
