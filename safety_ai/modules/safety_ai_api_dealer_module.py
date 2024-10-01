@@ -119,6 +119,7 @@ class SafetyAIApiDealer():
         def request_to_try():
             try:
                 url_b64_frame = self.encode_frame_for_url_body_b64_string(frame)
+                print()
                 payload = {
                     'camera_uuid': camera_uuid,
                     'is_violation_detected': is_violation_detected,
@@ -126,7 +127,7 @@ class SafetyAIApiDealer():
                     'frame_b64_string': url_b64_frame
                 }
                 header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}             
-                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_last_camera_frame_as", headers=header, data = payload, timeout=1)
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_last_camera_frame_as", headers=header, data = json.dumps(payload), timeout=1)
                 response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
                 if response_body['is_task_successful']:                
                     return [True,  response_body['detail'] , response_body['json_data']]

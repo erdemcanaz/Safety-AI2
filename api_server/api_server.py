@@ -443,7 +443,6 @@ async def update_last_camera_frame_as_api(last_frame_info: UpdateLastFrameAs, au
             "json_data": database_manager.update_last_camera_frame_as_by_camera_uuid(**last_frame_info_dict)
         }
     except Exception as e:
-        raise e
         return {
             "status": status.HTTP_400_BAD_REQUEST,
             "is_task_successful": False,
