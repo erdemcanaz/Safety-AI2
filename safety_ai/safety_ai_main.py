@@ -95,8 +95,8 @@ while True:
         api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"detected_people_count_{timestamp_str}", delta_count=number_of_people_detected)
 
         # update evaluated_frame_count
-        api_dealer.update_count(camera_uuid= camera_uuid, subkey="evaluated_frame_count")
-        api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"evaluated_frame_count_{timestamp_str}")
+        api_dealer.update_count(camera_uuid= camera_uuid, subkey="evaluated_frame_count", delta_count=1)
+        api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"evaluated_frame_count_{timestamp_str}", delta_count=1)
 
 
         for violation_report in evaluation_result['violation_reports']:
