@@ -194,3 +194,33 @@ class SafetyAIApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
 
+    def create_reported_violation(self,  camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None):
+        """
+        """
+        def request_to_try():
+            try:
+                url_b64_frame = self.encode_frame_for_url_body_b64_string(violation_frame)
+                payload = {
+                    'camera_uuid': camera_uuid,
+                    "violation_frame_b64_string": url_b64_frame,
+                    "violation_date": violation_date,
+                    "violation_type": violation_type,
+                    "violation_score": violation_score,
+                    "region_name": region_name
+                }
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}             
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/create_reported_violation", headers=header, data = json.dumps(payload), timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.create_reported_violation.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()

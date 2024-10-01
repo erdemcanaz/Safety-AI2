@@ -24,10 +24,7 @@ stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
 last_time_server_last_frame_updated = 0
-last_time_violations_reported = 0
-best_violations_wrt_camera = {
-
-}
+last_time_camera_violation_is_reported = {} # key: camera_uuid | value: time.time()
 
 while True:
     #(1) Update the cameras and the rules for each camera
@@ -42,20 +39,20 @@ while True:
 
     if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
     
-    #(1) Update the cameras and the rules for each camera
+    #() Update the cameras and the rules for each camera
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS) # updates the rules for each camera no matter what.
     
-    #(2) Get all the recent frames from the cameras
+    #() Get all the recent frames from the cameras
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
-    #(3) Evaluate the recent frames (same frame is not evaluated twice)
+    #() Evaluate the recent frames (same frame is not evaluated twice)
     evaluation_results = []
     for frame_info in recent_frames:
         r = frame_evaluator.evaluate_frame(frame_info) # Returns None if the frame is already evaluated
         if r is not None: evaluation_results.append(r)
 
-    #(4) Update the server with the last frames (check if violation is detected or not)
+    #() Update the server with the last frames (check if violation is detected or not)
     for evaluation_result in evaluation_results:
         camera_uuid = evaluation_result['frame_info']['camera_uuid']
         is_violation_detected = True if len(evaluation_result['violation_reports']) > 0 else False
@@ -70,7 +67,7 @@ while True:
             rule_uuid = violation_report['rule_uuid']
             api_dealer.trigger_rule(rule_uuid=rule_uuid)
         
-    #(5) Update the counts for each camera (to be used for statistics)
+    #() Update the counts for each camera (to be used for statistics)
     for evaluation_result in evaluation_results:
         # All time statistics
         # key: camera_uuid | subkey:evaluated_frame_count
@@ -113,32 +110,53 @@ while True:
                 api_dealer.update_count(count_key= camera_uuid, count_subkey="check_person_count", delta_count=1)
                 api_dealer.update_count(count_key= camera_uuid, count_subkey=f"check_person_count_{timestamp_str}", delta_count=1)
 
-    continue
-
+    # () Report the best violations for each camera (if any) to the local-server and the fol-server
     for evaluation_result in evaluation_results:
-        for violation_result in evaluation_result["violation_results"]:
+        for violation_report in evaluation_result['violation_reports']:
             camera_uuid = evaluation_result['frame_info']['camera_uuid']
-            if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
-            elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
+
+            if camera_uuid not in last_time_camera_violation_is_reported: last_time_camera_violation_is_reported[camera_uuid] = 0
+            if time.time() - last_time_camera_violation_is_reported[camera_uuid] < 20: continue # Report the violation every 20 seconds
+            last_time_camera_violation_is_reported[camera_uuid] = time.time()
+
+            violation_frame = evaluation_result['processed_cv2_frame']
+            violation_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            violation_type = violation_report['violation_type']
+            violation_score = round( float(violation_report['violation_score']) , 2 )
+            region_name = violation_report['region_name']
+
+            api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
+            print(f"Reported violation for camera_uuid: {camera_uuid}")
+
+
+    # for evaluation_result in evaluation_results:
+    #     for violation_result in evaluation_result["violation_results"]:
+    #         camera_uuid = evaluation_result['frame_info']['camera_uuid']
+    #         if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
+    #         elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
+
+    # continue
+    # if time.time() - last_time_violations_reported > 60:
+    #     last_time_violations_reported = time.time()
+    #     for camera_uuid, violation_result in best_violations_wrt_camera.items():
+    #         print(f"Reporting violation for camera_uuid: {camera_uuid}")
+    #         # camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date_ddmmyyy_hhmmss:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None):
+    #         camera_uuid = violation_result['camera_uuid']
+    #         violation_date_ddmmyyy_hhmmss = violation_result['violation_date_ddmmyyy_hhmmss']
+    #         violation_type = violation_result['violation_type']
+    #         violation_score = round( float(violation_result['violation_score']) , 2 )
+    #         region_name = violation_result['region_name']
+    #         violation_frame = violation_result['violation_frame']
+
+    #         print(f"camera_uuid: {camera_uuid}, violation_date_ddmmyyy_hhmmss: {violation_date_ddmmyyy_hhmmss}, violation_type: {violation_type}, violation_score: {violation_score}, region_name: {region_name}")
+    #         r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date_ddmmyyy_hhmmss=violation_date_ddmmyyy_hhmmss, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
+    #         print(r)
+
+    #     best_violations_wrt_camera = {} # Reset the best violations after reporting them. next time the best violations will be updated again.
+
 
     continue
-    if time.time() - last_time_violations_reported > 60:
-        last_time_violations_reported = time.time()
-        for camera_uuid, violation_result in best_violations_wrt_camera.items():
-            print(f"Reporting violation for camera_uuid: {camera_uuid}")
-            # camera_uuid:str=None, violation_frame:np.ndarray=None, violation_date_ddmmyyy_hhmmss:str=None, violation_type:str=None, violation_score:float=None, region_name:str=None):
-            camera_uuid = violation_result['camera_uuid']
-            violation_date_ddmmyyy_hhmmss = violation_result['violation_date_ddmmyyy_hhmmss']
-            violation_type = violation_result['violation_type']
-            violation_score = round( float(violation_result['violation_score']) , 2 )
-            region_name = violation_result['region_name']
-            violation_frame = violation_result['violation_frame']
 
-            print(f"camera_uuid: {camera_uuid}, violation_date_ddmmyyy_hhmmss: {violation_date_ddmmyyy_hhmmss}, violation_type: {violation_type}, violation_score: {violation_score}, region_name: {region_name}")
-            r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date_ddmmyyy_hhmmss=violation_date_ddmmyyy_hhmmss, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
-            print(r)
-
-        best_violations_wrt_camera = {} # Reset the best violations after reporting them. next time the best violations will be updated again.
 
         # violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
         #     "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
