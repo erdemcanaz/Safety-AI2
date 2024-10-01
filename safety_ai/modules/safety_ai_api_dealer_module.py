@@ -15,9 +15,6 @@ class SafetyAIApiDealer():
         self.JWT_TOKEN = None
         self.DECODED_TOKEN = None
 
-        self.__ensure_safety_ai_robot_user_exists()
-        self.__update_access_token()
-
     def get_access_token(self) -> bool: #AKA login
         # Ensure that both username and password are provided
         try:
@@ -104,8 +101,8 @@ class SafetyAIApiDealer():
         print(f"Refreshing token and retrying once more... {self.fetch_all_rules.__name__}")
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
-    
-                   
+
+
     # def fetch_all_camera_info(self):
     #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
         
