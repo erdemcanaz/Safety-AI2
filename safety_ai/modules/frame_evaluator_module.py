@@ -86,7 +86,7 @@ class FrameEvaluator():
             
             "violation_reports": [], # Stores information about each violated rule -> camera_uuid, region_name, violation_type, evaluation_method, violation_score, threshold_value, fol_threshold_value, violation_datetime
             "normalized_person_bboxes_to_blur": [], # [x1n, y1n, x2n, y2n]
-            "violation_person_nbboxes": [], # The bboxes of the persons that are violating the rules {"bbox": [x1, y1, x2, y2], "violation_type": str, "violation_score": float, "threshold_value": float, "fol_threshold_value": float}
+            "violation_person_nbboxes": [], # The bboxes of the persons that are violating the rules {"nbbox": [nx1, ny1, nx2, ny2], "violation_type": str, "violation_score": float, "threshold_value": float, "fol_threshold_value": float}
 
             "pose_detection_results": None, # The results of the pose detection, Always available
             "number_of_people_detected": None, # The number of people detected in the frame
@@ -200,7 +200,7 @@ class FrameEvaluator():
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
                 evaluation_result['violation_person_nbboxes'].append(
                     {
-                        "bbox": detection['normalized_bbox'],
+                        "nbbox": detection['normalized_bbox'],
                         "violation_type": rule_info['rule_type'],
                         "violation_score": violation_score,
                         "threshold_value": rule_info['threshold_value'],
@@ -260,7 +260,7 @@ class FrameEvaluator():
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
                 evaluation_result['violation_person_nbboxes'].append(
                     {
-                        "bbox": detection['normalized_bbox'],
+                        "nbbox": detection['normalized_bbox'],
                         "violation_type": rule_info['rule_type'],
                         "violation_score": violation_score,
                         "threshold_value": rule_info['threshold_value'],
@@ -272,7 +272,7 @@ class FrameEvaluator():
                     violation_report_info['violation_score'] = violation_score
 
         if violation_report_info['violation_score'] is not None:
-            evaluation_result['violation_results'].append(violation_report_info)
+            evaluation_result['violation_reports'].append(violation_report_info)
                 
         #prepare the frame to be reported: add text, add timestamp, etc.
         
