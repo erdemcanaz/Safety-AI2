@@ -84,13 +84,13 @@ class FrameEvaluator():
             "frame_info": frame_info,
             "processed_cv2_frame": copy.deepcopy(frame_info['cv2_frame']),            # The frame that is processed by the frame evaluator (e.g., blurring the bbox of the person)
             "flags":{
-                "is_person_detected": False,
-                "is_violation_detected": False,
-            },          
-            "pose_detection_result": None,      # Detect_frame result of the pose detector List of Dict
-            "hardhat_detection_result": None,   # Detect_frame result of the hardhat detector List of Dict
-            "forklift_detection_result": None,  # Detect_frame result of the forklift detector List of Dict 
-            "violation_results": []             # List of violated rules dicts ready to be reported #{"camera_uuid":str=None, "violation_frame":np.ndarray=None, "violation_date_ddmmyyy_hhmmss":str=None, "violation_type":str=None, "violation_score":float=None, "region_name":str=None}
+                "is_person_detected": False, # Pose detection is applied to original frame, no zoom etc
+                "is_violation_detected": False, # If any violation is detected for the frame
+            },         
+            "pose_detection_results": None, # The results of the pose detection, performed for each frame without any zoom
+            "normalized_person_bboxes_to_blur": [], # {nbbox: [x1n, y1n, x2n, y2n], is_hardhat_violation: bool, is_restricted_area_violation: bool}
+
+            
         }   
 
         #============================detect_frame=======================================================
@@ -104,39 +104,45 @@ class FrameEvaluator():
         evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame = None, frame_info= frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         
+        active_rules = frame_info['active_rules'] 
+        zoomed_frames = [] # {frame:np.ndarray, zoomed_bbox:[nx0, ny0, nx1, ny1]} #
+        zoomed_frames.append({"frame": copy.deepcopy(frame_info['cv2_frame']), "zoomed_bbox": [0, 0, 1, 1]}) # The original frame is evaluated by default
+        for active_rule in active_rules:
+            if active_rule['rule_type'] == "zoom" and active_rule['evaluation_method'] == "v1":
+                print("Zooming the frame")
+                print(active_rule['rule_polygon'])
 
-        return evaluation_result
-        # Evaluate the frame for each active rule
-        for active_rule in frame_info['active_rules']: #rule_uuid, camera_uuid, rule_type, evaluation_method, rule_department, rule_polygon, threshold_value
-            # Restricted area violation
-            if active_rule['rule_type'] == "restricted_area_violation" and active_rule['rule_department'] == "ISG":
-                if active_rule['evaluation_method'] == "v1":
-                    self.__restricted_area_violation_isg_v1(evaluation_result=  evaluation_result, rule_info = active_rule)
-                elif active_rule['evaluation_method'] == "v2":
-                    self.__restricted_area_violation_isg_v2(evaluation_result = evaluation_result, rule_info= active_rule)
-                else:
-                    raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
-            elif active_rule['rule_type'] == "hardhat_violation":
-                if active_rule['evaluation_method'] == "v1":
-                    self.__hardhat_violation_isg_v1(evaluation_result=  evaluation_result, rule_info = active_rule)
-                else:
-                    raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
-            else:
-                raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
+        # # Evaluate the frame for each active rule
+        # for active_rule in frame_info['active_rules']: #rule_uuid, camera_uuid, rule_type, evaluation_method, rule_department, rule_polygon, threshold_value
+        #     # Restricted area violation
+        #     if active_rule['rule_type'] == "restricted_area_violation" and active_rule['rule_department'] == "ISG":
+        #         if active_rule['evaluation_method'] == "v1":
+        #             self.__restricted_area_violation_isg_v1(evaluation_result=  evaluation_result, rule_info = active_rule)
+        #         elif active_rule['evaluation_method'] == "v2":
+        #             self.__restricted_area_violation_isg_v2(evaluation_result = evaluation_result, rule_info= active_rule)
+        #         else:
+        #             raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
+        #     elif active_rule['rule_type'] == "hardhat_violation":
+        #         if active_rule['evaluation_method'] == "v1":
+        #             self.__hardhat_violation_isg_v1(evaluation_result=  evaluation_result, rule_info = active_rule)
+        #         else:
+        #             raise Exception(f"Unknown evaluation method: {active_rule['evaluation_method']} for rule type: {active_rule['rule_type']}")
+        #     else:
+        #         raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
 
-        # Blur the bbox of the persons
-        normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
-        for normalized_bbox in normalized_person_bboxes_to_blur:
-            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1) # Draw the bbox of the person, very narrow and will be overwritten by the violation rect thickness
-            self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
+        # # Blur the bbox of the persons
+        # normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
+        # for normalized_bbox in normalized_person_bboxes_to_blur:
+        #     self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1) # Draw the bbox of the person, very narrow and will be overwritten by the violation rect thickness
+        #     self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
 
-        for violation_result in evaluation_result['violation_results']:
-            # Add the violation frame to the violation result
-            violation_result['violation_frame'] = evaluation_result['processed_cv2_frame']
+        # for violation_result in evaluation_result['violation_results']:
+        #     # Add the violation frame to the violation result
+        #     violation_result['violation_frame'] = evaluation_result['processed_cv2_frame']
 
-        if len(evaluation_result['violation_results']) > 0:
-            resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
-            if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
+        # if len(evaluation_result['violation_results']) > 0:
+        #     resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
+        #     if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
 
         return evaluation_result
 
