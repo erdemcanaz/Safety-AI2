@@ -101,6 +101,7 @@ class FrameEvaluator():
         #================================================================================================
 
         # No matter what, the pose detection is done for each frame
+        pprint.pprint(frame_info)
         evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         
