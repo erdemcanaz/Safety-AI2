@@ -15,6 +15,18 @@ class SafetyAIApiDealer():
         self.JWT_TOKEN = None
         self.DECODED_TOKEN = None
 
+    @staticmethod
+    def encode_frame_for_url_body_b64_string(np_ndarray: np.ndarray = None):
+        if np_ndarray is None or not isinstance(np_ndarray, np.ndarray):
+            raise ValueError('Invalid np_ndarray provided')
+        
+        success, encoded_image = cv2.imencode('.jpg', np_ndarray)
+        if not success:
+            raise ValueError('Failed to encode image')
+        base64_encoded_jpg_image_string = base64.b64encode(encoded_image.tobytes()).decode('utf-8')
+
+        return base64_encoded_jpg_image_string
+    
     def get_access_token(self, username:str =None, password:str = None ) -> bool: #AKA login        
         try:
             payload = {'username': self.USERNAME, 'password': self.PASSWORD}
@@ -100,6 +112,36 @@ class SafetyAIApiDealer():
         print(f"Refreshing token and retrying once more... {self.fetch_all_rules.__name__}")
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
+
+    def update_last_camera_frame_as(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, frame:np.ndarray=None):
+        """
+        """
+        def request_to_try():
+            try:
+                url_b64_frame = self.encode_frame_for_url_body_b64_string(frame)
+                payload = {
+                    'camera_uuid': camera_uuid,
+                    'is_violation_detected': is_violation_detected,
+                    'is_person_detected': is_person_detected,
+                    'base64_encoded_image': url_b64_frame
+                }
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}             
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_last_camera_frame_as", headers=header, payload = payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result            
+        print(f"Refreshing token and retrying once more... {self.update_last_camera_frame_as.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+
 
     # def fetch_all_camera_info(self):
     #     header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}

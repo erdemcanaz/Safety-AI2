@@ -48,6 +48,7 @@ class User(BaseModel):
     personal_fullname: str = Field(..., alias='personal_fullname')
 
 # Routes
+
 class Token(BaseModel):
     access_token: str = Field(..., alias='access_token')
     token_type: str = Field(..., alias='token_type')

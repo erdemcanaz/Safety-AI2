@@ -71,6 +71,17 @@ while True:
         if r is not None: evaluation_results.append(r)
 
     
+    #(4) Update the server with the last frames (check if violation is detected or not)
+    #def update_last_camera_frame_as(self, camera_uuid:str=None, is_violation_detected:bool=None, is_person_detected:bool=None, frame:np.ndarray=None): 
+    for evaluation_result in evaluation_results:
+        camera_uuid = evaluation_result['frame_info']['camera_uuid']
+        is_violation_detected = True if len(evaluation_result['violation_reports']) > 0 else False
+        is_person_detected = True if evaluation_result['number_of_people_detected'] > 0 else False
+        frame = evaluation_result['processed_cv2_frame']
+
+        api_dealer.update_camera_last_frame_api(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
+
+
     continue
 
     for evaluation_result in evaluation_results:
