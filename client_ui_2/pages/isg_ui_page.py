@@ -184,66 +184,68 @@ class ISG_UIpage:
                 response = self.api_dealer.get_counts_by_count_key(count_key =camera_uuid)
                 print("response: ", response)
                 if response[0]:
-                    if "evaluated_frame_count" in response[2]:
-                        evaluated_frame_count = response[2]["evaluated_frame_count"]
-                        picasso.draw_text_on_frame(
-                            self.page_frame, 
-                            text=f"Evaluated Frame Count: {evaluated_frame_count}", 
-                            position=(top_left_x, top_left_y + int(display_frame_height) + 35),
-                            area_size=(int(display_frame_width), int(20)),
-                            alignment='center', 
-                            font=cv2.FONT_HERSHEY_SIMPLEX, 
-                            font_scale = 0.5, 
-                            text_color=(255, 255, 255), 
-                            thickness=1, 
-                            padding=10
-                        )
+                    counts_list = response[2]
+                    for count_dict in counts_list:
+                        if "evaluated_frame_count" in count_dict:
+                            evaluated_frame_count = count_dict['evaluated_frame_count']
+                            picasso.draw_text_on_frame(
+                                self.page_frame, 
+                                text=f"Evaluated Frame Count: {evaluated_frame_count}", 
+                                position=(top_left_x, top_left_y + int(display_frame_height) + 35),
+                                area_size=(int(display_frame_width), int(20)),
+                                alignment='center', 
+                                font=cv2.FONT_HERSHEY_SIMPLEX, 
+                                font_scale = 0.5, 
+                                text_color=(255, 255, 255), 
+                                thickness=1, 
+                                padding=10
+                            )
 
-                    if "detected_people_count" in response[2]:
-                        detected_people_count = response[2]["detected_people_count"]
-                        picasso.draw_text_on_frame(
-                            self.page_frame, 
-                            text=f"Detected People Count: {detected_people_count}", 
-                            position=(top_left_x, top_left_y + int(display_frame_height) + 55),
-                            area_size=(int(display_frame_width), int(20)),
-                            alignment='center', 
-                            font=cv2.FONT_HERSHEY_SIMPLEX, 
-                            font_scale = 0.5, 
-                            text_color=(255, 255, 255), 
-                            thickness=1, 
-                            padding=10
-                        )
+                        if "detected_people_count" in count_dict:
+                            detected_people_count = count_dict['detected_people_count']
+                            picasso.draw_text_on_frame(
+                                self.page_frame, 
+                                text=f"Detected People Count: {detected_people_count}", 
+                                position=(top_left_x, top_left_y + int(display_frame_height) + 55),
+                                area_size=(int(display_frame_width), int(20)),
+                                alignment='center', 
+                                font=cv2.FONT_HERSHEY_SIMPLEX, 
+                                font_scale = 0.5, 
+                                text_color=(255, 255, 255), 
+                                thickness=1, 
+                                padding=10
+                            )
 
-                    if "detected_hardhat_count" in response[2]:
-                        detected_hardhat_count = response[2]["detected_hardhat_count"]
-                        picasso.draw_text_on_frame(
-                            self.page_frame, 
-                            text=f"Detected Hardhat Count: {detected_hardhat_count}", 
-                            position=(top_left_x, top_left_y + int(display_frame_height) + 75),
-                            area_size=(int(display_frame_width), int(20)),
-                            alignment='center', 
-                            font=cv2.FONT_HERSHEY_SIMPLEX, 
-                            font_scale = 0.5, 
-                            text_color=(255, 255, 255), 
-                            thickness=1, 
-                            padding=10
-                        )
-                    
-                    if "detected_restricted_area_count" in response[2]:
-                        detected_restricted_area_count = response[2]["detected_restricted_area_count"]
-                        picasso.draw_text_on_frame(
-                            self.page_frame, 
-                            text=f"Detected Restricted Area Count: {detected_restricted_area_count}", 
-                            position=(top_left_x, top_left_y + int(display_frame_height) + 95),
-                            area_size=(int(display_frame_width), int(20)),
-                            alignment='center', 
-                            font=cv2.FONT_HERSHEY_SIMPLEX, 
-                            font_scale = 0.5, 
-                            text_color=(255, 255, 255), 
-                            thickness=1, 
-                            padding=10
-                        )
+                        if "detected_hardhat_count" in count_dict:
+                            detected_hardhat_count = count_dict['detected_hardhat_count']
+                            picasso.draw_text_on_frame(
+                                self.page_frame, 
+                                text=f"Detected Hardhat Count: {detected_hardhat_count}", 
+                                position=(top_left_x, top_left_y + int(display_frame_height) + 75),
+                                area_size=(int(display_frame_width), int(20)),
+                                alignment='center', 
+                                font=cv2.FONT_HERSHEY_SIMPLEX, 
+                                font_scale = 0.5, 
+                                text_color=(255, 255, 255), 
+                                thickness=1, 
+                                padding=10
+                            )
                         
+                        if "detected_restricted_area_count" in count_dict:
+                            detected_restricted_area_count = count_dict['detected_restricted_area_count']
+                            picasso.draw_text_on_frame(
+                                self.page_frame, 
+                                text=f"Detected Restricted Area Count: {detected_restricted_area_count}", 
+                                position=(top_left_x, top_left_y + int(display_frame_height) + 95),
+                                area_size=(int(display_frame_width), int(20)),
+                                alignment='center', 
+                                font=cv2.FONT_HERSHEY_SIMPLEX, 
+                                font_scale = 0.5, 
+                                text_color=(255, 255, 255), 
+                                thickness=1, 
+                                padding=10
+                            )
+                            
                 picasso.draw_frame_on_frame(
                     self.page_frame, this_frame, 
                     int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0]), 

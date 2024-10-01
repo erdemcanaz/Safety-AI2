@@ -773,7 +773,7 @@ class ApiDealer():
                 response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_counts_by_count_key", headers=header, json=payload, timeout=1)
                 response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
                 if response_body['is_task_successful']:                
-                    return [True,  response_body['detail'] , response_body['json_data']]
+                    return [True,  response_body['detail'] , response_body['json_data']['counts']]
                 else:
                     return [False, response_body['detail'], []]
 
