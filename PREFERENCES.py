@@ -200,7 +200,7 @@ MAXIMUM_NUMBER_OF_FETCHING_CAMERAS = 32 # The maximum number of camera stream fe
 CAMERA_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera information
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
 
-CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 7.5] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
+CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 10] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
 
 SAFETY_AI_VERBOSES = {
     'header_class_name_width': 20, # The width of the class name in the printed header

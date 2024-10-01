@@ -70,11 +70,7 @@ while True:
         r = frame_evaluator.evaluate_frame(frame_info) # Returns None if the frame is already evaluated
         if r is not None: evaluation_results.append(r)
 
-
-    #TODO:frame_evaluator: evaluate the recent frames 
-    #TODO:frame_evaluator: update counts
-
-    #TODO:stream_manager: below function is not implemented yet
+    continue
     stream_manager.update_update_server_last_frames(most_recent_evaluation_results = {}, time_interval_seconds = 60.0)
 
     continue
