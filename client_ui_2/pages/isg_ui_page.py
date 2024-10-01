@@ -182,6 +182,7 @@ class ISG_UIpage:
                 #camera uuid | detected_hardhat_count
                 #camera uuid | detected_restricted_area_count
                 response = self.api_dealer.get_counts_by_count_key(count_key =camera_uuid)
+                print("response: ", response)
                 if response[0]:
                     if "evaluated_frame_count" in response[2]:
                         evaluated_frame_count = response[2]["evaluated_frame_count"]
