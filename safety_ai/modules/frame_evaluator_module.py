@@ -134,7 +134,7 @@ class FrameEvaluator():
                 raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
             
         pprint.pprint(evaluation_result['violation_reports'])
-        
+
         #TODO:
         # Blur the bbox of the persons
         # normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
@@ -166,8 +166,8 @@ class FrameEvaluator():
             "violation_type": rule_info['rule_type'],
             "evaluation_method": rule_info['evaluation_method'],
             "violation_score": None, # will be added if a violation is detected   
-            "threshold_value": rule_info['threshold_value'],
-            "fol_threshold_value": rule_info['fol_threshold_value'],      
+            "threshold_value":float(rule_info['threshold_value']),
+            "fol_threshold_value": float(rule_info['fol_threshold_value']),      
             "violation_datetime": datetime.datetime.now(),
         }
 
@@ -231,8 +231,8 @@ class FrameEvaluator():
             "violation_type": rule_info['rule_type'],
             "evaluation_method": rule_info['evaluation_method'],
             "violation_score": None, # will be added if a violation is detected   
-            "threshold_value": rule_info['threshold_value'],
-            "fol_threshold_value": rule_info['fol_threshold_value'],      
+            "threshold_value":float(rule_info['threshold_value']),
+            "fol_threshold_value": float(rule_info['fol_threshold_value']),   
             "violation_datetime": datetime.datetime.now(),
         }
                 
