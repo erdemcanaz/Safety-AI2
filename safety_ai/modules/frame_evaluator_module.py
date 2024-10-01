@@ -102,9 +102,10 @@ class FrameEvaluator():
 
         # No matter what, the pose detection is done for each frame
         pprint.pprint(frame_info)
-        evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        evaluation_result['pose_detection_results'] = self.pose_detector.detect_frame(frame = None, frame_info= frame_info, bbox_threshold_confidence= PREFERENCES.POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE)
         evaluation_result['flags']['is_person_detected'] = len(evaluation_result['pose_detection_results']['detections']) > 0
         
+
         # Evaluate the frame for each active rule
         for active_rule in frame_info['active_rules']: #rule_uuid, camera_uuid, rule_type, evaluation_method, rule_department, rule_polygon, threshold_value
             # Restricted area violation
