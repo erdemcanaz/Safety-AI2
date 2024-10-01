@@ -156,7 +156,7 @@ class StreamManager:
         if(PREFERENCES.SAFETY_AI_VERBOSES['updating_camera_info']):self.__print_with_header(text=f"Checking if camera info is changed")
 
         # Fetch the camera info from the server and update the camera_info_dict
-        response = self.api_dealer.fetch_all_camera_info() # [is_successful, status code, response_data]
+        response = self.api_dealer.fetch_all_camera_info() 
 
         if response[0] == False:
             self.__print_with_header(text=f"Error in fetching camera info", pprint_object=response[2])
@@ -166,6 +166,8 @@ class StreamManager:
         is_new_camera_added = False
         is_camera_info_changed = False
         is_camera_removed = False
+
+        pprint.pprint(response)
 
         fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username]
         
