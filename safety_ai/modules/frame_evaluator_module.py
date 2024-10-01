@@ -459,4 +459,4 @@ class FrameEvaluator():
                 violation_report_info['violation_score'] = violation_score
 
         if violation_report_info['violation_score'] is not None:
-            evaluation_result['violation_results'].append(violation_report_info)
+            evaluation_result['violation_reports'].append(violation_report_info)
