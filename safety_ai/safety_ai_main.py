@@ -49,7 +49,6 @@ while True:
     
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS) # updates the rules for each camera no matter what.
-    
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
     #TODO:frame_evaluator: evaluate the recent frames 
@@ -69,6 +68,9 @@ while True:
             if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
             elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
 
+    stream_manager.show_all_frames()
+    
+    continue
     if time.time() - last_time_violations_reported > 60:
         last_time_violations_reported = time.time()
         for camera_uuid, violation_result in best_violations_wrt_camera.items():
