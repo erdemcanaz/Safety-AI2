@@ -219,7 +219,7 @@ class FrameEvaluator():
                         violation_report_info['violation_score'] = violation_score
             
         if violation_report_info['violation_score'] is not None:
-            evaluation_result['violation_results'].append(violation_report_info)
+            evaluation_result['violation_reports'].append(violation_report_info)
 
     def __restricted_area_violation_isg_v2(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
