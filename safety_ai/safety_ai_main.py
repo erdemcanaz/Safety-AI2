@@ -81,8 +81,8 @@ while True:
 
 
     #(5) Update the counts for each camera (to be used for statistics)
-    for evaluation_result in evaluation_results['violation_reports']:
-        pprint.pprint(evaluation_result)
+    for evaluation_result in evaluation_results:
+        pprint.pprint(evaluation_result['violation_reports'])
 
 
     continue
