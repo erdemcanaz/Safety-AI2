@@ -20,7 +20,7 @@ print("Waiting for the device to be ready for 5 seconds...")
 time.sleep(5)
 
 # Send '001780' as ASCII encoded data
-data_to_send = '001780'
+data_to_send = '001783'
 ser.write(data_to_send.encode('ascii'))
 
 # Close the serial connection
