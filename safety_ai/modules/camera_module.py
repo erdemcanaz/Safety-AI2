@@ -169,7 +169,7 @@ class StreamManager:
 
         pprint.pprint(response)
 
-        fetched_dicts = response[2]["camera_info"] # NVR_ip_address, camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username]
+        fetched_dicts = response[2] # camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username]
         
         # Check for camera UUID collisions
         camera_uuids = [fetched_dict["camera_uuid"] for fetched_dict in fetched_dicts]
