@@ -120,10 +120,10 @@ while True:
             violation_score = round( float(violation_report['violation_score']) , 2 )
             region_name = violation_report['region_name']
 
-            # The violation score is already above the local-threshold, so we can report it directly to local server
-            api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
-            print(f"Reported violation for camera_uuid: {camera_uuid}")
-            # We should also report the violation to the fol-server if the violation score is above the fol-threshold
+            # 
+            if violation_score > violation_report['violation_threshold_value']:
+                api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
+                print(f"Reported violation for camera_uuid: {camera_uuid}")
             if violation_score > violation_report['fol_threshold_value']:
                 pass #TODO: report the violation to the fol-server
                 
