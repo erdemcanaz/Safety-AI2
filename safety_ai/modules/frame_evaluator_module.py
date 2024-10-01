@@ -133,6 +133,8 @@ class FrameEvaluator():
             else:
                 raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
             
+        pprint.pprint(evaluation_result['violation_reports'])
+        
         #TODO:
         # Blur the bbox of the persons
         # normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
@@ -173,8 +175,8 @@ class FrameEvaluator():
         rule_polygon = rule_info['rule_polygon']   
         
         # Get the forklift bboxes so that we can exclude them from the violation detection
-        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame= None, frame_info= frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
+        forklift_detection_results = self.forklift_detector.detect_frame(frame= None, frame_info= frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in forklift_detection_results['detections']]
 
         # Check if the ankle of the person is inside the restricted area
         # {"bbox_class_name": str, "bbox_confidence": float, "bbox": [x1, y1, x2, y2], "normalized_keypoints": {$keypoint_name: [xn, yn, confidence]}}
@@ -197,23 +199,24 @@ class FrameEvaluator():
         
             if is_left_ankle_in_restricted_area or is_right_ankle_in_restricted_area and not is_person_inside_forklift:
                 violation_score = detection["bbox_confidence"] * (is_left_ankle_in_restricted_area * left_ankle[2] + is_right_ankle_in_restricted_area* right_ankle[2])/(is_left_ankle_in_restricted_area + is_right_ankle_in_restricted_area)
-                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
-                evaluation_result['violation_person_nbboxes'].append(
-                    {
-                        "nbbox": detection['normalized_bbox'],
-                        "violation_type": rule_info['rule_type'],
-                        "violation_score": violation_score,
-                        "threshold_value": rule_info['threshold_value'],
-                        "fol_threshold_value": rule_info['fol_threshold_value']
-                    }
-                )
-                
-                if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
-                    violation_report_info['violation_score'] = violation_score
+                # Check if the violation score is above the threshold
+                if violation_score > violation_report_info['threshold_value']:                
+                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']}, violation_score: {violation_score}")
+
+                    evaluation_result['violation_person_nbboxes'].append(
+                        {
+                            "nbbox": detection['normalized_bbox'],
+                            "violation_type": rule_info['rule_type'],
+                            "violation_score": violation_score,
+                            "threshold_value": rule_info['threshold_value'],
+                            "fol_threshold_value": rule_info['fol_threshold_value']
+                        }
+                    )                    
+                    if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                        violation_report_info['violation_score'] = violation_score
             
         if violation_report_info['violation_score'] is not None:
             evaluation_result['violation_results'].append(violation_report_info)
-
 
     def __restricted_area_violation_isg_v2(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
@@ -237,8 +240,8 @@ class FrameEvaluator():
         rule_polygon = rule_info['rule_polygon']   
 
         # Get the forklift bboxes so that we can exclude them from the violation detection
-        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame = None, frame_info=frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
+        forklift_detection_results = self.forklift_detector.detect_frame(frame = None, frame_info=frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in forklift_detection_results['detections']]
 
         # {"bbox_class_name": str, "bbox_confidence": float, "normalized_bbox": [x1n, y1n, x2n, y2n], "keypoints": {$keypoint_name: [xn, yn, confidence]}}
         # Check if the bbox-center of the person is inside the restricted area and not inside the forklift
@@ -257,25 +260,26 @@ class FrameEvaluator():
             is_person_in_restricted_area = self.__is_normalized_point_inside_polygon(normalized_bbox_center, rule_polygon)
             if is_person_in_restricted_area:
                 violation_score = detection["bbox_confidence"]
-                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
-                evaluation_result['violation_person_nbboxes'].append(
-                    {
-                        "nbbox": detection['normalized_bbox'],
-                        "violation_type": rule_info['rule_type'],
-                        "violation_score": violation_score,
-                        "threshold_value": rule_info['threshold_value'],
-                        "fol_threshold_value": rule_info['fol_threshold_value']
-                    }
-                )
+                # Check if the violation score is above the threshold
+                if violation_score > violation_report_info['threshold_value']:
+                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score}")
 
-                if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
-                    violation_report_info['violation_score'] = violation_score
+                    evaluation_result['violation_person_nbboxes'].append(
+                        {
+                            "nbbox": detection['normalized_bbox'],
+                            "violation_type": rule_info['rule_type'],
+                            "violation_score": violation_score,
+                            "threshold_value": rule_info['threshold_value'],
+                            "fol_threshold_value": rule_info['fol_threshold_value']
+                        }
+                    )
+
+                    if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                        violation_report_info['violation_score'] = violation_score
 
         if violation_report_info['violation_score'] is not None:
             evaluation_result['violation_reports'].append(violation_report_info)
-                
-        #prepare the frame to be reported: add text, add timestamp, etc.
-        
+                        
     def __hardhat_violation_isg_v1(self, evaluation_result:Dict, rule_info:Dict):
         # ===============================================================================================
         # evaluation type: hardhat_violation ||| evaluation method: v1
@@ -296,22 +300,20 @@ class FrameEvaluator():
         violation_report_info= { # Will not be added to the evaluation_result if no violation is detected
             "camera_uuid": evaluation_result['frame_info']['camera_uuid'],
             "region_name": evaluation_result['frame_info']['region_name'],
-            "violation_frame": None, # Will be added after the person blur is applied at the end of the evaluation, all rules share the same frame
-            "violation_date_ddmmyyy_hhmmss": datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
             "violation_type": rule_info['rule_type'],
-            "violation_score": None, # will be added if a violation is detected           
-        }            
+            "evaluation_method": rule_info['evaluation_method'],
+            "violation_score": None, # will be added if a violation is detected   
+            "threshold_value": rule_info['threshold_value'],
+            "fol_threshold_value": rule_info['fol_threshold_value'],      
+            "violation_datetime": datetime.datetime.now(),
+        }        
         
         frame_info = evaluation_result['frame_info']
-        processed_cv2_frame = evaluation_result['processed_cv2_frame']
         rule_polygon = rule_info['rule_polygon']
 
-        # Ensure that the pose detection results are available
-        if evaluation_result['pose_detection_results'] is None: raise Exception("Pose detection results are not available for the hardhat violation evaluation")
-
         # Get the forklift bboxes so that we can exclude them from the violation detection
-        evaluation_result['forklift_detection_results'] = self.forklift_detector.detect_frame(frame = None, frame_info = frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in evaluation_result['forklift_detection_results']['detections']]
+        forklift_detection_results = self.forklift_detector.detect_frame(frame = None, frame_info = frame_info, bbox_threshold_confidence= PREFERENCES.FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+        normalized_forklift_bboxes = [detection['normalized_bbox'] for detection in forklift_detection_results['detections']]
 
         for detection in evaluation_result['pose_detection_results']['detections']:
             normalized_bbox = detection['normalized_bbox']
@@ -378,12 +380,23 @@ class FrameEvaluator():
                 # If the bbox can't fit into a 320x320 frame, use the original frame
                 frame_to_detect_hardhat = frame_info['cv2_frame']
 
-            #cv2.imshow("hardhat_v1_zoomed_frame", frame_to_detect_hardhat) #TODO: make this parametric
-
-            evaluation_result['hardhat_detection_results'] = self.hardhat_detector.detect_frame(frame = frame_to_detect_hardhat, frame_info = None, bbox_threshold_confidence = PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
-            if len(evaluation_result['hardhat_detection_results']['detections']) == 0:
+            hardhat_detection_results = self.hardhat_detector.detect_frame(frame = frame_to_detect_hardhat, frame_info = None, bbox_threshold_confidence = PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
+            if len(hardhat_detection_results['detections']) == 0:
+                # Person detected but hardhat detection resulted in no detection -> violation
                 violation_score = detection["bbox_confidence"]
-                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (model detects neither hard_hat nor no_hard_hat detection)")
+                if violation_score > violation_report_info['threshold_value']:
+                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (model detects neither hard_hat nor no_hard_hat detection)")
+                    evaluation_result['violation_person_nbboxes'].append(
+                        {
+                            "nbbox": detection['normalized_bbox'],
+                            "violation_type": rule_info['rule_type'],
+                            "violation_score": violation_score,
+                            "threshold_value": rule_info['threshold_value'],
+                            "fol_threshold_value": rule_info['fol_threshold_value']
+                        }
+                    )
+                    if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                        violation_report_info['violation_score'] = violation_score 
             else:
                 # find the closest hardhat bbox to the head center
                 min_distance = float("inf")
@@ -397,11 +410,39 @@ class FrameEvaluator():
                         closest_hardhat_detection = hardhat_detection
 
                 if closest_hardhat_detection['bbox_class_name'] == 'no_hard_hat':
+                    # Person detected but hardhat detection resulted in no hardhat detection -> violation
                     violation_score = detection["bbox_confidence"]
-                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (no_hardhat bbox)")
+                    if violation_score > violation_report_info['threshold_value']:
+                        print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (no_hardhat bbox)")
+
+                        evaluation_result['violation_person_nbboxes'].append(
+                            {
+                                "nbbox": detection['normalized_bbox'],
+                                "violation_type": rule_info['rule_type'],
+                                "violation_score": violation_score,
+                                "threshold_value": rule_info['threshold_value'],
+                                "fol_threshold_value": rule_info['fol_threshold_value']
+                            }
+                        )
+                        if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                            violation_report_info['violation_score'] = violation_score
+                    
                 elif closest_hardhat_detection['bbox_class_name'] == 'hard_hat':
+                    # Person detected but hardhat detection resulted in hardhat detection -> no violation                    
                     violation_score = 1 - (detection["bbox_confidence"] * closest_hardhat_detection["bbox_confidence"])
-                    print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (hardhat bbox)")
+                    if violation_score > violation_report_info['threshold_value']:                   
+                            print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {violation_score} (hardhat bbox)")
+                            evaluation_result['violation_person_nbboxes'].append(
+                                {
+                                    "nbbox": detection['normalized_bbox'],
+                                    "violation_type": rule_info['rule_type'],
+                                    "violation_score": violation_score,
+                                    "threshold_value": rule_info['threshold_value'],
+                                    "fol_threshold_value": rule_info['fol_threshold_value']
+                                }
+                            )
+                            if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
+                                violation_report_info['violation_score'] = violation_score
                 else:
                     raise Exception(f"Unknown bbox_class_name: {closest_hardhat_detection['bbox_class_name']}")
             
