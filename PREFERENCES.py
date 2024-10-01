@@ -78,8 +78,14 @@ DEFINED_RULES = {
     ],
     "restricted_area_violation": [
         "v1", # People are detected via pose detection. If their ankle is inside the restricted area, then it is a violation.
-        "v2"  # People are detected via pose detection. If thier bbox-center is inside the restricted area, then it is a violation.
+        "v2",  # People are detected via pose detection. If thier bbox-center is inside the restricted area, then it is a violation.
+        "restricted_zoom", # This areas are encapsulated by a bbox, zoomed and resized to origanal frame size and analyzed seperately for restricted area violation
     ],
+    "check_person": [
+        "v1", # People are detected via pose detection. If there is a person in the frame, then it is a violation.
+        "check_zoom", # This areas are encapsulated by a bbox, zoomed and resized to origanal frame size and analyzed seperately for person detection
+    ],
+    
     }
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
 ADMIN_USER_INFO = {"username": "a", "password": "a", "personal_fullname": "Admin User"}
