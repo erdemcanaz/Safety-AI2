@@ -760,4 +760,29 @@ class ApiDealer():
         self.get_access_token(self.USERNAME, self.PASSWORD)
         return request_to_try()
     
-    
+    def get_counts_by_count_key(self, count_key:str = None):
+        """
+        """
+
+        def request_to_try():
+            try:
+                header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}
+                payload = {
+                    'count_key': count_key
+                }                    
+                response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/get_counts_by_count_key", headers=header, json=payload, timeout=1)
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                if response_body['is_task_successful']:                
+                    return [True,  response_body['detail'] , response_body['json_data']]
+                else:
+                    return [False, response_body['detail'], []]
+
+            except Exception as e:
+                return [False , str(e), []]
+
+        result = request_to_try()
+        if result[0]: return result   
+        print(f"Refreshing token and retrying once more... {self.get_encrypted_image_by_uuid.__name__}")
+        self.get_access_token(self.USERNAME, self.PASSWORD)
+        return request_to_try()
+        
