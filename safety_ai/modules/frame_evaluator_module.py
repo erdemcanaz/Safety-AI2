@@ -133,7 +133,7 @@ class FrameEvaluator():
             
         #Blur the bbox of the persons
         for normalized_bbox in evaluation_result['normalized_person_bboxes_to_blur']:
-            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1)
+            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=4)
             self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
         
         # Draw the violation bboxes on the processed frame
