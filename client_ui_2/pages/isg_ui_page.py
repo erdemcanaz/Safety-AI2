@@ -182,7 +182,6 @@ class ISG_UIpage:
                 #camera uuid | detected_hardhat_count
                 #camera uuid | detected_restricted_area_count
                 response = self.api_dealer.get_counts_by_count_key(count_key =camera_uuid)
-                print("response: ", response)
                 if response[0]:
                     counts_list = response[2]
                     for count_dict in counts_list:
@@ -191,13 +190,13 @@ class ISG_UIpage:
                             picasso.draw_text_on_frame(
                                 self.page_frame, 
                                 text=f"{evaluated_frame_count:.0f}", 
-                                position=(int(main_frame_location[0] * self.page_frame.shape[1]+int(main_frame_width/2)), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 70)),
+                                position=(int(main_frame_location[0] * self.page_frame.shape[1]+int(main_frame_width/2)), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 100)),
                                 area_size=(int(main_frame_width/2), int(20)),
                                 alignment='center',
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
                                 font_scale=2,
                                 text_color=(169, 69, 0),
-                                thickness=2,
+                                thickness=3,
                                 padding=10
                             )
 
@@ -206,14 +205,14 @@ class ISG_UIpage:
                             detected_people_count = count_dict['detected_people_count']
                             picasso.draw_text_on_frame(
                                 self.page_frame, 
-                                text=f"Detected People Count: {detected_people_count}", 
-                                position=(top_left_x, top_left_y + int(display_frame_height) + 55),
-                                area_size=(int(display_frame_width), int(20)),
-                                alignment='center', 
+                                text=f"{detected_people_count:.0f}", 
+                                position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 100)),
+                                area_size=(int(main_frame_width/2), int(20)),
+                                alignment='center',
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
                                 font_scale=2,
                                 text_color=(169, 69, 0),
-                                thickness=2,
+                                thickness=3,
                                 padding=10
                             )
 
@@ -221,14 +220,14 @@ class ISG_UIpage:
                             detected_hardhat_count = count_dict['detected_hardhat_count']
                             picasso.draw_text_on_frame(
                                 self.page_frame, 
-                                text=f"Detected Hardhat Count: {detected_hardhat_count}", 
-                                position=(top_left_x, top_left_y + int(display_frame_height) + 75),
-                                area_size=(int(display_frame_width), int(20)),
-                                alignment='center', 
+                                text=f"{detected_hardhat_count:.0f}", 
+                                position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 150)),
+                                area_size=(int(main_frame_width/2), int(20)),
+                                alignment='center',
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
-                                font_scale = 0.5, 
-                                text_color=(255, 255, 255), 
-                                thickness=1, 
+                                font_scale=2,
+                                text_color=(169, 69, 0),
+                                thickness=3,
                                 padding=10
                             )
                         
