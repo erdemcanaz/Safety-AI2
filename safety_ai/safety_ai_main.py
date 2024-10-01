@@ -50,8 +50,9 @@ while True:
     #(3) Evaluate the recent frames (same frame is not evaluated twice)
     #(4) Update the server with the last frames (check if violation is detected or not)
     #(5) Update the counts for each camera (to be used for statistics)
-    #(6) Report the best violations for each camera (if any) to the server 
-    #(7) TODO: change active cameras to next batch of cameras if the time is up
+    #(6) Report the best violations for each camera (if any) to the local-server
+    #(7) Report the best violations for each camera (if any) to the fol-server 
+    #(8) TODO: change active cameras to next batch of cameras if the time is up
 
     if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
     
@@ -105,32 +106,6 @@ while True:
         # }    
     
     if len(evaluation_results) > 0: print(f"len(evaluation_results): {len(evaluation_results)}, remaining time: {60 - (time.time() - last_time_violations_reported):.2f} seconds")
-
-def test_api_functionality():
-    api_dealer = safety_ai_api_dealer.SafetyAIApiDealer()
-
-    r = api_dealer.fetch_all_camera_info()
-    pprint.pprint(r)
-    camera_uuid = r[2]['camera_info'][0]['camera_uuid']
-
-    r = api_dealer.update_count(camera_uuid=camera_uuid, count_type="TRIAL", delta_count=1)
-    pprint.pprint(r)
-
-    shift_date = datetime.datetime.now().strftime("%d.%m.%Y")
-    r = api_dealer.update_shift_count(camera_uuid=camera_uuid, shift_date_ddmmyyyy=shift_date, shift_no="0", count_type="TRIAL", delta_count=1)
-    pprint.pprint(r)
-
-    width, height = 1920, 1080
-    random_frame = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
-    text = f"Violation: ({width}x{height}) | {'.jpg'}"
-    text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.75, 1)[0]
-    text_x = (random_frame.shape[1] - text_width) // 2
-    text_y = (random_frame.shape[0] + text_height) // 2
-    cv2.putText(random_frame, text, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
-
-
-    r = api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=random_frame, violation_date_ddmmyyy_hhmmss=datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S"), violation_type="TRIAL_VIOLATION", violation_score=random.uniform(0,1)*100, region_name=random.choice(["Region 1", "Region 2", "Region 3"]))
-    pprint.pprint(r)
 
   
 
