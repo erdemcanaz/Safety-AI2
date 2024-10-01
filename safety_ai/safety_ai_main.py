@@ -95,10 +95,10 @@ while True:
             camera_uuid = evaluation_result['frame_info']['camera_uuid']
             violation_type = violation_report['violation_type']
             #    def update_count(self, count_key:str=None, count_subkey:str=None, delta_count:float = None):           
-            if violation_type == "hardhat_detection":
+            if violation_type == "hardhat_violation":
                 api_dealer.update_count(count_key= camera_uuid, count_subkey="detected_hardhat_count", delta_count=1)
                 api_dealer.update_count(count_key= camera_uuid, count_subkey=f"detected_hardhat_count_{timestamp_str}", delta_count=1)
-            elif violation_type == "restricted_area_detection":
+            elif violation_type == "restricted_area_violation":
                 api_dealer.update_count(count_key= camera_uuid, count_subkey="detected_restricted_area_count", delta_count=1)
                 api_dealer.update_count(count_key= camera_uuid, count_subkey=f"detected_restricted_area_count_{timestamp_str}", delta_count=1)
             elif violation_type == "check_person":
