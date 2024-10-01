@@ -48,7 +48,6 @@ class FrameEvaluator():
         if intersection_bbox[0] >= intersection_bbox[2] or intersection_bbox[1] >= intersection_bbox[3]: return False
         intersection_area = (intersection_bbox[2] - intersection_bbox[0]) * (intersection_bbox[3] - intersection_bbox[1])
         bbox1_area = (normalized_bbox1[2] - normalized_bbox1[0]) * (normalized_bbox1[3] - normalized_bbox1[1])
-        pprint.pprint(intersection_area/bbox1_area)
         return intersection_area/bbox1_area >= intersection_percentage_threshold
 
     def __gaussian_blur_bbox(self, normalized_bbox:List[int], frame:np.ndarray, kernel_size:int = PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE):
@@ -156,9 +155,9 @@ class FrameEvaluator():
             elif violation_person_nbbox['violation_type'] == "hardhat_violation":
                 picasso_module.draw_image_on_frame(frame=evaluation_result['processed_cv2_frame'], image_name="red_hardhat_transparent_with_background", x=bbox[2]+padding, y=bbox[3]-padding, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
 
-        if len(evaluation_result['violation_reports']) > 0:
-            resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
-            if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
+        # if len(evaluation_result['violation_reports']) > 0:
+        #     resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
+        #     if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
 
         return evaluation_result
 
@@ -456,13 +455,6 @@ class FrameEvaluator():
                 else:
                     raise Exception(f"Unknown bbox_class_name: {closest_hardhat_detection['bbox_class_name']}")
             
-            self.__draw_rect_on_frame(normalized_bbox= normalized_bbox, frame= processed_cv2_frame, color=[0, 0, 255], thickness=8)
-            # put HARDHAT icon on the top right (outside) corner of the bbox
-            bbox = self.__translate_normalized_bbox_to_frame_bbox(normalized_bbox, processed_cv2_frame)
-            icon_max_size = (bbox[3]-bbox[1])//3
-            padding = icon_max_size // 3
-            picasso_module.draw_image_on_frame(frame= processed_cv2_frame, image_name="red_hardhat_transparent_with_background", x = bbox[2] + padding , y = bbox[1], width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
-           
             if violation_report_info['violation_score'] is None or violation_score > violation_report_info['violation_score']:
                 violation_report_info['violation_score'] = violation_score
 
