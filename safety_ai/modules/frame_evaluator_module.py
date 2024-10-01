@@ -133,17 +133,33 @@ class FrameEvaluator():
             else:
                 raise Exception(f"Unknown rule type: {active_rule['rule_type']} or rule department: {active_rule['rule_department']}")
             
-        pprint.pprint(evaluation_result['violation_reports'])
-
         #Blur the bbox of the persons
         for normalized_bbox in evaluation_result['normalized_person_bboxes_to_blur']:
             self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1)
             self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
         
+        # Draw the violation bboxes on the processed frame
+        for violation_person_nbbox in evaluation_result['violation_person_nbboxes']:
+            self.__draw_rect_on_frame(violation_person_nbbox['nbbox'], evaluation_result['processed_cv2_frame'], color=[0, 0, 255], thickness=8)
+            # "nbbox": detection['normalized_bbox'],
+            # "violation_type": rule_info['rule_type'],
+            # "violation_score": violation_score,
+            # "threshold_value": rule_info['threshold_value'],
+            # "fol_threshold_value": rule_info['fol_threshold_value']
+            
+            # put VIOLATION icon on the top right (outside) corner of the bbox
+            bbox = self.__translate_normalized_bbox_to_frame_bbox(violation_person_nbbox['nbbox'], evaluation_result['processed_cv2_frame'])
+            icon_max_size = (bbox[3]-bbox[1])//3
+            padding = icon_max_size // 3
+
+            if violation_person_nbbox['violation_type'] == "restricted_area_violation":
+                pass
+            elif violation_person_nbbox['violation_type'] == "hardhat_violation":
+                pass                                               
+
         if len(evaluation_result['violation_reports']) > 0:
             resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
             if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
-
 
         return evaluation_result
 
