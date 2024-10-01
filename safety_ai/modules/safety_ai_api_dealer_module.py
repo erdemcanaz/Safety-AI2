@@ -127,7 +127,8 @@ class SafetyAIApiDealer():
                 }
                 header = {'Authorization': f'Bearer {self.JWT_TOKEN}'}             
                 response = requests.post(f"http://{self.SERVER_IP_ADDRESS}/update_last_camera_frame_as", headers=header, data = payload, timeout=1)
-                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data'                     
+                response_body = response.json() # dict | 'status', 'is_task_successful', 'detail', 'json_data' 
+                print(response_body)                    
                 if response_body['is_task_successful']:                
                     return [True,  response_body['detail'] , response_body['json_data']]
                 else:
