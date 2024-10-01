@@ -190,7 +190,7 @@ class ISG_UIpage:
                         picasso.draw_text_on_frame(
                             self.page_frame, 
                             text=f"{evaluated_frame_count:.0f}", 
-                            position=(int(main_frame_location[0] * self.page_frame.shape[1]+int(main_frame_width/2)), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 130)),
+                            position=(int(main_frame_location[0] * self.page_frame.shape[1]+int(main_frame_width/2)), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 150)),
                             area_size=(int(main_frame_width/2), int(20)),
                             alignment='center',
                             font=cv2.FONT_HERSHEY_SIMPLEX, 
@@ -204,7 +204,7 @@ class ISG_UIpage:
                         picasso.draw_text_on_frame(
                             self.page_frame, 
                             text=f"{detected_people_count:.0f}", 
-                            position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 130)),
+                            position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 150)),
                             area_size=(int(main_frame_width/2), int(20)),
                             alignment='center',
                             font=cv2.FONT_HERSHEY_SIMPLEX, 
@@ -218,7 +218,7 @@ class ISG_UIpage:
                         picasso.draw_text_on_frame(
                             self.page_frame, 
                             text=f"{detected_hardhat_count:.0f}", 
-                            position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 200)),
+                            position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 300)),
                             area_size=(int(main_frame_width/2), int(20)),
                             alignment='center',
                             font=cv2.FONT_HERSHEY_SIMPLEX, 
@@ -232,7 +232,7 @@ class ISG_UIpage:
                         picasso.draw_text_on_frame(
                             self.page_frame, 
                             text=f"{detected_restricted_area_count}", 
-                            position=(top_left_x, top_left_y + int(display_frame_height) + 200),
+                            position=(top_left_x, top_left_y + int(display_frame_height) + 300),
                             area_size=(int(display_frame_width), int(20)),
                             alignment='center', 
                             font=cv2.FONT_HERSHEY_SIMPLEX, 
