@@ -70,25 +70,48 @@ while True:
             rule_uuid = violation_report['rule_uuid']
             api_dealer.trigger_rule(rule_uuid=rule_uuid)
         
-
     #(5) Update the counts for each camera (to be used for statistics)
     for evaluation_result in evaluation_results:
         # All time statistics
-        # key: camera_uuid | subkey:detected_people_count
+        # key: camera_uuid | subkey:evaluated_frame_count
+        # key: camera_uuid | subkey:number_of_people_detected_count
         # key: camera_uuid | subkey:detected_hardhat_count
         # key: camera_uuid | subkey:detected_restricted_area_count
         # key: camera_uuid | subkey:check_person_count
         
         # Hourly statistics
-        # key: camera_uuid | subkey:detected_people_count_yyyy_mm_dd_hh
+        # key: camera_uuid | subkey:evaluated_frame_count_yyyy_mm_dd_hh
+        # key: camera_uuid | subkey:number_of_people_detected_count_yyyy_mm_dd_hh
         # key: camera_uuid | subkey:detected_hardhat_count_yyyy_mm_dd_hh
         # key: camera_uuid | subkey:detected_restricted_area_count_yyyy_mm_dd_hh
         # key: camera_uuid | subkey:check_person_count_yyyy_mm_dd_hh
 
-        #pprint.pprint(evaluation_result['violation_reports'])
-        pass
+        camera_uuid = evaluation_result['frame_info']['camera_uuid']
+        number_of_people_detected = evaluation_result['number_of_people_detected']
+        timestamp_str = datetime.datetime.now().strftime("%Y_%m_%d_%H")
+
+        # update detected_people_count
+        api_dealer.update_count(camera_uuid= camera_uuid, subkey="detected_people_count", delta_count=number_of_people_detected)
+        api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"detected_people_count_{timestamp_str}", delta_count=number_of_people_detected)
+
+        # update evaluated_frame_count
+        api_dealer.update_count(camera_uuid= camera_uuid, subkey="evaluated_frame_count")
+        api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"evaluated_frame_count_{timestamp_str}")
 
 
+        for violation_report in evaluation_result['violation_reports']:
+            camera_uuid = evaluation_result['frame_info']['camera_uuid']
+            violation_type = violation_report['violation_type']
+            #    def update_count(self, count_key:str=None, count_subkey:str=None, delta_count:float = None):           
+            if violation_type == "hardhat_detection":
+                api_dealer.update_count(camera_uuid= camera_uuid, subkey="detected_hardhat_count", delta_count=1)
+                api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"detected_hardhat_count_{timestamp_str}", delta_count=1)
+            elif violation_type == "restricted_area_detection":
+                api_dealer.update_count(camera_uuid= camera_uuid, subkey="detected_restricted_area_count", delta_count=1)
+                api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"detected_restricted_area_count_{timestamp_str}", delta_count=1)
+            elif violation_type == "check_person":
+                api_dealer.update_count(camera_uuid= camera_uuid, subkey="check_person_count", delta_count=1)
+                api_dealer.update_count(camera_uuid= camera_uuid, subkey=f"check_person_count_{timestamp_str}", delta_count=1)
 
     continue
 
