@@ -79,7 +79,7 @@ while True:
         is_person_detected = True if evaluation_result['number_of_people_detected'] > 0 else False
         frame = evaluation_result['processed_cv2_frame']
 
-        api_dealer.update_camera_last_frame_api(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
+        api_dealer.update_last_camera_frame_as(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
 
 
     continue
