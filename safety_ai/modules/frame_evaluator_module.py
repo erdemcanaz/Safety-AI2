@@ -146,7 +146,7 @@ class FrameEvaluator():
             if violation_person_nbbox['violation_type'] == "restricted_area_violation":
                 picasso_module.draw_image_on_frame(frame=evaluation_result['processed_cv2_frame'], image_name="red_restricted_area_transparent_with_background", x=bbox[2]+padding, y=bbox[1]+padding, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
             elif violation_person_nbbox['violation_type'] == "hardhat_violation":
-                picasso_module.draw_image_on_frame(frame=evaluation_result['processed_cv2_frame'], image_name="red_hardhat_transparent_with_background", x=bbox[2]+padding, y=bbox[3]-padding, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
+                picasso_module.draw_image_on_frame(frame=evaluation_result['processed_cv2_frame'], image_name="red_hardhat_transparent_with_background", x=bbox[2]+padding, y=bbox[3]-4*padding, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
 
         # if len(evaluation_result['violation_reports']) > 0:
         #     resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
