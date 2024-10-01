@@ -167,8 +167,6 @@ class StreamManager:
         is_camera_info_changed = False
         is_camera_removed = False
 
-        pprint.pprint(response)
-
         fetched_dicts = response[2] # camera_description, camera_ip_address, camera_region, camera_status, camera_uuid, date_created, date_updated, password, stream_path, username]
         
         # Check for camera UUID collisions
@@ -256,7 +254,7 @@ class StreamManager:
             self.__print_with_header(text=f"Error in fetching camera rules", pprint_object=response[2])
             return
         
-        fetched_dicts:List = response[2]["rules"] # camera_uuid, date_created, date_updated, evaluation_method, rule_department, rule_polygon, rule_type, rule_uuid
+        fetched_dicts:List = response[2] # camera_uuid, date_created, date_updated, evaluation_method, rule_department, rule_polygon, rule_type, rule_uuid
         active_rule_uuids = [fetched_rule_dict["rule_uuid"] for fetched_rule_dict in fetched_dicts]
         if len(active_rule_uuids) != len(set(active_rule_uuids)):
             duplicate_uuids = {uuid for uuid in active_rule_uuids if active_rule_uuids.count(uuid) > 1}
