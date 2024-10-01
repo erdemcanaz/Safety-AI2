@@ -108,12 +108,18 @@ class ISG_UIpage:
 
         # Create iterators for important and other items
         important_items = ((uuid, frame) for uuid, frame in self.fetched_images.items() if uuid in self.violation_detected_camera_uuids)
-        other_items = ((uuid, frame) for uuid, frame in self.fetched_images.items() if uuid not in self.violation_detected_camera_uuids)
 
+        # Create and shuffle a list for other items
+        other_items = [
+            (uuid, frame) for uuid, frame in self.fetched_images.items()
+            if uuid not in self.violation_detected_camera_uuids
+        ]
+        random.shuffle(other_items)
+        
         # Chain the iterators
         for i, (camera_uuid, this_frame) in enumerate(chain(important_items, other_items)):
             if i >= len(frame_locations): break
-            
+
             # Calculate the top-left corner position of the frame
             top_left_x = int(frame_locations[i][0] * self.page_frame.shape[1])
             top_left_y = int(frame_locations[i][1] * self.page_frame.shape[0])
