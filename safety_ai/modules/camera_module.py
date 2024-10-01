@@ -9,7 +9,7 @@ import safety_ai_api_dealer_module
 class CameraStreamFetcher:
     def __init__(self, **kwargs )->None:  
         
-        for key in ['camera_uuid', 'camera_region', 'camera_description', 'camera_status', 'NVR_ip_address', 'camera_ip_address', 'username', 'password', 'stream_path']: # Check if all the required arguments are provided
+        for key in ['camera_uuid', 'camera_region', 'camera_description', 'camera_status', 'camera_ip_address', 'username', 'password', 'stream_path']: # Check if all the required arguments are provided
             if key not in kwargs.keys():
                 raise ValueError(f"Missing camera config argument. Required: {key}")
 
