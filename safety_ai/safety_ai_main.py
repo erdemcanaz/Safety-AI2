@@ -70,10 +70,7 @@ while True:
         r = frame_evaluator.evaluate_frame(frame_info) # Returns None if the frame is already evaluated
         if r is not None: evaluation_results.append(r)
 
-    #(4) Update the server with the last frames (check if violation is detected or not)
-
-    continue
-
+    
     continue
 
     for evaluation_result in evaluation_results:
