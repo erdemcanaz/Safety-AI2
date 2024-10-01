@@ -45,6 +45,14 @@ def update_server_last_frames(recent_frames):
         print(f"update_server_last_frames: {result}")
 
 while True:
+    #(1) Update the cameras and the rules for each camera
+    #(2) Get all the recent frames from the cameras
+    #(3) Evaluate the recent frames (same frame is not evaluated twice)
+    #(4) Update the server with the last frames (check if violation is detected or not)
+    #(5) Update the counts for each camera (to be used for statistics)
+    #(6) Report the best violations for each camera (if any) to the server 
+    #(7) TODO: change active cameras to next batch of cameras if the time is up
+
     if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
     
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
@@ -68,8 +76,6 @@ while True:
             if camera_uuid not in best_violations_wrt_camera: best_violations_wrt_camera[camera_uuid] = violation_result
             elif violation_result['violation_score'] > best_violations_wrt_camera[camera_uuid]['violation_score']: best_violations_wrt_camera[camera_uuid] = violation_result
 
-    stream_manager.show_all_frames()
-    
     continue
     if time.time() - last_time_violations_reported > 60:
         last_time_violations_reported = time.time()
