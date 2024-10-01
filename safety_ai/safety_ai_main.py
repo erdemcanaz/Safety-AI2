@@ -53,23 +53,31 @@ while True:
     #(6) Report the best violations for each camera (if any) to the local-server
     #(7) Report the best violations for each camera (if any) to the fol-server 
     #(8) TODO: change active cameras to next batch of cameras if the time is up
+    #(9) TODO: send signal to iotdevices if violation is detected for respective cameras
 
     if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
     
+    #(1) Update the cameras and the rules for each camera
     stream_manager.update_cameras(update_interval_seconds = PREFERENCES.CAMERA_UPDATE_INTERVAL_SECONDS) #stops and restarts the cameras if new, updated or deleted cameras are detected
     stream_manager.update_camera_rules(update_interval_seconds = PREFERENCES.CAMERA_RULES_UPDATE_INTERVAL_SECONDS) # updates the rules for each camera no matter what.
+    
+    #(2) Get all the recent frames from the cameras
     recent_frames = stream_manager.return_all_recent_frames_info_as_list() # last decoded frame from each camera 
     
+    #(3) Evaluate the recent frames (same frame is not evaluated twice)
+    evaluation_results = []
+    for frame_info in recent_frames:
+        r = frame_evaluator.evaluate_frame(frame_info) # Returns None if the frame is already evaluated
+        if r is not None: evaluation_results.append(r)
+
+
     #TODO:frame_evaluator: evaluate the recent frames 
     #TODO:frame_evaluator: update counts
 
     #TODO:stream_manager: below function is not implemented yet
     stream_manager.update_update_server_last_frames(most_recent_evaluation_results = {}, time_interval_seconds = 60.0)
 
-    evaluation_results = []
-    for frame_info in recent_frames:
-        r = frame_evaluator.evaluate_frame(frame_info)
-        if r is not None: evaluation_results.append(r)
+    continue
 
     for evaluation_result in evaluation_results:
         for violation_result in evaluation_result["violation_results"]:
