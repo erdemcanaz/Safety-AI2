@@ -410,7 +410,7 @@ class FrameEvaluator():
                 # find the closest hardhat bbox to the head center
                 min_distance = float("inf")
                 closest_hardhat_detection = None
-                for hardhat_detection in evaluation_result['hardhat_detection_results']['detections']:
+                for hardhat_detection in hardhat_detection_results['detections']:
                     normalized_hardhat_bbox = hardhat_detection['normalized_bbox']
                     normalized_hardhat_bbox_center = [(normalized_hardhat_bbox[0]+normalized_hardhat_bbox[2])/2, (normalized_hardhat_bbox[1]+normalized_hardhat_bbox[3])/2]
                     normalized_distance = np.linalg.norm(np.array(normalized_head_center) - np.array(normalized_hardhat_bbox_center))
