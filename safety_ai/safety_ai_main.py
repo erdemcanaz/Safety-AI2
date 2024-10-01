@@ -70,7 +70,9 @@ while True:
         for violation_report in evaluation_result['violation_reports']:
             rule_uuid = violation_report['rule_uuid']
             print(f"Triggering rule_uuid: {rule_uuid}")
-            api_dealer.trigger_rule(rule_uuid=rule_uuid)
+            response = api_dealer.trigger_rule(rule_uuid=rule_uuid)
+            if response[0] == False:
+                print(f"Error: {response[1]}")
 
     #(5) Update the counts for each camera (to be used for statistics)
     for evaluation_result in evaluation_results:
