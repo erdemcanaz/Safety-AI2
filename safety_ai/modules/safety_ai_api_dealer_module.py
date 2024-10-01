@@ -119,7 +119,6 @@ class SafetyAIApiDealer():
         def request_to_try():
             try:
                 url_b64_frame = self.encode_frame_for_url_body_b64_string(frame)
-                print()
                 payload = {
                     'camera_uuid': camera_uuid,
                     'is_violation_detected': is_violation_detected,
@@ -148,8 +147,6 @@ class SafetyAIApiDealer():
         """
         def request_to_try():
             try:
-                url_b64_frame = self.encode_frame_for_url_body_b64_string(frame)
-                print()
                 payload = {
                     'rule_uuid': rule_uuid,
                 }
