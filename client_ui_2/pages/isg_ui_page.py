@@ -186,23 +186,20 @@ class ISG_UIpage:
                 if response[0]:
                     counts_list = response[2]
                     for count_dict in counts_list:
-                        print("count_dict: ", count_dict)
                         if "evaluated_frame_count" in count_dict:
                             evaluated_frame_count = count_dict['evaluated_frame_count']
                             picasso.draw_text_on_frame(
                                 self.page_frame, 
                                 text=f"Evaluated Frame Count: {evaluated_frame_count}", 
-                                position=(top_left_x, top_left_y + int(display_frame_height) + 35),
-                                area_size=(int(display_frame_width), int(20)),
-                                alignment='center', 
+                                position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 45)),
+                                area_size=(int(main_frame_width/2), int(20)),
+                                alignment='center',
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
                                 font_scale = 0.5, 
                                 text_color=(0, 0, 0), 
                                 thickness=1, 
                                 padding=10
                             )
-                            print("evaluated_frame_count: ", evaluated_frame_count)
-
 
 
                         if "detected_people_count" in count_dict:
@@ -214,9 +211,9 @@ class ISG_UIpage:
                                 area_size=(int(display_frame_width), int(20)),
                                 alignment='center', 
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
-                                font_scale = 0.5, 
-                                text_color=(0, 0, 0), 
-                                thickness=1, 
+                                font_scale=2,
+                                text_color=(169, 69, 0),
+                                thickness=2,
                                 padding=10
                             )
 
