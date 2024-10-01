@@ -231,7 +231,7 @@ class ISG_UIpage:
                         detected_restricted_area_count = count_dict['detected_restricted_area_count'] if "detected_restricted_area_count" in count_dict else 0
                         picasso.draw_text_on_frame(
                             self.page_frame, 
-                            text=f"Detected Restricted Area Count: {detected_restricted_area_count}", 
+                            text=f"{detected_restricted_area_count}", 
                             position=(top_left_x, top_left_y + int(display_frame_height) + 200),
                             area_size=(int(display_frame_width), int(20)),
                             alignment='center', 
