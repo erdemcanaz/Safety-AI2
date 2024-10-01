@@ -134,7 +134,6 @@ class SafetyAIApiDealer():
                     return [False, response_body['detail'], []]
 
             except Exception as e:
-                raise e
                 return [False , str(e), []]
 
         result = request_to_try()
