@@ -222,7 +222,7 @@ class ISG_UIpage:
                             picasso.draw_text_on_frame(
                                 self.page_frame, 
                                 text=f"{detected_hardhat_count:.0f}", 
-                                position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 300)),
+                                position=(int(main_frame_location[0] * self.page_frame.shape[1]), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 200)),
                                 area_size=(int(main_frame_width/2), int(20)),
                                 alignment='center',
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
@@ -236,14 +236,14 @@ class ISG_UIpage:
                             detected_restricted_area_count = count_dict['detected_restricted_area_count']
                             picasso.draw_text_on_frame(
                                 self.page_frame, 
-                                text=f"{detected_restricted_area_count}", 
-                                position=(int(main_frame_location[0] * self.page_frame.shape[1]+int(main_frame_width/2) ), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 300)),
+                                text=f"{detected_restricted_area_count:.0f}", 
+                                position=(int(main_frame_location[0] * self.page_frame.shape[1]+int(main_frame_width/2)), int(main_frame_location[1] * self.page_frame.shape[0] + main_frame_height + 200)),
                                 area_size=(int(main_frame_width/2), int(20)),
-                                alignment='center', 
+                                alignment='center',
                                 font=cv2.FONT_HERSHEY_SIMPLEX, 
-                                font_scale = 0.5, 
-                                text_color=(255, 255, 255), 
-                                thickness=1, 
+                                font_scale=2,
+                                text_color=(169, 69, 0),
+                                thickness=3,
                                 padding=10
                             )
                             
