@@ -312,8 +312,8 @@ class FrameEvaluator():
             "violation_type": rule_info['rule_type'],
             "evaluation_method": rule_info['evaluation_method'],
             "violation_score": None, # will be added if a violation is detected   
-            "threshold_value": rule_info['threshold_value'],
-            "fol_threshold_value": rule_info['fol_threshold_value'],      
+            "threshold_value": float(rule_info['threshold_value']),
+            "fol_threshold_value": float(rule_info['fol_threshold_value']),      
             "violation_datetime": datetime.datetime.now(),
         }        
         
