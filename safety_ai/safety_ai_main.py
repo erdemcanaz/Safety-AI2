@@ -147,6 +147,7 @@ while True:
                     timelapse_frame = np.vstack(resized_frames)
 
                     # Concatenate the main frame and the timelapse frame horizontally
+                    frame = cv2.resize(violation_frame, (timelapse_frame.shape[1], violation_frame.shape[0]))
                     combined_frame = np.hstack((frame, timelapse_frame))
                 else:
                     combined_frame = frame
