@@ -106,7 +106,7 @@ class FrameEvaluator():
 
         for detection in evaluation_result['pose_detection_results']['detections']:
             normalized_bbox = detection['normalized_bbox']
-            self.evaluation_result['normalized_person_bboxes_to_blur'].append(normalized_bbox)
+            evaluation_result['normalized_person_bboxes_to_blur'].append(normalized_bbox)
                 
         # Evaluate the frame for each active rule
         for active_rule in frame_info['active_rules']: #rule_uuid, camera_uuid, rule_type, evaluation_method, rule_department, rule_polygon, threshold_value, fol_threshold_value
