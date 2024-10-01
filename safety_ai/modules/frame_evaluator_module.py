@@ -135,20 +135,15 @@ class FrameEvaluator():
             
         pprint.pprint(evaluation_result['violation_reports'])
 
-        #TODO:
-        # Blur the bbox of the persons
-        # normalized_person_bboxes_to_blur = [detection['normalized_bbox'] for detection in evaluation_result['pose_detection_results']['detections']]
-        # for normalized_bbox in normalized_person_bboxes_to_blur:
-        #     self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1) # Draw the bbox of the person, very narrow and will be overwritten by the violation rect thickness
-        #     self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
+        #Blur the bbox of the persons
+        for normalized_bbox in evaluation_result['normalized_person_bboxes_to_blur']:
+            self.__draw_rect_on_frame(normalized_bbox, evaluation_result['processed_cv2_frame'], color=[169, 69, 0], thickness=1)
+            self.__gaussian_blur_bbox(normalized_bbox = normalized_bbox, frame= evaluation_result['processed_cv2_frame'], kernel_size= PREFERENCES.PERSON_BBOX_BLUR_KERNEL_SIZE)
+        
+        if len(evaluation_result['violation_reports']) > 0:
+            resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
+            if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
 
-        # for violation_result in evaluation_result['violation_results']:
-        #     # Add the violation frame to the violation result
-        #     violation_result['violation_frame'] = evaluation_result['processed_cv2_frame']
-
-        # if len(evaluation_result['violation_results']) > 0:
-        #     resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
-        #     if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
 
         return evaluation_result
 
