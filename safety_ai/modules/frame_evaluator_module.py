@@ -106,11 +106,27 @@ class FrameEvaluator():
         
         active_rules = frame_info['active_rules'] 
         zoomed_frames = [] # {frame:np.ndarray, zoomed_bbox:[nx0, ny0, nx1, ny1]} #
-        zoomed_frames.append({"frame": copy.deepcopy(frame_info['cv2_frame']), "zoomed_bbox": [0, 0, 1, 1]}) # The original frame is evaluated by default
+        zoomed_frames.append({"frame": frame_info['cv2_frame'], "zoomed_bbox": [0, 0, 1, 1]}) # The original frame is evaluated by default
         for active_rule in active_rules:
             if active_rule['rule_type'] == "zoom" and active_rule['evaluation_method'] == "v1":
                 print("Zooming the frame")
-                print(active_rule['rule_polygon'])
+                
+                min_x = min([point[0] for point in active_rule['rule_polygon']])
+                min_y = min([point[1] for point in active_rule['rule_polygon']])
+                max_x = max([point[0] for point in active_rule['rule_polygon']])
+                max_y = max([point[1] for point in active_rule['rule_polygon']])
+
+                n_zoomed_bbox = [min_x, min_y, max_x, max_y]                
+                zoomed_bbox =  self.__translate_normalized_bbox_to_frame_bbox(self, normalized_bbox = n_zoomed_bbox, frame= frame_info['cv2_frame'])
+                zoomed_frame = frame_info['cv2_frame'][zoomed_bbox[1]:zoomed_bbox[3], zoomed_bbox[0]:zoomed_bbox[2]]
+                zoomed_frames.append({"frame": zoomed_frame, "zoomed_bbox": n_zoomed_bbox})
+                cv2.imshow("zoomed_frame", zoomed_frame)
+                print("Zoomed frame is added to the evaluation")
+
+                print(active_rule['rule_polygon']) # [(nx0, ny0), (nx1, ny1), (nx2, ny2), (nx3, ny3), ...]
+              
+
+
 
         # # Evaluate the frame for each active rule
         # for active_rule in frame_info['active_rules']: #rule_uuid, camera_uuid, rule_type, evaluation_method, rule_department, rule_polygon, threshold_value
