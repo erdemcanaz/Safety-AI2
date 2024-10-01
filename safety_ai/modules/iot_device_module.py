@@ -15,7 +15,7 @@ class IoTDevicemanager:
     
     def __send_signal_to_iot_device(self, iot_device_uuid:str, which_action:str):
         #TODO:
-        print(f"Sending signal to iot_device_uuid: {iot_device_uuid} with action: {which_action}")
+        print(f"Sending signal to iot_device_uuid: {iot_device_uuid}, device_id:{self.iot_devices[iot_device_uuid]} with action: {which_action}")
 
     def update_iot_devices(self, update_interval_seconds:float = 60):
         if time.time() - self.last_time_iot_devices_updated < update_interval_seconds: return
