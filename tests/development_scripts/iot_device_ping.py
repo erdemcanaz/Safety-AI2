@@ -11,7 +11,6 @@ for index, port in enumerate(ports):
 which_comport = int(input("Enter the index of the COM port you want to use: "))
 comport = ports[which_comport].device
 
-
 # Open the serial port
 ser = serial.Serial(comport, 9600)  # Make sure the baud rate matches your device
 
@@ -19,9 +18,12 @@ ser = serial.Serial(comport, 9600)  # Make sure the baud rate matches your devic
 print("Waiting for the device to be ready for 5 seconds...")
 time.sleep(5)
 
-# Send '001780' as ASCII encoded data
-data_to_send = '001783'
-ser.write(data_to_send.encode('ascii'))
+while True:
+    # Send '001780' as ASCII encoded data
+    data_to_send = input("Enter the data you want to send (i.e. 001783): ")
+    if data_to_send == "exit":
+        break
+    ser.write(data_to_send.encode('ascii'))
 
 # Close the serial connection
 ser.close()

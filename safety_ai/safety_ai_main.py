@@ -100,7 +100,9 @@ while True:
         for violation_report in evaluation_result['violation_reports']:
             camera_uuid = evaluation_result['frame_info']['camera_uuid']
             violation_type = violation_report['violation_type']
-            print(f"violation_type: {violation_type}")
+            violation_score = violation_report['violation_score']
+            threshold_value = violation_report['threshold_value']
+            if violation_score < threshold_value: continue
             #    def update_count(self, count_key:str=None, count_subkey:str=None, delta_count:float = None):           
             if violation_type == "hardhat_violation":
                 api_dealer.update_count(count_key= camera_uuid, count_subkey="detected_hardhat_count", delta_count=1)
