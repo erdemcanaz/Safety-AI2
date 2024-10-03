@@ -58,7 +58,11 @@ while True:
     #(4) Update the server with the last frames (check if violation is detected or not). Note that all the frames in the evaluation_results are new frames, so we can update the server with them
     for evaluation_result in evaluation_results:
         camera_uuid = evaluation_result['frame_info']['camera_uuid']
-        is_violation_detected = True if len(evaluation_result['violation_reports']) > 0 else False
+        is_violation_detected = False
+        for violation_report in evaluation_result['violation_reports']:
+            if violation_report['violation_score'] > violation_report['threshold_value']:
+                is_violation_detected = True
+                break        
         is_person_detected = True if evaluation_result['number_of_people_detected'] > 0 else False
         frame = evaluation_result['processed_cv2_frame']
         api_dealer.update_last_camera_frame_as(camera_uuid=camera_uuid, is_violation_detected=is_violation_detected, is_person_detected=is_person_detected, frame=frame)
