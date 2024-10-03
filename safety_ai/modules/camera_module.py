@@ -289,7 +289,7 @@ class StreamManager:
         start_all_alive_cameras = len(camera_uuids) == 0
         started_camera_count = 0
         for camera_stream_fetcher in self.camera_stream_fetchers:
-            if started_camera_count >= max_number_of_cameras or camera_stream_fetcher.is_camera_status_active() != True: break
+            if started_camera_count >= max_number_of_cameras or camera_stream_fetcher.is_camera_status_active() != True: continue
             if camera_stream_fetcher.is_camera_status_active and (start_all_alive_cameras or camera_stream_fetcher.camera_uuid in camera_uuids):           
                 camera_stream_fetcher.start_fetching_frames()
                 started_camera_count += 1

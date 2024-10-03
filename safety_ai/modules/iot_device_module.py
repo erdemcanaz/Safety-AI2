@@ -107,7 +107,7 @@ class IoTDevicemanager:
 
         for iot_device_uuid in self.iot_devices:
             if iot_device_uuid not in self.last_time_signal_sent_to_iot_devices: self.last_time_signal_sent_to_iot_devices[iot_device_uuid] = 0
-            if time.time() - self.last_time_signal_sent_to_iot_devices[iot_device_uuid] < 5: continue # send signal to iot devices every 5 seconds
+            if time.time() - self.last_time_signal_sent_to_iot_devices[iot_device_uuid] < 20: continue # send signal to iot devices every 5 seconds
             
             device_id = self.iot_devices[iot_device_uuid]['device_id']
             for linked_rule_uuid_and_action in self.iot_devices[iot_device_uuid]['linked_rule_uuids_and_actions']:
