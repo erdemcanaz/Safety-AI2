@@ -19,7 +19,6 @@ class IoTDevicemanager:
     
     def ensure_serial_port_is_open(self):
         # Check if the serial port was previously opened
-        print(self.serial_port)
         if self.serial_port is not None and self.serial_port.is_open:
             # Get the list of current COM ports
             current_ports = [port.device for port in serial.tools.list_ports.comports()]
@@ -51,10 +50,10 @@ class IoTDevicemanager:
             try:
                 self.serial_port = serial.Serial(comport, 9600, timeout=1)  # Adjust baud rate as needed
                 print(f"Opened serial port {comport} successfully.")
+                break
             except serial.SerialException as e:
                 self.serial_port = None
                 print(f"Failed to open serial port {comport}: {e}")
-
 
     def send_signal_to_iot_device(self, device_id:str, which_action:str):
         self.ensure_serial_port_is_open()
