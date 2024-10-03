@@ -205,7 +205,7 @@ CAMERA_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the c
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
 IOT_DEVICE_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the iot devices
 
-CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 10] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
+CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 3] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
 
 SAFETY_AI_VERBOSES = {
     'header_class_name_width': 20, # The width of the class name in the printed header
