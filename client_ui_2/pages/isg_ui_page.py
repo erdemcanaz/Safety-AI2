@@ -142,7 +142,7 @@ class ISG_UIpage:
                     this_frame, 
                     text=f"Görüntü 5 Dakikadan Eski", 
                     position = (0,0),
-                    area = (int(this_frame_width), int(this_frame_height)),
+                    area_size = (int(this_frame_width), int(this_frame_height)),
                     alignment='center',
                     font=cv2.FONT_HERSHEY_SIMPLEX, 
                     font_scale=3,
