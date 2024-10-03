@@ -58,7 +58,7 @@ class IoTDevicemanager:
     def send_signal_to_iot_device(self, device_id:str, which_action:str):
         self.ensure_serial_port_is_open()
         try:
-            data_to_send = f"{device_id.zfill(5)}{which_action}"
+            data_to_send = f"{str(device_id).zfill(5)}{which_action}"
             print(f"Sending signal to device_id:{device_id} with action: {which_action} -> '{data_to_send}'")
             self.serial_port.write(data_to_send.encode('ascii'))
             time.sleep(15)
