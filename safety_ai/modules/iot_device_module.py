@@ -49,19 +49,19 @@ class IoTDevicemanager:
             comport = ports[0].device
             try:
                 self.serial_port = serial.Serial(comport, 9600, timeout=1)  # Adjust baud rate as needed
-                print(f"Opened serial port {comport} successfully.")
+                print(f"Opened serial port {comport} successfully. Waiting for 5 seconds for device to initialize...")
+                time.sleep(5)  # Wait for device to initialize
                 break
             except serial.SerialException as e:
                 self.serial_port = None
                 print(f"Failed to open serial port {comport}: {e}")
 
-    def send_signal_to_iot_device(self, device_id:str, which_action:str):
+    def __send_signal_to_iot_device(self, device_id:str, which_action:str):
         self.ensure_serial_port_is_open()
         try:
             data_to_send = f"{str(device_id).zfill(5)}{which_action}"
             print(f"Sending signal to device_id:{device_id} with action: {which_action} -> '{data_to_send}'")
             self.serial_port.write(data_to_send.encode('ascii'))
-            time.sleep(15)
         except Exception as e:
             self.serial_port = None
             print(f"Error: {e}")
@@ -102,16 +102,19 @@ class IoTDevicemanager:
                 rule_uuid = rule['rule_uuid']
                 last_time_triggered = rule['last_time_triggered'] # 'YYYY-MM-DD HH:MM:SS'
                 rule_uuid_trigger_time_dict[rule_uuid] = time.mktime(time.strptime(last_time_triggered, "%Y-%m-%d %H:%M:%S"))
-        
+        else:
+            print("Could not fetch rules -> Error: ", response[1])
+
         for iot_device_uuid in self.iot_devices:
             if iot_device_uuid not in self.last_time_signal_sent_to_iot_devices: self.last_time_signal_sent_to_iot_devices[iot_device_uuid] = 0
             if time.time() - self.last_time_signal_sent_to_iot_devices[iot_device_uuid] < 20: continue
             
+            device_id = self.iot_devices[iot_device_uuid]['device_id']
             for linked_rule_uuid_and_action in self.iot_devices[iot_device_uuid]['linked_rule_uuids_and_actions']:
                 rule_uuid = linked_rule_uuid_and_action[0]
                 which_action = linked_rule_uuid_and_action[1]
-                if rule_uuid in rule_uuid_trigger_time_dict and time.time() - rule_uuid_trigger_time_dict[rule_uuid] < 20:
-                    self.__send_signal_to_iot_device(iot_device_uuid, which_action)
+                if rule_uuid in rule_uuid_trigger_time_dict and time.time() - rule_uuid_trigger_time_dict[rule_uuid] < 5:
+                    self.__send_signal_to_iot_device(device_id, which_action)
                     self.last_time_signal_sent_to_iot_devices[iot_device_uuid] = time.time()
                 
                 
