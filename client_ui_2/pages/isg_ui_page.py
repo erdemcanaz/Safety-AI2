@@ -133,6 +133,24 @@ class ISG_UIpage:
             date_updated = this_camera_info["date_updated"] #'date_updated': '2024-09-25 17:55:30'
             date_updated = (datetime.datetime.strptime(date_updated, '%Y-%m-%d %H:%M:%S') + datetime.timedelta(hours=3)).strftime('%d/%m/%Y %H:%M:%S') # Add 3 hours to convert UTC to local time
 
+            date_updated_unix = time.mktime(datetime.datetime.strptime(date_updated, "%d/%m/%Y %H:%M:%S").timetuple())
+            if time.time() - date_updated_unix > 300: # 5 minutes
+                this_frame = cv2.GaussianBlur(this_frame, (61, 61), 0)
+                this_frame_width, this_frame_height = this_frame.shape[1], this_frame.shape[0]
+
+                picasso.draw_text_on_frame(
+                    this_frame, 
+                    text=f"Görüntü 5 Dakikadan Eski", 
+                    position = (0,0),
+                    area = (int(this_frame_width), int(this_frame_height)),
+                    alignment='center',
+                    font=cv2.FONT_HERSHEY_SIMPLEX, 
+                    font_scale=3,
+                    text_color=(169, 69, 0),
+                    thickness=3,
+                    padding=10
+                )
+
             camera_uuid = this_camera_info["camera_uuid"]
             camera_ip_address = this_camera_info["camera_ip_address"]
             camera_region = this_camera_info["camera_region"]
