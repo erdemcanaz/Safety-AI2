@@ -1,6 +1,9 @@
 import safety_ai_api_dealer_module
 from typing import List, Dict
 import time, pprint
+import serial.tools.list_ports
+import serial
+
 
 class IoTDevicemanager:
     #TODO: add serial communication with the iot devices
@@ -9,13 +12,59 @@ class IoTDevicemanager:
         self.api_dealer = api_dealer
         self.iot_devices = {} # key: iot_device_uuid | device_uuid (str), device_name (str),  device_id (str), linked_rule_uuids_and_actions (List[str, str])
         self.last_time_iot_devices_updated = 0
-
+        self.serial_port = None # will be initialized
         self.last_time_signal_sent_to_iot_devices = {} #  key: iot_device_uuid | value: time.time() to prevent sending signals to iot devices too frequently
-        pass
+
+        self.ensure_serial_port_is_open()
     
-    def __send_signal_to_iot_device(self, iot_device_uuid:str, which_action:str):
-        #TODO:
-        print(f"Sending signal to iot_device_uuid: {iot_device_uuid}, device_id:{self.iot_devices[iot_device_uuid]} with action: {which_action}")
+    def ensure_serial_port_is_open(self):
+        # Check if the serial port was previously opened
+        if self.serial_port is not None and self.serial_port.is_open:
+            # Get the list of current COM ports
+            current_ports = [port.device for port in serial.tools.list_ports.comports()]
+            if self.serial_port.port in current_ports:
+                return  # Port is open and device is connected
+            else:
+                print(f"Serial port {self.serial_port.port} is no longer available. Attempting to reconnect...")
+                self.serial_port.close()  # Close the old serial port
+
+        # Find available COM ports
+        while True:
+            ports = serial.tools.list_ports.comports()
+            if len(ports) == 0:
+                print("No COM ports found. Please ensure the device is connected.")
+                time.sleep(1)
+                continue
+            if len(ports) > 1:
+                print("Multiple COM ports found. Please ensure only one device is connected to avoid ambiguity.")
+                time.sleep(1)
+                continue
+
+            # List available ports (optional)
+            for index, port in enumerate(ports):
+                print(f"{index}: {port.device} - {port.description}")
+
+            # Open the serial port
+            comport = ports[0].device
+            try:
+                self.serial_port = serial.Serial(comport, 9600, timeout=1)  # Adjust baud rate as needed
+                print(f"Opened serial port {comport} successfully.")
+            except serial.SerialException as e:
+                self.serial_port = None
+                print(f"Failed to open serial port {comport}: {e}")
+
+
+    def send_signal_to_iot_device(self, device_id:str, which_action:str):
+        self.ensure_serial_port_is_open()
+        try:
+            data_to_send = f"{device_id.zfill(5)}{which_action}"
+
+            print(f"Sending signal to device_id:{device_id} with action: {which_action} -> '{data_to_send}'")
+            self.serial_port.write(data_to_send.encode('ascii'))
+            time.sleep(15)
+        except Exception as e:
+            self.serial_port = None
+            print(f"Error: {e}")
 
     def update_iot_devices(self, update_interval_seconds:float = 60):
         if time.time() - self.last_time_iot_devices_updated < update_interval_seconds: return

@@ -144,7 +144,7 @@ while True:
             api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(8) Ping IoT devices if their rules are triggered in recent 
-    iot_device_manager.send_signal_to_iot_devices_if_rule_triggered_recently()
+    iot_device_manager.send_signal_to_iot_device(device_id = 178, which_action = "3")
         
     
        
