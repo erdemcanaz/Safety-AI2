@@ -196,7 +196,7 @@ if datetime.datetime.now().year < 2024:
 # Safety-AI related parameters
 PERSON_BBOX_BLUR_KERNEL_SIZE = 31 # Odd number
 POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.70
-FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35a
+FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
 HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
 
 MAXIMUM_NUMBER_OF_STORED_FRAMES = 10 # The maximum number of previous frames that are stored for each camera. (RAM usage is proportional to this number)
