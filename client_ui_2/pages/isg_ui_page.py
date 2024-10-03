@@ -147,7 +147,7 @@ class ISG_UIpage:
                     font=cv2.FONT_HERSHEY_SIMPLEX, 
                     font_scale=3,
                     text_color=(169, 69, 0),
-                    thickness=3,
+                    thickness=5,
                     padding=10
                 )
 
