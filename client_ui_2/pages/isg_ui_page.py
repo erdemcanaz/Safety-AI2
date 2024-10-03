@@ -170,7 +170,7 @@ class ISG_UIpage:
                 alignment='left', 
                 font=cv2.FONT_HERSHEY_SIMPLEX, 
                 font_scale = 0.5, 
-                text_color=(255, 255, 255), 
+                text_color=(0, 0, 0), 
                 thickness=1, 
                 padding=10
             )
@@ -274,7 +274,7 @@ class ISG_UIpage:
                     alignment='left',
                     font=cv2.FONT_HERSHEY_SIMPLEX,
                     font_scale=1,
-                    text_color=(169, 69, 0),
+                    text_color=(0, 0, 0),
                     thickness=2,
                     padding=10                    
                 )
