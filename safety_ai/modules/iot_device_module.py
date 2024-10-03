@@ -19,7 +19,7 @@ class IoTDevicemanager:
     
     def ensure_serial_port_is_open(self):
         # Check if the serial port was previously opened
-        print(self.serial_port, self.serial_port.is_open)
+        print(self.serial_port)
         if self.serial_port is not None and self.serial_port.is_open:
             # Get the list of current COM ports
             current_ports = [port.device for port in serial.tools.list_ports.comports()]
