@@ -195,8 +195,8 @@ if datetime.datetime.now().year < 2024:
 
 # Safety-AI related parameters
 PERSON_BBOX_BLUR_KERNEL_SIZE = 31 # Odd number
-POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.65
-FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.50
+POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.70
+FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35a
 HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
 
 MAXIMUM_NUMBER_OF_STORED_FRAMES = 10 # The maximum number of previous frames that are stored for each camera. (RAM usage is proportional to this number)
@@ -205,7 +205,7 @@ CAMERA_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the c
 CAMERA_RULES_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the camera rules
 IOT_DEVICE_UPDATE_INTERVAL_SECONDS = 20 # The interval in seconds for updating the iot devices
 
-CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 3] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
+CAMERA_DECODING_RANDOMIZATION_RANGE = [0, 10] # The range of randomization for the decoding of the camera frames in seconds. Other frames are just grabbed and not decoded.
 
 SAFETY_AI_VERBOSES = {
     'header_class_name_width': 20, # The width of the class name in the printed header
