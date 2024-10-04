@@ -160,7 +160,7 @@ elif os.name == "posix":  # For Unix-like systems (Linux, macOS, etc.)
 
     if not is_local_available:
         raise Exception(f"Local data folder path '{DATA_FOLDER_PATH_LOCAL}' is not accessible")
-    if not is_external_available:
+    if not is_external_available and IS_EXTERNAL_DRIVE_REQUIRED:
         raise Exception(f"External data folder path '{DATA_FOLDER_PATH_EXTERNAL}' is not accessible Please ensure the external drive is connected to 'E:' drive")
 
     print(f"[INFO] Ensuring the data folder's subfolders are created")    
