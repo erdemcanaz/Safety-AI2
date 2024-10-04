@@ -55,7 +55,7 @@ class PopupDealer:
                 (popup_bbox_coords[0] + 10, y_offset + 10),  # Adding padding for text position
                 (popup_bbox_coords[2] - popup_bbox_coords[0] - 20, popup_height - 20),  # Width and height for text area
                 font=cv2.FONT_HERSHEY_SIMPLEX,
-                font_scale=1,
+                font_scale=0.75,
                 text_color=(255, 255, 255),
                 thickness=2,
                 padding=10,
