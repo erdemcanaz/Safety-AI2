@@ -145,6 +145,8 @@ while True:
     for evaluation_result in evaluation_results:
         for violation_report in evaluation_result['violation_reports']:
             rule_uuid = violation_report['rule_uuid']
+            pprint.pprint(violation_report)
+            
             api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(8) Ping IoT devices if their rules are triggered in recent 
