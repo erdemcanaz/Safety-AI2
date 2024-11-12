@@ -39,7 +39,7 @@ def calculate_folder_size_gb(folder_path: Path = None):
 PREFERENCES_FILE_PATH = Path(__file__).resolve()
 # Definitions (Hardcoded)
 IS_EXTERNAL_DRIVE_REQUIRED = False # If yes, then if external drive is not connected, the script will raise an error
-SQL_MANAGER_SECRET_KEY = secrets.token_bytes(32)  #For production -> secrets.token_bytes(32) |||  For development, you can use static key as ->  b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" 
+SQL_MANAGER_SECRET_KEY = b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT"   #For production -> secrets.token_bytes(32) |||  For development, you can use static key as ->  b"G4ECs6lRrm6HXbtBdMwFoLA18iqF1mMT" 
 SERVER_JWT_KEY = "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a" #For production -> secrets.token_hex(32) |||  For development, you can use static key as -> "ck56b5dfbc8b728d15f2f9d816c3b9d89f4c2d19f8a1e7b8b9a4f8f6b0c5e2d6a"
 VIOLATIONS_CLEANUP_CHECK_INTERVAL_SECONDS = 5*60 #5 min  # Keep this value low, since the fetching from database is fast but the deletion is slow, thus it is better to check more frequently. Also since the reports are deleted, the number of rows in the database is bounded
 VIOLATIONS_TIME_TO_LIVE_DAYS = 30 # 30 days
