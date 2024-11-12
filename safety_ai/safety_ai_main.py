@@ -150,7 +150,7 @@ while True:
     #(8) Ping IoT devices if their rules are triggered in recent 
     iot_device_manager.send_signal_to_iot_devices_if_rule_triggered_recently()
         
-    print(f"{datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")} | Loop is finished")
+    print(f"{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')} | Loop is finished")
        
 
     
