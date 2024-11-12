@@ -141,13 +141,14 @@ while True:
             if violation_score > violation_report['fol_threshold_value']:
                 pass #TODO: report the violation to the fol-server
                 
-    #(7) Trigger rules and send signals to the IoT devices if the linked rules are triggered
+    #(7) Trigger rules and send signals to the IoT devices if the linked rules are triggered (this is not a good solution, but it is a temporary solution)
     for evaluation_result in evaluation_results:
         for violation_report in evaluation_result['violation_reports']:
             rule_uuid = violation_report['rule_uuid']
-            pprint.pprint(violation_report)
-            
-            api_dealer.trigger_rule(rule_uuid=rule_uuid)
+
+            violation_score = violation_report['violation_score']
+            threshold_value = violation_report['threshold_value']
+            if violation_score > threshold_value: api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(8) Ping IoT devices if their rules are triggered in recent 
     iot_device_manager.send_signal_to_iot_devices_if_rule_triggered_recently()
