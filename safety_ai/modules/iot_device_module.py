@@ -113,7 +113,7 @@ class IoTDevicemanager:
             for linked_rule_uuid_and_action in self.iot_devices[iot_device_uuid]['linked_rule_uuids_and_actions']:
                 rule_uuid = linked_rule_uuid_and_action[0]
                 which_action = linked_rule_uuid_and_action[1]
-                if rule_uuid in rule_uuid_trigger_time_dict and time.time() - rule_uuid_trigger_time_dict[rule_uuid] < 10: # rule was triggered in recent 20 seconds, ensure the cycle completes less than this much
+                if rule_uuid in rule_uuid_trigger_time_dict and time.time() - rule_uuid_trigger_time_dict[rule_uuid] < 3: # rule was triggered in recent 20 seconds, ensure the cycle completes less than this much
                     self.__send_signal_to_iot_device(device_id, which_action)
                     self.last_time_signal_sent_to_iot_devices[iot_device_uuid] = time.time()
                 
