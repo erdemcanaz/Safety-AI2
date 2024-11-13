@@ -55,6 +55,8 @@ while True:
         r = frame_evaluator.evaluate_frame(frame_info) # Returns None if the frame is already evaluated
         if r is not None: evaluation_results.append(r)
 
+        print(f"len(evaluation_results): {len(evaluation_results)}")
+
     #(4) Update the server with the last frames (check if violation is detected or not). Note that all the frames in the evaluation_results are new frames, so we can update the server with them
     for evaluation_result in evaluation_results:
         camera_uuid = evaluation_result['frame_info']['camera_uuid']
