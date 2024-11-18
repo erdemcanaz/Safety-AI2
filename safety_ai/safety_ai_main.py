@@ -1,5 +1,5 @@
 # Built-in imports
-import pprint, time, sys, os, cv2, datetime, random
+import pprint, time, sys, os, cv2, datetime, random, uuid
 from pathlib import Path
 import numpy as np
 
@@ -16,13 +16,18 @@ sys.path.append(str(MODULES_DIRECTORY)) # Add the modules directory to the syste
 sys.path.append(str(SAFETY_AI2_DIRECTORY)) # Add the modules directory to the system path so that imports work
 
 import PREFERENCES
-import safety_ai_api_dealer_module, camera_module, models_module, frame_evaluator_module, iot_device_module
+import safety_ai_api_dealer_module, camera_module, models_module, frame_evaluator_module, iot_device_module, fol_module
 
 #================================================================================================================================================================
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 iot_device_manager = iot_device_module.IoTDevicemanager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
+
+fol_manager = fol_module.FolModule()
+dumy_image_for_fol = np.zeros((640,640,3), np.uint8)
+dummy_image_base64 = api_dealer.encode_frame_for_url_body_b64_string(np_ndarray = dumy_image_for_fol)
+
 
 last_time_server_last_frame_updated = 0
 last_time_camera_violation_is_reported = {} # key: camera_uuid | value: time.time()
@@ -39,6 +44,13 @@ while True:
     #(8) TODO: send signal to iot devices if violation is detected for respective cameras
     #() TODO: change active cameras to next batch of cameras if the time is up
 
+    fol_manager.send_data(
+        violation_score=random.random(0,1),
+        violation_uuid=str(uuid.uuid4()), 
+        camera_uuid=str(uuid.uuid4()),
+        image_base64=dummy_image_base64,
+        cooldown=15
+    )
     if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
     
     #(1) Update the cameras and the rules for each camera
