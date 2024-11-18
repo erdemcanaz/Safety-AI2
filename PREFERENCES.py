@@ -194,7 +194,7 @@ if datetime.datetime.now().year < 2024:
     raise ValueError("System year is less than 2024, Please ensure the system date and time is correct, best way to connect device to the internet and it will likely to automatically update the date and time")
 
 # Safety-AI related parameters
-PERSON_BBOX_BLUR_KERNEL_SIZE = 31 # Odd number
+PERSON_BBOX_BLUR_KERNEL_SIZE = 15 # Odd number
 POSE_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.70
 FORKLIFT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
 HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE = 0.35
