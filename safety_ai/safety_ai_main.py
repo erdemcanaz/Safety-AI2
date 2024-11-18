@@ -137,13 +137,15 @@ while True:
 
             #NOTE: please note that violation uuids are different for the local-server and the fol-server.
             # Report the violation to the local-server
+            
             if violation_score > violation_report['threshold_value']:
                 number_of_previous_frames = len(last_frames_for_timelapse[camera_uuid])
                 api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
                 print(f"Reported violation for camera_uuid: {camera_uuid}")
            
             # Report the violation to the fol-server
-            if violation_score > violation_report['fol_threshold_value']:                          
+            if violation_score > violation_report['threshold_value']:
+            #if violation_score > violation_report['fol_threshold_value']:                          
                 FOL_IMAGE_SIZE = (640, 640)
                 violation_frame_base64 = api_dealer.encode_frame_for_url_body_b64_string(np_ndarray = cv2.resize(violation_frame, FOL_IMAGE_SIZE))
                 
