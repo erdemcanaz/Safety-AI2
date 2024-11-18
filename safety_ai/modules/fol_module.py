@@ -54,9 +54,11 @@ class FolModule:
                 }
             ]
         }
-        
-        pprint.pprint(body)
-        
+
+
         response = requests.post(self.end_point_url, headers = headers, data=json.dumps(body))
+        #remove Image from body before printing
+        body["SafetyData"][0].pop("Image")
+        pprint.pprint(body)
         pprint.pprint(response)
         return response.status_code, response.text
