@@ -45,7 +45,7 @@ while True:
     #() TODO: change active cameras to next batch of cameras if the time is up
 
     fol_manager.send_data(
-        violation_score=random.random(0,1),
+        violation_score=0.25,
         violation_uuid=str(uuid.uuid4()), 
         camera_uuid=str(uuid.uuid4()),
         image_base64=dummy_image_base64,
