@@ -25,9 +25,6 @@ iot_device_manager = iot_device_module.IoTDevicemanager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
 fol_manager = fol_module.FolModule()
-dumy_image_for_fol = np.zeros((640,640,3), np.uint8)
-dummy_image_base64 = api_dealer.encode_frame_for_url_body_b64_string(np_ndarray = dumy_image_for_fol)
-
 
 last_time_server_last_frame_updated = 0
 last_time_camera_violation_is_reported = {} # key: camera_uuid | value: time.time()
@@ -44,13 +41,6 @@ while True:
     #(8) TODO: send signal to iot devices if violation is detected for respective cameras
     #() TODO: change active cameras to next batch of cameras if the time is up
 
-    fol_manager.send_data(
-        violation_score=0.25,
-        violation_uuid=str(uuid.uuid4()), 
-        camera_uuid=str(uuid.uuid4()),
-        image_base64=dummy_image_base64,
-        cooldown=15
-    )
     if PREFERENCES.SHOW_FRAMES['show_all_frames']: stream_manager.show_all_frames()
     
     #(1) Update the cameras and the rules for each camera
@@ -145,13 +135,28 @@ while True:
             violation_score = round( float(violation_report['violation_score']) , 2 )
             region_name = violation_report['region_name']
 
-            # 
+            #NOTE: please note that violation uuids are different for the local-server and the fol-server.
+            # Report the violation to the local-server
             if violation_score > violation_report['threshold_value']:
                 number_of_previous_frames = len(last_frames_for_timelapse[camera_uuid])
                 api_dealer.create_reported_violation(camera_uuid=camera_uuid, violation_frame=violation_frame, violation_date=violation_date, violation_type=violation_type, violation_score=violation_score, region_name=region_name)
                 print(f"Reported violation for camera_uuid: {camera_uuid}")
-            if violation_score > violation_report['fol_threshold_value']:
-                pass #TODO: report the violation to the fol-server
+           
+            # Report the violation to the fol-server
+            if violation_score > violation_report['fol_threshold_value']:                          
+                FOL_IMAGE_SIZE = (640, 640)
+                violation_frame_base64 = api_dealer.encode_frame_for_url_body_b64_string(np_ndarray = cv2.resize(violation_frame, FOL_IMAGE_SIZE))
+                
+                fol_manager.send_data(
+                    violation_score=violation_score,
+                    violation_uuid=str(uuid.uuid4()),
+                    camera_uuid=camera_uuid,
+                    image_base64=violation_frame_base64,
+                    cooldown=0
+                )
+
+
+
                 
     #(7) Trigger rules and send signals to the IoT devices if the linked rules are triggered (this is not a good solution, but it is a temporary solution)
     for evaluation_result in evaluation_results:
