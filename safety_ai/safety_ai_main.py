@@ -153,6 +153,7 @@ while True:
                     violation_score=violation_score,
                     violation_uuid=str(uuid.uuid4()),
                     camera_uuid=camera_uuid,
+                    region_name = region_name,
                     image_base64=violation_frame_base64,
                     cooldown=0
                 )

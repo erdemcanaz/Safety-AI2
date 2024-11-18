@@ -12,6 +12,7 @@ class FolModule:
             violation_score:float = None,
             violation_uuid:str = None,
             camera_uuid:str = None, 
+            region_name:str = None,
             image_base64:str = None,
             cooldown:float = None              
 
@@ -30,6 +31,11 @@ class FolModule:
         hour = datetime.datetime.now().hour
         shift_no = hour // 8 + 1
 
+        if region_name is None:
+            region_name = "SHE-matters-None"
+        if type(region_name) == str and len(region_name) == 0:
+            region_name = "SHE-matters-empty"
+
         body = {
             "SafetyData": [
                 {
@@ -40,7 +46,7 @@ class FolModule:
 
                     "DeviceTimestamp": str(datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")),
 
-                    "RegionName": "SHE-matters-1",
+                    "RegionName": region_name,
 
                     "ViolationType": "restricted_area_rule_statistics",
 
