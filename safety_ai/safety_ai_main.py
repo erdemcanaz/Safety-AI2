@@ -144,8 +144,8 @@ while True:
                 print(f"Reported violation for camera_uuid: {camera_uuid}")
            
             # Report the violation to the fol-server
-            if violation_score > violation_report['threshold_value']:
-            #if violation_score > violation_report['fol_threshold_value']:                          
+            #if violation_score > violation_report['threshold_value']:
+            if violation_score > violation_report['fol_threshold_value']:                          
                 FOL_IMAGE_SIZE = (640, 640)
                 violation_frame_base64 = api_dealer.encode_frame_for_url_body_b64_string(np_ndarray = cv2.resize(violation_frame, FOL_IMAGE_SIZE))
                 
@@ -157,10 +157,7 @@ while True:
                     image_base64=violation_frame_base64,
                     cooldown=0
                 )
-
-
-
-                
+       
     #(7) Trigger rules and send signals to the IoT devices if the linked rules are triggered (this is not a good solution, but it is a temporary solution)
     for evaluation_result in evaluation_results:
         for violation_report in evaluation_result['violation_reports']:
