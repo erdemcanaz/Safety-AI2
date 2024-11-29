@@ -85,6 +85,12 @@ DEFINED_RULES = {
     ]
     
     }
+
+DEFINED_RULE_FOL_MAPPING = { # The mapping between the defined rules and the FOL definitions
+    "hardhat_violation": "hardhat_violation",
+    "restricted_area_violation": "restricted_area_rule_statistics",    
+}
+
 SAFETY_AI_USER_INFO = {"username": "safety_ai", "password": "safety_ai_password", "personal_fullname": "Safety AI Robot"}    
 ADMIN_USER_INFO = {"username": "a", "password": "a", "personal_fullname": "Admin User"}
 MUST_EXISTING_DATA_SUBFOLDER_PATHS = { 

@@ -155,6 +155,7 @@ while True:
                     camera_uuid=camera_uuid,
                     region_name = region_name,
                     image_base64=violation_frame_base64,
+                    violation_type = violation_type,
                     cooldown=0
                 )
        

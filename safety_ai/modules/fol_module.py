@@ -1,4 +1,4 @@
-import requests, json, uuid, datetime, time, pprint
+import requests, json, uuid, datetime, time, pprint, PREFERENCES
 
 class FolModule:
     def __init__(self):
@@ -14,13 +14,18 @@ class FolModule:
             camera_uuid:str = None, 
             region_name:str = None,
             image_base64:str = None,
-            cooldown:float = None              
+            cooldown:float = None,
+            violation_type:str = None       
 
         ):
 
         if time.time() - self.last_time_sent < cooldown:
             return 
         self.last_time_sent = time.time()
+
+        if violation_type not in PREFERENCES.DEFINED_RULE_FOL_MAPPING.keys():
+            raise ValueError(f"Violation type {violation_type} not defined in PREFERENCES.DEFINED_RULE_FOL_MAPPING")
+        fol_mapped_violation_type = PREFERENCES.DEFINED_RULE_FOL_MAPPING[violation_type]
 
         headers = {
             "Content-Type": "application/json",
@@ -48,7 +53,7 @@ class FolModule:
 
                     "RegionName": region_name,
 
-                    "ViolationType": "restricted_area_rule_statistics",
+                    "ViolationType": fol_mapped_violation_type,
 
                     "ViolationScore": str(violation_score),
 
