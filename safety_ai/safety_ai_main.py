@@ -25,6 +25,7 @@ iot_device_manager = iot_device_module.IoTDevicemanager(api_dealer=api_dealer)
 frame_evaluator = frame_evaluator_module.FrameEvaluator()
 
 fol_manager = fol_module.FolModule()
+debug_number_of_catched_fol_requests = 0 #which should be deleted lated. Used to keep track of number of failed post request to FOL
 
 last_time_server_last_frame_updated = 0
 last_time_camera_violation_is_reported = {} # key: camera_uuid | value: time.time()
@@ -149,15 +150,19 @@ while True:
                 FOL_IMAGE_SIZE = (640, 640)
                 violation_frame_base64 = api_dealer.encode_frame_for_url_body_b64_string(np_ndarray = cv2.resize(violation_frame, FOL_IMAGE_SIZE))
                 
-                fol_manager.send_data(
-                    violation_score=violation_score,
-                    violation_uuid=str(uuid.uuid4()),
-                    camera_uuid=camera_uuid,
-                    region_name = region_name,
-                    image_base64=violation_frame_base64,
-                    violation_type = violation_type,
-                    cooldown=0
-                )
+                try:
+                    fol_manager.send_data(
+                        violation_score=violation_score,
+                        violation_uuid=str(uuid.uuid4()),
+                        camera_uuid=camera_uuid,
+                        region_name = region_name,
+                        image_base64=violation_frame_base64,
+                        violation_type = violation_type,
+                        cooldown=0
+                    )
+                except Exception as e:
+                    debug_number_of_catched_fol_requests = debug_number_of_catched_fol_requests +1
+                    print(f"Error sending data to FOL server: {e}")
        
     #(7) Trigger rules and send signals to the IoT devices if the linked rules are triggered (this is not a good solution, but it is a temporary solution)
     for evaluation_result in evaluation_results:
@@ -171,7 +176,7 @@ while True:
     #(8) Ping IoT devices if their rules are triggered in recent 
     iot_device_manager.send_signal_to_iot_devices_if_rule_triggered_recently()
 
-    print(f"{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')} | Loop is finished {len(evaluation_results)}")
+    print(f"{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')} | Loop is finished {len(evaluation_results)} | FOL failed requests count: {debug_number_of_catched_fol_requests}")
        
 
     
