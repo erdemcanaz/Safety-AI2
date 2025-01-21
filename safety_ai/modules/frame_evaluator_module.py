@@ -152,6 +152,7 @@ class FrameEvaluator():
             print("zaa")
             resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
             if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
+            cv2.waitKey(1)
 
         return evaluation_result
 
