@@ -148,9 +148,9 @@ class FrameEvaluator():
             elif violation_person_nbbox['violation_type'] == "hardhat_violation":
                 picasso_module.draw_image_on_frame(frame=evaluation_result['processed_cv2_frame'], image_name="red_hardhat_transparent_with_background", x=bbox[2]+padding, y=bbox[3]-4*padding, width=icon_max_size, height=icon_max_size, maintain_aspect_ratio=True)
 
-        # if len(evaluation_result['violation_reports']) > 0:
-        #     resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
-        #     if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
+        if len(evaluation_result['violation_reports']) > 0:
+            resized_frame = cv2.resize(copy.deepcopy(evaluation_result['processed_cv2_frame']), (500, 500))
+            if PREFERENCES.SHOW_FRAMES['combined_violation_frame']: cv2.imshow("Combined violation frame", resized_frame)
 
         return evaluation_result
 
@@ -390,8 +390,8 @@ class FrameEvaluator():
             if len(hardhat_detection_results['detections']) == 0:
                 #NOTE: To avoid miss-detection reported to FOL, ignore if hardhat model does not detect any hardhat
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {detection['bbox_confidence']} (hardhat model does not detect any class)")
-                #continue #NOTE: for visit 21.01, it is decided to use below logic
-                
+                continue #NOTE: for visit 21.01, it is decided to use below logic
+
                 # Person detected but hardhat detection resulted in no detection -> violation
                 violation_score = detection["bbox_confidence"]
                 if violation_score > violation_report_info['threshold_value']:
