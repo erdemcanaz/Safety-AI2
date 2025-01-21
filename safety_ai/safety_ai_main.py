@@ -181,7 +181,9 @@ while True:
                 #delete items older than X seconds
                 debug_last_violation_signal_times = [x for x in debug_last_violation_signal_times if time.time() - x < debug_last_violation_list_max_age_seconds]
 
+                print(f"Number of violations in the last {debug_last_violation_list_max_age_seconds} seconds: {len(debug_last_violation_signal_times)}")
                 if len(debug_last_violation_signal_times) > debug_last_violation_count_threshold:
+                    print(f"\tTriggering rule_uuid: {rule_uuid}")
                     api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
     #(8) Ping IoT devices if their rules are triggered in recent
