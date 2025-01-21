@@ -297,7 +297,7 @@ class FrameEvaluator():
         #
         # VIOLATION SCORE:
         # -> if the hardhat is detected, then violation_score = 1 - (pose_bbox_confidence * hardhat_bbox_confidence)
-        # -> NOTE: below case is ignored to avoid miss-detection reported to FOL
+        # -> NOTE: below case is ignored to avoid miss-detection reported to FOL (NOTE: for visit 21.01, it is decided to use below logic)
         # -> if the hardhat is not detected, then violation_score = pose_bbox_confidence
         # Exception: If the person is inside the forklift, then it is not a violation.
         # Dataset candidate: If a person is detected yet neiter hardhat or no_hardhat is detected, then it is a candidate for the dataset.
@@ -390,7 +390,8 @@ class FrameEvaluator():
             if len(hardhat_detection_results['detections']) == 0:
                 #NOTE: To avoid miss-detection reported to FOL, ignore if hardhat model does not detect any hardhat
                 print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {detection['bbox_confidence']} (hardhat model does not detect any class)")
-                continue
+                #continue #NOTE: for visit 21.01, it is decided to use below logic
+                
                 # Person detected but hardhat detection resulted in no detection -> violation
                 violation_score = detection["bbox_confidence"]
                 if violation_score > violation_report_info['threshold_value']:
