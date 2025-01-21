@@ -19,6 +19,9 @@ import PREFERENCES
 import safety_ai_api_dealer_module, camera_module, models_module, frame_evaluator_module, iot_device_module, fol_module
 
 #================================================================================================================================================================
+debug_last_violation_signal_times = [] #to keep track of the last violation signal times. The violations that are older than X seconds are removed from the list
+debug_last_violation_list_max_age_seconds = 5
+debug_last_violation_count_threshold = 3
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 iot_device_manager = iot_device_module.IoTDevicemanager(api_dealer=api_dealer)
@@ -171,9 +174,17 @@ while True:
 
             violation_score = violation_report['violation_score']
             threshold_value = violation_report['threshold_value']
-            if violation_score > threshold_value: api_dealer.trigger_rule(rule_uuid=rule_uuid)
 
-    #(8) Ping IoT devices if their rules are triggered in recent 
+            
+            if violation_score > threshold_value:
+                debug_last_violation_signal_times.append(time.time())
+                #delete items older than X seconds
+                debug_last_violation_signal_times = [x for x in debug_last_violation_signal_times if time.time() - x < debug_last_violation_list_max_age_seconds]
+
+                if len(debug_last_violation_signal_times) > debug_last_violation_count_threshold:
+                    api_dealer.trigger_rule(rule_uuid=rule_uuid)
+
+    #(8) Ping IoT devices if their rules are triggered in recent
     iot_device_manager.send_signal_to_iot_devices_if_rule_triggered_recently()
 
     print(f"{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')} | Loop is finished {len(evaluation_results)} | FOL failed requests count: {debug_number_of_catched_fol_requests}")
