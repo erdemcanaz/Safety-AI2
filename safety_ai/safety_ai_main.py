@@ -20,8 +20,8 @@ import safety_ai_api_dealer_module, camera_module, models_module, frame_evaluato
 
 #================================================================================================================================================================
 debug_last_violation_signal_times = [] #to keep track of the last violation signal times. The violations that are older than X seconds are removed from the list
-debug_last_violation_list_max_age_seconds = 5
-debug_last_violation_count_threshold = 3
+debug_last_violation_list_max_age_seconds = 4
+debug_last_violation_count_threshold = 2
 api_dealer = safety_ai_api_dealer_module.SafetyAIApiDealer()
 stream_manager = camera_module.StreamManager(api_dealer=api_dealer)
 iot_device_manager = iot_device_module.IoTDevicemanager(api_dealer=api_dealer)
