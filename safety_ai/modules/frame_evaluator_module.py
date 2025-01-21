@@ -390,8 +390,8 @@ class FrameEvaluator():
             hardhat_detection_results = self.hardhat_detector.detect_frame(frame = frame_to_detect_hardhat, frame_info = None, bbox_threshold_confidence = PREFERENCES.HARDHAT_MODEL_BBOX_THRESHOLD_CONFIDENCE)
             if len(hardhat_detection_results['detections']) == 0:
                 #NOTE: To avoid miss-detection reported to FOL, ignore if hardhat model does not detect any hardhat
-                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {detection['bbox_confidence']} (hardhat model does not detect any class)")
                 continue #NOTE: for visit 21.01, it is decided to use below logic
+                print(f"Violation detected for rule_uuid: {rule_info['rule_uuid']} violation_score: {detection['bbox_confidence']} (hardhat model does not detect any class)")
 
                 # Person detected but hardhat detection resulted in no detection -> violation
                 violation_score = detection["bbox_confidence"]
